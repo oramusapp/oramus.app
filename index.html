@@ -142,6 +142,15 @@
     color:var(--text);transition:box-shadow 0.2s,border-color 0.2s,transform 0.15s;
   }
   .tile:hover{transform:translateY(-2px);border-color:var(--accent2);box-shadow:var(--glow2);}
+  /* Per-tile custom highlight color (falls back to the theme's pink when unset).
+     A subtle tinted border shows at rest (important on touch, where there is no hover),
+     and a matching glow appears on hover / tap / keyboard focus. */
+  .tile--tinted{border-color:color-mix(in srgb,var(--tile-accent) 45%,var(--border));}
+  .tile--tinted:hover,.tile--tinted:active,.tile--tinted:focus-visible{
+    border-color:var(--tile-accent);
+    box-shadow:0 0 6px color-mix(in srgb,var(--tile-accent) 55%,transparent),
+               0 0 18px color-mix(in srgb,var(--tile-accent) 20%,transparent);
+  }
   .tile .tile-icon{font-size:1.5rem;line-height:1;}
   .tile .tile-title{font-family:var(--font-mono);font-size:1rem;font-weight:700;letter-spacing:0.02em;}
   .tile .tile-sub{color:var(--text-dim);font-size:0.76rem;}
@@ -343,6 +352,10 @@
     display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
   }
   .overlay.active{display:flex;}
+  /* In the light theme the dark 0.6 backdrop looked like a half-transparent HUD behind the white modal.
+     Use a light, cohesive backdrop instead so the settings read as fully light. */
+  html[data-theme="light"] .overlay{background:rgba(226,231,240,0.72);}
+  html[data-theme="light"] .modal{box-shadow:0 10px 40px rgba(20,30,50,0.18);}
   .modal{
     background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--glow);
     width:100%;max-width:520px;padding:22px;margin:auto;
@@ -362,6 +375,9 @@
   .order-row .or-name{flex:1;font-size:0.86rem;}
   .order-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);}
   .order-row .or-arrows{display:flex;gap:4px;}
+  .order-row .tile-col{width:30px;height:26px;padding:1px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);cursor:pointer;flex:0 0 auto;}
+  .order-row .or-colreset{background:none;border:none;color:var(--text-dim);font-size:1rem;line-height:1;cursor:pointer;padding:0 2px;flex:0 0 auto;}
+  .order-row .or-colreset:hover{color:var(--danger);}
   .toggle-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:0.85rem;}
   .lang-opts,.header-mode-opts{display:flex;gap:8px;}
 
@@ -413,13 +429,28 @@
   .db-item .db-name{font-size:0.86rem;font-weight:600;color:var(--text);}
   .db-item .db-meta{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);line-height:1.4;}
   .db-item .db-tag{font-size:0.62rem;color:var(--accent2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.04em;}
-  /* collapsible database body */
-  .db-head{display:flex;justify-content:space-between;align-items:center;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left;}
-  .db-head h4{margin:0;}
+  /* collapsible sections — one reusable accordion pattern (exercise DB, settings, budget, home daily) */
+  .db-head,.acc-head{display:flex;justify-content:space-between;align-items:center;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left;color:inherit;font:inherit;}
+  .db-head h4,.acc-head h4,.acc-head h3{margin:0;}
   .db-arrow{color:var(--accent);font-size:0.8rem;transition:transform 0.3s ease;display:inline-block;}
-  .db-head[aria-expanded="true"] .db-arrow{transform:rotate(180deg);}
+  .db-head[aria-expanded="true"] .db-arrow,.acc-head[aria-expanded="true"] .db-arrow{transform:rotate(180deg);}
   .db-collapse{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;margin-top:0;}
-  .db-collapse.open{max-height:2400px;opacity:1;margin-top:12px;}
+  .db-collapse.open{max-height:4000px;opacity:1;margin-top:12px;}
+  /* appearance settings: color pickers and sliders */
+  .color-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px;}
+  .color-row span{font-size:0.82rem;color:var(--text-dim);}
+  .color-row input[type="color"]{width:44px;height:30px;padding:2px;border:1px solid var(--border);border-radius:7px;background:var(--bg-input);cursor:pointer;}
+  .slider-row{display:flex;align-items:center;gap:12px;margin:6px 0 14px;}
+  .slider-row input[type="range"]{flex:1;accent-color:var(--accent);min-width:0;}
+  .slider-val{font-family:var(--font-mono);font-size:0.76rem;color:var(--accent);min-width:48px;text-align:right;}
+  /* optional page backgrounds (applied on body, use theme variables) */
+  body.bg-gradient{background:linear-gradient(160deg,var(--bg) 0%,color-mix(in srgb,var(--accent) 12%,var(--bg)) 55%,color-mix(in srgb,var(--accent2) 10%,var(--bg)) 100%) fixed;}
+  body.bg-pattern{background-image:radial-gradient(color-mix(in srgb,var(--accent) 16%,transparent) 1px,transparent 1px);background-size:22px 22px;}
+  /* budget pin (fixed/recurring item survives period reset) */
+  .pin-btn{background:transparent;border:none;cursor:pointer;font-size:0.95rem;line-height:1;padding:2px 4px;opacity:0.3;filter:grayscale(1);transition:opacity 0.2s,filter 0.2s;}
+  .pin-btn.active{opacity:1;filter:none;}
+  /* workout duration line */
+  .w-dur{font-size:0.72rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px;}
   .db-empty{color:var(--text-dim);font-size:0.82rem;font-style:italic;}
 
   /* ===== CURRENCY PERSONALIZATION (settings) ===== */
@@ -432,6 +463,7 @@
   /* ===== DAILY TASKS (home) ===== */
   .daily-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--glow);padding:16px 18px;margin-bottom:18px;position:relative;}
   .daily-card h3{font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--accent2);margin:0 0 10px;padding-right:34px;}
+  .daily-card .acc-head{padding-right:32px;} /* keep the arrow clear of the absolutely-positioned pen */
   .daily-pen{position:absolute;top:12px;right:12px;background:transparent;border:1px solid var(--border);border-radius:7px;width:30px;height:30px;color:var(--accent);font-size:0.9rem;display:flex;align-items:center;justify-content:center;}
   .daily-pen:hover{border-color:var(--accent);box-shadow:var(--glow);}
   .daily-pen.active{color:var(--accent2);border-color:var(--accent2);box-shadow:var(--glow2);}
@@ -514,7 +546,7 @@
     /* horizontally scrollable ticker, thumb-friendly */
     .ticker{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;padding-bottom:4px;order:3;}
     .tick{min-width:104px;flex:0 0 auto;padding:8px 11px;}
-    .header-info{margin-left:0;max-width:100%;order:2;}
+    .header-info{margin-left:0;max-width:100%;width:100%;order:2;}
     main{padding:10px 12px 20px;}
     /* full-width scrollable modals */
     .overlay{padding:0;align-items:stretch;}
@@ -528,11 +560,22 @@
     .bud-add-row{flex-direction:column;align-items:stretch;}
     .bud-add-row>div{min-width:0;}
     .bud-add-row .btn-primary{width:100%;}
+    /* budget line: let name/amount/actions wrap instead of overflowing */
+    .bud-line{flex-wrap:wrap;}
+    .bud-line .bl-main{flex:1 1 60%;}
+    /* Training: keep date / start / end side by side and centered (per request) */
+    .wk-timerow{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:8px;}
+    .wk-timerow>div{flex:1 1 0;min-width:88px;margin:0;}
+    .wk-timerow>div label{text-align:center;}
+    .wk-timerow input[type=date],.wk-timerow input[type=time]{text-align:center;}
+    .wk-timerow>.btn-ghost{flex:1 1 100%;order:5;margin-top:6px;}
     /* thumb-friendly touch targets (min 44px) */
     input[type=text],input[type=email],input[type=date],input[type=time],input[type=number],
     input[type=password],select,textarea{min-height:44px;font-size:16px;}
     .btn-primary,.btn-ghost,.tab-btn,.seg-btn,.db-tab,.back-btn{min-height:44px;}
+    .acc-head,.db-head{padding:4px 0;} /* full-width headers stay easy to tap */
     .btn-small,.del-btn{min-height:36px;}
+    .pin-btn{min-width:34px;min-height:34px;font-size:1.05rem;}
     .tile{min-height:96px;padding:16px 16px;}
     .tile-grid{gap:12px;}
     .stepper .stp{width:44px;}
@@ -541,10 +584,18 @@
     .tabs{flex-wrap:wrap;}
     .daily-item input[type=checkbox]{width:22px;height:22px;}
     .gear-btn{width:48px;height:48px;right:12px;bottom:12px;}
+    /* stat/result tiles and pills breathe on small screens */
+    .stat-tiles{grid-template-columns:1fr 1fr;}
+    .macro-pills{justify-content:center;}
+    .color-row input[type="color"]{width:52px;height:34px;}
+    .order-row .tile-col{width:44px;height:34px;}
+    .modal{font-size:0.95rem;}
   }
   @media (max-width:360px){
     .tick{min-width:96px;}
     .site-name{font-size:1.05rem;}
+    .wk-timerow>div{flex:1 1 42%;} /* date on its own line, start+end share the next */
+    .stat-tiles{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -584,11 +635,15 @@
     <!-- DAILY TASKS -->
     <div class="daily-card">
       <button class="daily-pen" id="dailyPen" title="Edytuj">&#9998;</button>
-      <h3 data-i18n="daily_title">Codzienne zadania</h3>
-      <div class="daily-list" id="dailyList"></div>
-      <div class="daily-add-row" id="dailyAddRow" style="display:none;">
-        <input type="text" id="dailyAddInput" data-i18n-ph="daily_add_ph" placeholder="Nowe zadanie...">
-        <button class="btn-small" id="dailyAddBtn" data-i18n="daily_add">Dodaj</button>
+      <button class="acc-head" data-acc="daily" data-acc-open aria-controls="dailyBody">
+        <h3 data-i18n="daily_title">Codzienne zadania</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="dailyBody">
+        <div class="daily-list" id="dailyList"></div>
+        <div class="daily-add-row" id="dailyAddRow" style="display:none;">
+          <input type="text" id="dailyAddInput" data-i18n-ph="daily_add_ph" placeholder="Nowe zadanie...">
+          <button class="btn-small" id="dailyAddBtn" data-i18n="daily_add">Dodaj</button>
+        </div>
       </div>
     </div>
 
@@ -658,8 +713,10 @@
 
     <div class="tab-panel active" id="tab-training">
       <div class="card">
-        <div class="row" style="align-items:flex-end;">
+        <div class="row wk-timerow" style="align-items:flex-end;">
           <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
+          <div><label for="wStart" data-i18n="wk_start">Początek</label><input type="time" id="wStart"></div>
+          <div><label for="wEnd" data-i18n="wk_end">Koniec</label><input type="time" id="wEnd"></div>
           <button class="btn-ghost" id="repeatLastBtn" style="white-space:nowrap;" data-i18n="repeat_last">↻ Powtórz ostatni</button>
         </div>
         <div id="exercisesContainer"></div>
@@ -670,7 +727,7 @@
 
       <div class="card">
         <div class="db-section">
-          <button class="db-head" id="exerciseDbToggle" type="button" aria-expanded="false" aria-controls="exerciseDbBody">
+          <button class="db-head" id="exerciseDbToggle" type="button" data-acc="excdb" aria-controls="exerciseDbBody">
             <h4 data-i18n="db_exercises_title">Baza ćwiczeń</h4>
             <span class="db-arrow" aria-hidden="true">&#9660;</span>
           </button>
@@ -842,18 +899,25 @@
 
     <!-- Period -->
     <div class="bud-section">
-      <h3 data-i18n="budget_period">Okres rozliczeniowy</h3>
+      <button class="acc-head" data-acc="bud_period" data-acc-open aria-controls="budAccPeriod">
+        <h3 data-i18n="budget_period">Okres rozliczeniowy</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccPeriod">
       <div class="row">
         <div><label for="budFrom" data-i18n="budget_from">Od</label><input type="date" id="budFrom"></div>
         <div><label for="budTo" data-i18n="budget_to">Do</label><input type="date" id="budTo"></div>
       </div>
       <button class="btn-primary" id="budSavePeriodBtn" data-i18n="budget_save_period">Zapisz okres</button>
       <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="budget_period_note">Po upływie daty końcowej budżet zresetuje się automatycznie, a nadwyżka przejdzie do nowego okresu.</div>
+      </div>
     </div>
 
     <!-- Income -->
     <div class="bud-section">
-      <h3 data-i18n="budget_income">Źródła dochodu</h3>
+      <button class="acc-head" data-acc="bud_income" data-acc-open aria-controls="budAccIncome">
+        <h3 data-i18n="budget_income">Źródła dochodu</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccIncome">
       <div class="bud-carry" id="budCarryLine" style="display:none;"></div>
       <div id="budIncomeList"></div>
       <div class="bud-add-row">
@@ -862,11 +926,15 @@
         <button class="btn-primary" id="budIncAdd" data-i18n="budget_add">+ Dodaj</button>
       </div>
       <div class="bud-subtotal"><span data-i18n="budget_income_total">Łączny dochód</span><span class="st-val" id="budIncTotal">0</span></div>
+      </div>
     </div>
 
     <!-- Monthly expenses -->
     <div class="bud-section">
-      <h3 data-i18n="budget_monthly">Wydatki miesięczne (cykliczne)</h3>
+      <button class="acc-head" data-acc="bud_monthly" data-acc-open aria-controls="budAccMonthly">
+        <h3 data-i18n="budget_monthly">Wydatki miesięczne (cykliczne)</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccMonthly">
       <div id="budMonthlyList"></div>
       <div class="bud-add-row">
         <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budMonName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
@@ -875,11 +943,15 @@
         <button class="btn-primary" id="budMonAdd" data-i18n="budget_add">+ Dodaj</button>
       </div>
       <div class="bud-subtotal"><span data-i18n="budget_monthly">Wydatki miesięczne</span><span class="st-val" id="budMonTotal">0</span></div>
+      </div>
     </div>
 
     <!-- One-time expenses -->
     <div class="bud-section">
-      <h3 data-i18n="budget_onetime">Wydatki jednorazowe</h3>
+      <button class="acc-head" data-acc="bud_once" data-acc-open aria-controls="budAccOnce">
+        <h3 data-i18n="budget_onetime">Wydatki jednorazowe</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccOnce">
       <div id="budOnceList"></div>
       <div class="bud-add-row">
         <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budOnceName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
@@ -889,11 +961,15 @@
         <button class="btn-primary" id="budOnceAdd" data-i18n="budget_add">+ Dodaj</button>
       </div>
       <div class="bud-subtotal"><span data-i18n="budget_onetime">Wydatki jednorazowe</span><span class="st-val" id="budOnceTotal">0</span></div>
+      </div>
     </div>
 
     <!-- Investments -->
     <div class="bud-section">
-      <h3 data-i18n="budget_invest">Inwestycje</h3>
+      <button class="acc-head" data-acc="bud_invest" data-acc-open aria-controls="budAccInvest">
+        <h3 data-i18n="budget_invest">Inwestycje</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccInvest">
       <div id="budInvestList"></div>
       <div class="bud-add-row">
         <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budInvName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
@@ -901,11 +977,15 @@
         <button class="btn-primary" id="budInvAdd" data-i18n="budget_add">+ Dodaj</button>
       </div>
       <div class="bud-subtotal"><span data-i18n="budget_invest">Inwestycje</span><span class="st-val" id="budInvTotal">0</span></div>
+      </div>
     </div>
 
     <!-- Piggy bank (savings goal) -->
     <div class="bud-section">
-      <h3 data-i18n="piggy_title">Skarbonka</h3>
+      <button class="acc-head" data-acc="bud_piggy" data-acc-open aria-controls="budAccPiggy">
+        <h3 data-i18n="piggy_title">Skarbonka</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccPiggy">
       <div class="row">
         <div><label for="piggyName" data-i18n="piggy_name">Nazwa celu</label><input type="text" id="piggyName" data-i18n-ph="piggy_name" placeholder="Nazwa celu"></div>
         <div><label for="piggyTarget" data-i18n="piggy_target">Kwota docelowa</label><input type="number" id="piggyTarget" min="0" step="0.01" data-i18n-ph="piggy_target" placeholder="Kwota docelowa"></div>
@@ -928,6 +1008,7 @@
         <button class="btn-primary" id="piggyAddBtn" data-i18n="piggy_add">+ Wpłać</button>
         <button class="btn-small" id="piggyWithdrawBtn" data-i18n="piggy_withdraw">− Wypłać</button>
       </div>
+      </div>
     </div>
 
     <!-- Summary -->
@@ -941,7 +1022,10 @@
 
     <!-- History (previous periods) -->
     <div class="bud-section" id="budHistorySection">
-      <h3 data-i18n="budget_history">Historia budżetu</h3>
+      <button class="acc-head" data-acc="bud_history" aria-controls="budAccHistory">
+        <h3 data-i18n="budget_history">Historia budżetu</h3><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="budAccHistory">
       <div id="budHistoryEmpty" class="db-empty" data-i18n="budget_history_none">Brak zapisanych okresów.</div>
       <div id="budHistoryViewer" style="display:none;">
         <div class="hist-nav">
@@ -957,6 +1041,7 @@
           <div class="bs-final"><span class="bf-label" data-i18n="budget_available">Pozostała kwota dostępna</span><span class="bf-val" id="histAvailable">0</span></div>
         </div>
       </div>
+      </div>
     </div>
   </section>
 
@@ -969,6 +1054,20 @@
 
 <button class="gear-btn" id="gearBtn" title="Ustawienia">&#9881;</button>
 
+<!-- WELCOME MODAL (first visit only) -->
+<div class="overlay" id="welcomeOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <h2 data-i18n="welcome_title">Witaj w FutureApp!</h2>
+      <button class="modal-close" id="welcomeCloseBtn">&times;</button>
+    </div>
+    <div style="font-size:0.86rem;line-height:1.65;color:var(--text-dim);margin-bottom:14px;" data-i18n="welcome_text">
+      Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).
+    </div>
+    <button class="btn-primary" id="welcomeStartBtn" style="width:100%;" data-i18n="welcome_start">Zaczynamy</button>
+  </div>
+</div>
+
 <!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay">
   <div class="modal">
@@ -978,27 +1077,80 @@
     </div>
 
     <div class="set-section">
-      <h4 data-i18n="set_theme">Wygląd strony</h4>
-      <div class="theme-opts" id="themeOpts">
-        <button class="theme-chip" data-theme-opt="cyber" data-i18n="theme_cyber">Cyberpunk</button>
-        <button class="theme-chip" data-theme-opt="synth" data-i18n="theme_synth">Synthwave</button>
-        <button class="theme-chip" data-theme-opt="light" data-i18n="theme_light">Jasny</button>
+      <button class="acc-head" data-acc="set_themes" data-acc-open aria-controls="accThemes">
+        <h4 data-i18n="acc_themes">Motywy</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accThemes">
+        <div class="mini-label" data-i18n="set_colormode">Tryb</div>
+        <div class="theme-opts" id="colorModeOpts">
+          <button class="theme-chip" data-cm-opt="dark" data-i18n="cm_dark">Ciemny</button>
+          <button class="theme-chip" data-cm-opt="light" data-i18n="cm_light">Jasny</button>
+          <button class="theme-chip" data-cm-opt="system" data-i18n="cm_system">Systemowy</button>
+        </div>
+        <div class="mini-label" style="margin-top:12px;" data-i18n="set_theme">Wygląd strony</div>
+        <div class="theme-opts" id="themeOpts">
+          <button class="theme-chip" data-theme-opt="cyber" data-i18n="theme_cyber">Cyberpunk</button>
+          <button class="theme-chip" data-theme-opt="synth" data-i18n="theme_synth">Synthwave</button>
+        </div>
+        <div class="mini-label" style="margin-top:12px;" data-i18n="set_bg">Tło strony</div>
+        <div class="theme-opts" id="pageBgOpts">
+          <button class="theme-chip" data-bg-opt="default" data-i18n="bg_default">Domyślne</button>
+          <button class="theme-chip" data-bg-opt="gradient" data-i18n="bg_gradient">Gradient</button>
+          <button class="theme-chip" data-bg-opt="pattern" data-i18n="bg_pattern">Wzór</button>
+        </div>
       </div>
     </div>
 
     <div class="set-section">
-      <h4 data-i18n="set_appearance2">Wygląd i układ interfejsu</h4>
-      <div class="mini-label" data-i18n="set_fontsize">Rozmiar czcionki</div>
-      <div class="theme-opts" id="fontSizeOpts">
-        <button class="theme-chip" data-fs-opt="small" data-i18n="fs_small">Mała</button>
-        <button class="theme-chip" data-fs-opt="default" data-i18n="fs_default">Domyślna</button>
-        <button class="theme-chip" data-fs-opt="large" data-i18n="fs_large">Duża</button>
+      <button class="acc-head" data-acc="set_colors" aria-controls="accColors">
+        <h4 data-i18n="acc_colors">Kolory</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accColors">
+        <div class="color-row"><span data-i18n="col_accent">Kolor akcentu</span><input type="color" id="colAccent" data-col="accent"></div>
+        <div class="color-row"><span data-i18n="col_bg">Kolor tła</span><input type="color" id="colBg" data-col="bg"></div>
+        <div class="color-row"><span data-i18n="col_text">Kolor tekstu</span><input type="color" id="colText" data-col="text"></div>
+        <div class="color-row"><span data-i18n="col_panel">Kolor kart/paneli</span><input type="color" id="colPanel" data-col="panel"></div>
+        <button class="btn-ghost" id="colorResetBtn" style="margin-top:6px;" data-i18n="col_reset">Przywróć kolory motywu</button>
       </div>
-      <div class="mini-label" style="margin-top:12px;" data-i18n="set_density">Gęstość układu</div>
-      <div class="theme-opts" id="densityOpts">
-        <button class="theme-chip" data-den-opt="compact" data-i18n="den_compact">Kompaktowy</button>
-        <button class="theme-chip" data-den-opt="standard" data-i18n="den_standard">Standardowy</button>
-        <button class="theme-chip" data-den-opt="spacious" data-i18n="den_spacious">Przestronny</button>
+    </div>
+
+    <div class="set-section">
+      <button class="acc-head" data-acc="set_typo" aria-controls="accTypo">
+        <h4 data-i18n="acc_typo">Typografia</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accTypo">
+        <label for="fontFamilySel" data-i18n="set_font">Czcionka</label>
+        <select id="fontFamilySel">
+          <option value="default" data-i18n="font_default">Domyślna (motyw)</option>
+          <option value="system" data-i18n="font_system">Systemowa</option>
+          <option value="serif" data-i18n="font_serif">Szeryfowa</option>
+          <option value="mono" data-i18n="font_mono">Monospace</option>
+          <option value="rounded" data-i18n="font_rounded">Zaokrąglona</option>
+        </select>
+        <div class="mini-label" style="margin-top:12px;" data-i18n="set_fontsize">Rozmiar czcionki</div>
+        <div class="slider-row">
+          <input type="range" id="fontSizeRange" min="13" max="20" step="0.5">
+          <span class="slider-val" id="fontSizeVal"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <button class="acc-head" data-acc="set_layout" aria-controls="accLayout">
+        <h4 data-i18n="acc_layout">Układ</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accLayout">
+        <div class="mini-label" data-i18n="set_density">Gęstość układu</div>
+        <div class="theme-opts" id="densityOpts">
+          <button class="theme-chip" data-den-opt="compact" data-i18n="den_compact">Kompaktowy</button>
+          <button class="theme-chip" data-den-opt="standard" data-i18n="den_standard">Standardowy</button>
+          <button class="theme-chip" data-den-opt="spacious" data-i18n="den_spacious">Przestronny</button>
+        </div>
+        <div class="mini-label" style="margin-top:12px;" data-i18n="set_radius">Zaokrąglenie rogów</div>
+        <div class="slider-row">
+          <input type="range" id="radiusRange" min="0" max="24" step="1">
+          <span class="slider-val" id="radiusVal"></span>
+        </div>
       </div>
     </div>
 
@@ -1009,6 +1161,10 @@
 
     <div class="set-section">
       <h4 data-i18n="set_currency">Personalizacja kursów walut</h4>
+      <div class="toggle-line" style="margin-bottom:10px;">
+        <span data-i18n="ticker_enable">Pokazuj widget kursów walut</span>
+        <input type="checkbox" id="tickerEnabledChk" style="width:18px;height:18px;accent-color:var(--accent);">
+      </div>
       <div class="currency-grid" id="currencyGrid"></div>
       <div class="cur-note" data-i18n="currency_note">Zaznacz maksymalnie 5 par. Wybór pojawi się w pasku w nagłówku.</div>
     </div>
@@ -1045,6 +1201,7 @@
       <div class="header-mode-opts" id="headerModeOpts">
         <button class="theme-chip" data-header-opt="quote" data-i18n="header_quote">Cytat z NT</button>
         <button class="theme-chip" data-header-opt="fact" data-i18n="header_fact">Ciekawostka</button>
+        <button class="theme-chip" data-header-opt="motiv" data-i18n="header_motiv">Cytat motywacyjny</button>
       </div>
     </div>
 
@@ -1091,7 +1248,7 @@
     <div class="about-block" data-i18n="about_privacy">Dla nas najważniejsza jest prywatność oraz efektywna praca.</div>
     <div class="about-block">
       <span data-i18n="about_support">Jeśli chcesz nas wesprzeć, możesz postawić nam kawę</span>:
-      <a href="https://buycoffee.to" target="_blank" rel="noopener">BuyCoffee</a>
+      <a href="https://buycoffee.to/skb" target="_blank" rel="noopener">BuyCoffee</a>
     </div>
     <div class="about-block">
       <span data-i18n="about_ebook">Darmowy e-book</span>:
@@ -1151,9 +1308,19 @@
       send:"Wyślij", ai_ph:"Napisz wiadomość...", ai_config:"Konfiguracja API", ai_clear:"Wyczyść czat",
       about_link:"Informacje / O nas", rights:"Wszystkie prawa zastrzeżone",
       settings:"Ustawienia", set_theme:"Wygląd strony", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Jasny",
-      set_tiles:"Kafelki: kolejność i widoczność", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
+      set_tiles:"Kafelki: kolejność, widoczność i kolor", tile_color:"Kolor podświetlenia kafelka", tile_color_reset:"Przywróć domyślny kolor", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
       tz_primary:"Strefa główna", tz_second_enable:"Drugi zegar",
-      set_header:"Pole informacyjne (nagłówek)", header_quote:"Cytat z NT", header_fact:"Ciekawostka",
+      set_header:"Pole informacyjne (nagłówek)", header_quote:"Cytat z NT", header_fact:"Ciekawostka", header_motiv:"Cytat motywacyjny",
+      acc_themes:"Motywy", acc_colors:"Kolory", acc_typo:"Typografia", acc_layout:"Układ",
+      set_colormode:"Tryb", cm_dark:"Ciemny", cm_light:"Jasny", cm_system:"Systemowy",
+      set_bg:"Tło strony", bg_default:"Domyślne", bg_gradient:"Gradient", bg_pattern:"Wzór",
+      col_accent:"Kolor akcentu", col_bg:"Kolor tła", col_text:"Kolor tekstu", col_panel:"Kolor kart/paneli", col_reset:"Przywróć kolory motywu",
+      set_font:"Czcionka", font_default:"Domyślna (motyw)", font_system:"Systemowa", font_serif:"Szeryfowa", font_mono:"Monospace", font_rounded:"Zaokrąglona",
+      set_radius:"Zaokrąglenie rogów", ticker_enable:"Pokazuj widget kursów walut",
+      welcome_title:"Witaj w FutureApp!", welcome_start:"Zaczynamy",
+      welcome_text:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).",
+      pin_fixed:"Oznacz jako stałe (nie kasuj przy resecie)", unpin_fixed:"Usuń oznaczenie stałej",
+      wk_start:"Początek", wk_end:"Koniec",
       set_pin:"Zabezpieczenie PIN", pin_journal:"Chroń Dziennik", pin_calendar:"Chroń Kalendarz",
       pin_set_ph:"Ustaw 4-cyfrowy PIN", save_pin:"Zapisz ustawienia PIN",
       pin_note:"PIN jest przechowywany lokalnie w formie zaciemnionej (hash), nie jako zwykły tekst. To zabezpieczenie ekranowe, nie kryptograficzna ochrona danych.",
@@ -1164,7 +1331,7 @@
       ai_config_note:"Agent AI łączy się bezpośrednio z API Anthropic z Twojej przeglądarki. Wklej własny klucz API (przechowywany tylko lokalnie w tej przeglądarce). Klucz nie jest nigdzie wysyłany poza oficjalne API Anthropic.",
       ai_key:"Klucz API Anthropic", ai_model:"Model", save:"Zapisz",
       hi_quote:"Cytat dnia", hi_fact:"Ciekawostka",
-      quote_label:"Cytat · Nowy Testament", fact_label:"Ciekawostka",
+      quote_label:"Cytat · Nowy Testament", fact_label:"Ciekawostka", motiv_label:"Motywacja",
        delete:"Usuń", edit:"Edytuj", cancel:"Anuluj", empty_tasks:"Brak zadań. Dodaj pierwsze powyżej.",
       empty_events:"Brak wydarzeń tego dnia.", empty_workouts:"Brak zapisanych treningów.",
       empty_meals:"Brak posiłków zapisanych na ten dzień.", empty_meal_hist:"Brak historii dziennika żywienia.",
@@ -1246,9 +1413,19 @@
       send:"Send", ai_ph:"Type a message...", ai_config:"API config", ai_clear:"Clear chat",
       about_link:"Info / About us", rights:"All rights reserved",
       settings:"Settings", set_theme:"Appearance", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Light",
-      set_tiles:"Tiles: order & visibility", set_lang:"Language", set_clock:"Clock time zone",
+      set_tiles:"Tiles: order, visibility & color", tile_color:"Tile highlight color", tile_color_reset:"Reset to default color", set_lang:"Language", set_clock:"Clock time zone",
       tz_primary:"Primary zone", tz_second_enable:"Second clock",
-      set_header:"Header info box", header_quote:"NT quote", header_fact:"Fun fact",
+      set_header:"Header info box", header_quote:"NT quote", header_fact:"Fun fact", header_motiv:"Motivational quote",
+      acc_themes:"Themes", acc_colors:"Colors", acc_typo:"Typography", acc_layout:"Layout",
+      set_colormode:"Mode", cm_dark:"Dark", cm_light:"Light", cm_system:"System",
+      set_bg:"Page background", bg_default:"Default", bg_gradient:"Gradient", bg_pattern:"Pattern",
+      col_accent:"Accent color", col_bg:"Background color", col_text:"Text color", col_panel:"Card/panel color", col_reset:"Reset to theme colors",
+      set_font:"Font", font_default:"Default (theme)", font_system:"System", font_serif:"Serif", font_mono:"Monospace", font_rounded:"Rounded",
+      set_radius:"Corner radius", ticker_enable:"Show currency ticker widget",
+      welcome_title:"Welcome to FutureApp!", welcome_start:"Let's go",
+      welcome_text:"Your organization hub: tasks, calendar, fitness, budget and journal — all in one place. Data is stored only locally in your browser. Customize the look and layout in settings (the ⚙ icon in the corner).",
+      pin_fixed:"Mark as fixed (keep on reset)", unpin_fixed:"Unmark fixed",
+      wk_start:"Start", wk_end:"End",
       set_pin:"PIN protection", pin_journal:"Protect Journal", pin_calendar:"Protect Calendar",
       pin_set_ph:"Set a 4-digit PIN", save_pin:"Save PIN settings",
       pin_note:"The PIN is stored locally in an obfuscated (hashed) form, not as plain text. This is a screen lock, not cryptographic data protection.",
@@ -1259,7 +1436,7 @@
       ai_config_note:"The AI Agent connects directly to the Anthropic API from your browser. Paste your own API key (stored only locally in this browser). The key is never sent anywhere except the official Anthropic API.",
       ai_key:"Anthropic API key", ai_model:"Model", save:"Save",
       hi_quote:"Quote of the day", hi_fact:"Fun fact",
-      quote_label:"Quote · New Testament", fact_label:"Fun fact",
+      quote_label:"Quote · New Testament", fact_label:"Fun fact", motiv_label:"Motivation",
       delete:"Delete", edit:"Edit", cancel:"Cancel", empty_tasks:"No tasks yet. Add one above.",
       empty_events:"No events on this day.", empty_workouts:"No workouts saved.",
       empty_meals:"No meals logged for this day.", empty_meal_hist:"No food-log history.",
@@ -1348,13 +1525,25 @@
     pinJournalHash: settings.pinJournalHash || "",
     pinCalendarHash: settings.pinCalendarHash || "",
     tickerPairs: (settings.tickerPairs && settings.tickerPairs.length) ? settings.tickerPairs.slice(0,5) : DEFAULT_PAIRS.slice(),
-    fontSize: settings.fontSize || "default",   // small | default | large
+    tickerEnabled: settings.tickerEnabled!==false,   // widget kursów walут: domyślnie włączony
+    fontSize: settings.fontSize || "default",   // small | default | large (legacy, mapowane na fontPx)
     density: settings.density || "standard",    // compact | standard | spacious
-    timeFormat: settings.timeFormat || "24"     // 24 | 12
+    timeFormat: settings.timeFormat || "24",    // 24 | 12
+    // --- rozbudowana personalizacja wyglądu ---
+    colorMode: settings.colorMode || "dark",    // dark | light | system
+    pageBg: settings.pageBg || "default",        // default | gradient | pattern
+    fontFamily: settings.fontFamily || "default",// default | system | serif | mono | rounded
+    fontPx: (typeof settings.fontPx==="number") ? settings.fontPx : legacyFontPx(settings.fontSize),
+    radius: (typeof settings.radius==="number") ? settings.radius : 10,
+    customColors: (settings.customColors && typeof settings.customColors==="object") ? settings.customColors : {}, // {accent,bg,text,panel}
+    tileColors: (settings.tileColors && typeof settings.tileColors==="object") ? settings.tileColors : {} // per-tile highlight color {tileId:"#hex"}
   };
   // ensure order integrity (in case of new tiles)
   DEFAULT_ORDER.forEach(function(id){ if(state.order.indexOf(id)===-1) state.order.push(id); });
   state.order = state.order.filter(function(id){ return DEFAULT_ORDER.indexOf(id)!==-1; });
+
+  // Maps the legacy 3-step fontSize onto a concrete px value (backwards compatibility with older saved settings)
+  function legacyFontPx(fs){ return fs==="small"?14.5:(fs==="large"?18:16); }
 
   function persistSettings(){
     saveJSON("settings", {
@@ -1362,17 +1551,103 @@
       tzPrimary:state.tzPrimary, tzSecondEnabled:state.tzSecondEnabled, tzSecondary:state.tzSecondary,
       headerMode:state.headerMode, pinJournalEnabled:state.pinJournalEnabled,
       pinCalendarEnabled:state.pinCalendarEnabled, pinJournalHash:state.pinJournalHash, pinCalendarHash:state.pinCalendarHash,
-      tickerPairs:state.tickerPairs, fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat
+      tickerPairs:state.tickerPairs, tickerEnabled:state.tickerEnabled,
+      fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat,
+      colorMode:state.colorMode, pageBg:state.pageBg, fontFamily:state.fontFamily,
+      fontPx:state.fontPx, radius:state.radius, customColors:state.customColors, tileColors:state.tileColors
     });
   }
 
-  function applyTheme(){ document.documentElement.setAttribute("data-theme", state.theme); }
+  // System dark/light preference (used when colorMode === "system")
+  var prefersDark = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)")) || {matches:true,addListener:function(){}};
+
+  // Resolves which theme to render given the color-mode choice.
+  // dark   -> keep chosen dark theme (cyber/synth), fall back to cyber if "light" was stored
+  // light  -> force the built-in light theme
+  // system -> follow OS preference (light theme when OS is light, otherwise the chosen dark theme)
+  function resolveTheme(){
+    var chosen = state.theme;
+    if(state.colorMode==="light") return "light";
+    if(state.colorMode==="system") return prefersDark.matches ? (chosen==="light"?"cyber":chosen) : "light";
+    // dark mode
+    return chosen==="light" ? "cyber" : chosen;
+  }
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", resolveTheme());
+    applyCustomColors(); // re-assert user color overrides on top of the theme variables
+  }
+  // Applies user-picked colors as inline CSS variables on <html> (override theme defaults). Empty = use theme.
+  function applyCustomColors(){
+    var root=document.documentElement, c=state.customColors||{};
+    var map={accent:"--accent", bg:"--bg", text:"--text", panel:"--bg-panel"};
+    Object.keys(map).forEach(function(key){
+      if(c[key]) root.style.setProperty(map[key], c[key]);
+      else root.style.removeProperty(map[key]);
+    });
+  }
+  var FONT_STACKS={
+    "default":"", // empty => inherit theme's --font-sans (handled by not overriding)
+    "system":"-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif",
+    "serif":"Georgia,\"Times New Roman\",\"Noto Serif\",serif",
+    "mono":"\"JetBrains Mono\",\"Fira Code\",ui-monospace,Consolas,monospace",
+    "rounded":"\"Segoe UI Rounded\",\"Nunito\",\"Quicksand\",ui-rounded,\"Segoe UI\",sans-serif"
+  };
   function applyAppearance(){
     var h=document.documentElement, b=document.body;
-    h.classList.remove("fs-small","fs-default","fs-large");
-    h.classList.add("fs-"+(state.fontSize||"default"));
+    // Font size: concrete px on <html> so rem-based layout scales globally.
+    h.style.fontSize=(state.fontPx||16)+"px";
+    // Font family override (empty for "default" so the theme font is used).
+    var stack=FONT_STACKS[state.fontFamily]||"";
+    if(stack) b.style.fontFamily=stack; else b.style.removeProperty("font-family");
+    // Corner radius via the existing --radius variable (respected across cards/inputs/buttons).
+    h.style.setProperty("--radius",(state.radius==null?10:state.radius)+"px");
+    // Density (padding scale) — unchanged class mechanism.
     b.classList.remove("den-compact","den-standard","den-spacious");
     b.classList.add("den-"+(state.density||"standard"));
+    // Optional page background.
+    b.classList.remove("bg-gradient","bg-pattern");
+    if(state.pageBg==="gradient") b.classList.add("bg-gradient");
+    else if(state.pageBg==="pattern") b.classList.add("bg-pattern");
+  }
+  // React to OS theme changes live when in "system" mode.
+  try{
+    var _mqHandler=function(){ if(state.colorMode==="system"){ applyTheme(); } };
+    if(prefersDark.addEventListener) prefersDark.addEventListener("change",_mqHandler);
+    else if(prefersDark.addListener) prefersDark.addListener(_mqHandler); // older browsers
+  }catch(e){ /* matchMedia not supported — ignore */ }
+
+  /* ===== Reusable accordion (points 2, 3, 8) =====
+     Any <button class="acc-head"|"db-head" data-acc="KEY" [data-acc-open] aria-controls="BODY_ID">
+     paired with <div class="db-collapse" id="BODY_ID"> becomes collapsible.
+     Open/closed state is persisted per KEY in localStorage ("accordions").
+     data-acc-open sets the default (open) when no saved state exists. */
+  var accState=loadJSON("accordions",{});
+  function setAccordion(head, open, animate){
+    var bodyId=head.getAttribute("aria-controls"); if(!bodyId) return;
+    var body=document.getElementById(bodyId); if(!body) return;
+    if(!animate){ var prev=body.style.transition; body.style.transition="none"; }
+    body.classList.toggle("open", open);
+    head.setAttribute("aria-expanded", open?"true":"false");
+    if(!animate){ void body.offsetHeight; body.style.transition=prev||""; }
+  }
+  function initAccordions(){
+    document.querySelectorAll("[data-acc]").forEach(function(head){
+      var key=head.getAttribute("data-acc");
+      var def=head.hasAttribute("data-acc-open"); // default open?
+      var open=(accState[key]!==undefined)?!!accState[key]:def;
+      setAccordion(head, open, false);
+      // Guard against double-binding if init runs more than once.
+      if(head.__accBound) return; head.__accBound=true;
+      head.addEventListener("click", function(e){
+        // Ignore clicks bubbling up from controls placed inside the header (none currently, but future-safe).
+        var nowOpen=!(accState[key]!==undefined?!!accState[key]:def);
+        // recompute from actual DOM to stay in sync
+        var body=document.getElementById(head.getAttribute("aria-controls"));
+        nowOpen=!(body&&body.classList.contains("open"));
+        accState[key]=nowOpen; saveJSON("accordions",accState);
+        setAccordion(head, nowOpen, true);
+      });
+    });
   }
   /* time-format aware formatter for DISPLAYED times ("HH:MM" 24h stored -> shown per pref) */
   function fmtTime(hhmm){
@@ -1480,6 +1755,9 @@
                    (def.pin==="calendar" && state.pinCalendarEnabled && state.pinCalendarHash);
       var btn=document.createElement("button");
       btn.className="tile";
+      // Per-tile highlight colour (point: customizable tile glow). Unset => theme default (pink).
+      var tileCol=state.tileColors[id];
+      if(tileCol){ btn.classList.add("tile--tinted"); btn.style.setProperty("--tile-accent", tileCol); }
       btn.innerHTML='<span class="tile-icon">'+def.icon+'</span>'+
         '<span class="tile-title"></span>'+
         '<span class="tile-sub"></span>'+
@@ -1711,7 +1989,7 @@
     container.appendChild(block);
   }
   $("addExerciseBtn").addEventListener("click", function(){ addExerciseBlock(); });
-  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); }
+  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); $("wStart").value=""; $("wEnd").value=""; editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); }
 
   $("repeatLastBtn").addEventListener("click", function(){
     if(workouts.length===0){ alert(t("no_last_workout")); return; }
@@ -1726,6 +2004,8 @@
   var editingWorkoutId=null;
   $("addWorkoutBtn").addEventListener("click", function(){
     var date=$("wDate").value;
+    var start=$("wStart").value||""; // "HH:MM" or ""
+    var end=$("wEnd").value||"";
     var exercises=[];
     document.querySelectorAll("#exercisesContainer .exercise-block").forEach(function(block){
       var name=block.querySelector(".ex-name").value.trim();
@@ -1739,13 +2019,34 @@
     });
     if(!date||exercises.length===0){ alert(t("fill_workout")); return; }
     if(editingWorkoutId){
-      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; } });
+      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; w.start=start; w.end=end; } });
     } else {
-      workouts.push({id:uid(),date:date,exercises:exercises});
+      workouts.push({id:uid(),date:date,exercises:exercises,start:start,end:end});
     }
     saveWorkouts(); refreshExerciseDatalist();
     resetWorkoutForm(); renderWorkouts();
   });
+  // Duration in minutes between two "HH:MM" strings; if end <= start, assumes the session crossed midnight (+24h).
+  function workoutDurationMin(start,end){
+    if(!start||!end) return null;
+    var s=start.split(":"), e=end.split(":");
+    if(s.length<2||e.length<2) return null;
+    var sm=parseInt(s[0],10)*60+parseInt(s[1],10);
+    var em=parseInt(e[0],10)*60+parseInt(e[1],10);
+    if(isNaN(sm)||isNaN(em)) return null;
+    var diff=em-sm;
+    if(diff<=0) diff+=24*60; // trening przez północ
+    return diff;
+  }
+  // Formats a minute count as e.g. "1 godz. 25 min" / "1 hr 25 min" / "45 min".
+  function formatDuration(min){
+    if(min==null) return "";
+    var h=Math.floor(min/60), m=min%60;
+    var hrU=state.lang==="en"?"hr":"godz.", mnU="min";
+    if(h>0 && m>0) return h+" "+hrU+" "+m+" "+mnU;
+    if(h>0) return h+" "+hrU;
+    return m+" "+mnU;
+  }
   function renderWorkouts(){
     var c=$("workoutHistory"); c.innerHTML="";
     if(workouts.length===0){ c.innerHTML='<div class="empty-note">'+t("empty_workouts")+'</div>'; return; }
@@ -1753,10 +2054,16 @@
       var entry=document.createElement("div"); entry.className="workout-entry";
       var head=document.createElement("div");
       head.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:8px;";
-      head.innerHTML='<div class="w-date"></div><div style="display:flex;gap:6px;">'+
+      head.innerHTML='<div><div class="w-date"></div><div class="w-dur"></div></div><div style="display:flex;gap:6px;">'+
         '<button class="btn-small w-edit" data-id="'+w.id+'">'+t("edit")+'</button>'+
         '<button class="del-btn w-del" data-id="'+w.id+'">'+t("delete")+'</button></div>';
       head.querySelector(".w-date").textContent=formatDateReadable(w.date);
+      // Show start–end and computed duration when available (point 7).
+      var durEl=head.querySelector(".w-dur");
+      var dmin=workoutDurationMin(w.start,w.end);
+      if(w.start&&w.end){ durEl.textContent=fmtTime(w.start)+"–"+fmtTime(w.end)+(dmin!=null?" · "+formatDuration(dmin):""); }
+      else if(w.start){ durEl.textContent=fmtTime(w.start); }
+      else { durEl.style.display="none"; }
       entry.appendChild(head);
       (w.exercises||[]).forEach(function(ex){
         var b=document.createElement("div"); b.className="w-exercise-block";
@@ -1778,6 +2085,8 @@
         var w=workouts.filter(function(x){return x.id===id;})[0]; if(!w) return;
         editingWorkoutId=id;
         $("wDate").value=w.date;
+        $("wStart").value=w.start||"";
+        $("wEnd").value=w.end||"";
         $("exercisesContainer").innerHTML="";
         (w.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note}); });
         if((w.exercises||[]).length===0) addExerciseBlock();
@@ -1943,11 +2252,6 @@
       document.querySelectorAll("#exerciseDbTabs .db-tab").forEach(function(x){x.classList.remove("active");});
       b.classList.add("active"); currentExcCat=b.getAttribute("data-exc"); renderExerciseDb();
     });
-  });
-  $("exerciseDbToggle").addEventListener("click", function(){
-    var body=$("exerciseDbBody");
-    var open=body.classList.toggle("open");
-    this.setAttribute("aria-expanded", open?"true":"false");
   });
 
   /* ---- Meal categories ---- */
@@ -2288,8 +2592,12 @@
   var lastRates={};
   function activePairs(){ return PAIR_ORDER.filter(function(k){ return state.tickerPairs.indexOf(k)!==-1; }); }
   function renderTicker(){
-    var box=$("ticker"); box.innerHTML="";
-    activePairs().forEach(function(k){
+    var box=$("ticker"); if(!box) return;
+    var pairs=activePairs();
+    // Point 6: hide the entire widget when the toggle is off OR no pairs are selected.
+    if(!state.tickerEnabled || pairs.length===0){ box.innerHTML=""; box.style.display="none"; return; }
+    box.style.display=""; box.innerHTML="";
+    pairs.forEach(function(k){
       var def=PAIR_CATALOG[k];
       var tick=document.createElement("div"); tick.className="tick";
       tick.innerHTML='<span class="tk-pair">'+def.label+'</span><span class="tk-val" id="tk_'+k+'">—</span>';
@@ -2305,7 +2613,10 @@
     lastRates[key]=val;
   }
   function fetchRates(){
+    // Skip network calls entirely when the widget is hidden.
+    if(!state.tickerEnabled) return;
     var pairs=activePairs();
+    if(pairs.length===0) return;
     // Fiat: open.er-api.com (keyless), one call per selected base currency.
     var fiatBases={};
     pairs.forEach(function(k){ var d=PAIR_CATALOG[k]; if(d.type==="fiat") fiatBases[d.base]=k; });
@@ -2343,8 +2654,8 @@
           if(state.tickerPairs.length>=PAIR_LIMIT){ cb.checked=false; return; }
           if(state.tickerPairs.indexOf(k)===-1) state.tickerPairs.push(k);
         } else {
+          // Point 6 fix: allow unchecking ALL pairs (previously forced at least 1, which blocked hiding the widget).
           state.tickerPairs=state.tickerPairs.filter(function(x){return x!==k;});
-          if(state.tickerPairs.length===0){ state.tickerPairs.push(k); cb.checked=true; return; } // keep at least 1
         }
         persistSettings();
         renderCurrencyGrid(); renderTicker(); lastRates={}; fetchRates();
@@ -2453,6 +2764,35 @@
     "A teaspoon of neutron star matter would weigh billions of tons."
   ];
   function dayOfYear(d){ var s=new Date(d.getFullYear(),0,0); return Math.floor((d-s)/86400000); }
+  // Motivational quotes (point 5) — bilingual, ref = author.
+  var motivPL=[
+    {text:"Sukces to suma małych wysiłków powtarzanych dzień po dniu.",ref:"Robert Collier"},
+    {text:"Nie licz dni — spraw, by dni się liczyły.",ref:"Muhammad Ali"},
+    {text:"Jedyny sposób, by wykonać wielką pracę, to kochać to, co się robi.",ref:"Steve Jobs"},
+    {text:"Wierz, że potrafisz, a jesteś już w połowie drogi.",ref:"Theodore Roosevelt"},
+    {text:"Przyszłość należy do tych, którzy wierzą w piękno swoich marzeń.",ref:"Eleanor Roosevelt"},
+    {text:"Nie czekaj. Idealny moment nigdy nie nadejdzie.",ref:"Napoleon Hill"},
+    {text:"Dyscyplina to most między celami a ich realizacją.",ref:"Jim Rohn"},
+    {text:"Upadek nie jest porażką. Porażką jest pozostanie na ziemi.",ref:"Konfucjusz"},
+    {text:"Zaczynaj od tego, co konieczne, potem rób to, co możliwe, a nagle robisz rzeczy niemożliwe.",ref:"Św. Franciszek"},
+    {text:"Twoje ograniczenia to często tylko Twoja wyobraźnia.",ref:"Anonim"},
+    {text:"Małe kroki każdego dnia prowadzą do wielkich zmian.",ref:"Anonim"},
+    {text:"Motywacja pozwala zacząć, nawyk pozwala wytrwać.",ref:"Jim Ryun"}
+  ];
+  var motivEN=[
+    {text:"Success is the sum of small efforts repeated day in and day out.",ref:"Robert Collier"},
+    {text:"Don't count the days — make the days count.",ref:"Muhammad Ali"},
+    {text:"The only way to do great work is to love what you do.",ref:"Steve Jobs"},
+    {text:"Believe you can and you're halfway there.",ref:"Theodore Roosevelt"},
+    {text:"The future belongs to those who believe in the beauty of their dreams.",ref:"Eleanor Roosevelt"},
+    {text:"Don't wait. The perfect moment will never come.",ref:"Napoleon Hill"},
+    {text:"Discipline is the bridge between goals and accomplishment.",ref:"Jim Rohn"},
+    {text:"Falling down is not failure. Staying down is.",ref:"Confucius"},
+    {text:"Start by doing what's necessary, then the possible, and suddenly you're doing the impossible.",ref:"St. Francis"},
+    {text:"Your limitations are often just your imagination.",ref:"Anonymous"},
+    {text:"Small steps every day lead to big changes.",ref:"Anonymous"},
+    {text:"Motivation gets you started; habit keeps you going.",ref:"Jim Ryun"}
+  ];
   function renderHeaderInfo(){
     if(state.headerMode==="fact"){
       var facts = state.lang==="en"?factsEN:factsPL;
@@ -2460,6 +2800,12 @@
       $("hiLabel").textContent=t("fact_label");
       $("hiText").textContent=f;
       $("hiRef").textContent="";
+    } else if(state.headerMode==="motiv"){
+      var mo = state.lang==="en"?motivEN:motivPL;
+      var m = mo[Math.floor(Math.random()*mo.length)];
+      $("hiLabel").textContent=t("motiv_label");
+      $("hiText").textContent=m.text;
+      $("hiRef").textContent="— "+m.ref;
     } else {
       // quote refreshed each load (random pick)
       var q = quotes[Math.floor(Math.random()*quotes.length)];
@@ -2504,17 +2850,30 @@
   }
   function renderTileConfig(){
     var c=$("tileConfigList"); c.innerHTML="";
+    // Theme's default highlight colour (used to seed the picker when a tile has no custom colour yet).
+    var defaultGlow = toHex((getComputedStyle(document.documentElement).getPropertyValue("--accent2")||"").trim()) || "#ff2fd0";
     state.order.forEach(function(id,idx){
       var def=TILE_DEFS[id]; if(!def) return;
+      var cur=state.tileColors[id];
       var row=document.createElement("div"); row.className="order-row";
       row.innerHTML='<input type="checkbox" '+(state.hidden[id]?"":"checked")+' data-vis="'+id+'">'+
         '<span class="or-name"></span>'+
+        '<input type="color" class="tile-col" data-col-tile="'+id+'" value="'+(cur||defaultGlow)+'" title="'+t("tile_color")+'">'+
+        (cur?'<button class="or-colreset" data-col-reset="'+id+'" title="'+t("tile_color_reset")+'">\u21BA</button>':'')+
         '<div class="or-arrows"><button class="btn-small" data-up="'+id+'">▲</button><button class="btn-small" data-down="'+id+'">▼</button></div>';
       row.querySelector(".or-name").textContent=t(def.titleKey);
       c.appendChild(row);
     });
     c.querySelectorAll("[data-vis]").forEach(function(cb){
       cb.addEventListener("change", function(){ var id=cb.getAttribute("data-vis"); if(cb.checked) delete state.hidden[id]; else state.hidden[id]=true; persistSettings(); renderTiles(); });
+    });
+    // Per-tile highlight colour pickers (live preview + persist).
+    c.querySelectorAll("[data-col-tile]").forEach(function(inp){
+      inp.addEventListener("input", function(){ state.tileColors[inp.getAttribute("data-col-tile")]=inp.value; renderTiles(); });
+      inp.addEventListener("change", function(){ state.tileColors[inp.getAttribute("data-col-tile")]=inp.value; persistSettings(); renderTiles(); renderTileConfig(); });
+    });
+    c.querySelectorAll("[data-col-reset]").forEach(function(b){
+      b.addEventListener("click", function(){ delete state.tileColors[b.getAttribute("data-col-reset")]; persistSettings(); renderTiles(); renderTileConfig(); });
     });
     c.querySelectorAll("[data-up]").forEach(function(b){
       b.addEventListener("click", function(){ var id=b.getAttribute("data-up"); var i=state.order.indexOf(id); if(i>0){ state.order.splice(i,1); state.order.splice(i-1,0,id); persistSettings(); renderTileConfig(); renderTiles(); } });
@@ -2527,12 +2886,44 @@
     document.querySelectorAll("[data-theme-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-theme-opt")===state.theme); });
     document.querySelectorAll("[data-lang-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang-opt")===state.lang); });
     document.querySelectorAll("[data-header-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-header-opt")===state.headerMode); });
-    document.querySelectorAll("[data-fs-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-fs-opt")===state.fontSize); });
     document.querySelectorAll("[data-den-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-den-opt")===state.density); });
     document.querySelectorAll("[data-tf-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-tf-opt")===state.timeFormat); });
+    document.querySelectorAll("[data-cm-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-cm-opt")===state.colorMode); });
+    document.querySelectorAll("[data-bg-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-bg-opt")===state.pageBg); });
+  }
+  // Reflects current appearance values into the settings form controls (colors, sliders, selects, toggles).
+  function syncAppearanceControls(){
+    var c=state.customColors||{};
+    // For unset custom colors, seed the picker with the theme's computed value so it isn't an arbitrary default.
+    var cs=getComputedStyle(document.documentElement);
+    function themeCol(varName){ return (cs.getPropertyValue(varName)||"").trim(); }
+    // color inputs need hex; theme vars may be rgba — only prefill when we have a stored hex, else use a safe read via helper.
+    if($("colAccent")) $("colAccent").value = toHex(c.accent || themeCol("--accent")) || "#00fff7";
+    if($("colBg"))     $("colBg").value     = toHex(c.bg     || themeCol("--bg"))     || "#05060a";
+    if($("colText"))   $("colText").value   = toHex(c.text   || themeCol("--text"))   || "#dff8ff";
+    if($("colPanel"))  $("colPanel").value  = toHex(c.panel  || themeCol("--bg-panel"))|| "#0b0e16";
+    if($("fontFamilySel")) $("fontFamilySel").value=state.fontFamily;
+    if($("fontSizeRange")){ $("fontSizeRange").value=state.fontPx; $("fontSizeVal").textContent=state.fontPx+" px"; }
+    if($("radiusRange")){ $("radiusRange").value=state.radius; $("radiusVal").textContent=state.radius+" px"; }
+    if($("tickerEnabledChk")) $("tickerEnabledChk").checked=state.tickerEnabled;
+  }
+  // Best-effort conversion of a CSS color (hex or rgb/rgba) to #rrggbb for <input type=color>. Returns "" if impossible.
+  function toHex(col){
+    if(!col) return "";
+    col=col.trim();
+    if(/^#([0-9a-f]{6})$/i.test(col)) return col;
+    if(/^#([0-9a-f]{3})$/i.test(col)){ return "#"+col.slice(1).split("").map(function(ch){return ch+ch;}).join(""); }
+    var m=col.match(/rgba?\(([^)]+)\)/i);
+    if(m){
+      var parts=m[1].split(",").map(function(x){return parseFloat(x);});
+      if(parts.length>=3){
+        return "#"+parts.slice(0,3).map(function(n){ n=Math.max(0,Math.min(255,Math.round(n))); var s=n.toString(16); return s.length<2?"0"+s:s; }).join("");
+      }
+    }
+    return "";
   }
   function openSettings(){
-    fillTzSelects(); renderTileConfig(); syncSettingChips(); renderCurrencyGrid();
+    fillTzSelects(); renderTileConfig(); syncSettingChips(); renderCurrencyGrid(); syncAppearanceControls();
     $("pinJournalEnabled").checked=state.pinJournalEnabled;
     $("pinCalendarEnabled").checked=state.pinCalendarEnabled;
     $("settingsOverlay").classList.add("active");
@@ -2541,22 +2932,53 @@
   document.querySelector("[data-close-settings]").addEventListener("click", function(){ $("settingsOverlay").classList.remove("active"); });
 
   document.querySelectorAll("[data-theme-opt]").forEach(function(b){
-    b.addEventListener("click", function(){ state.theme=b.getAttribute("data-theme-opt"); applyTheme(); persistSettings(); syncSettingChips(); });
+    b.addEventListener("click", function(){
+      state.theme=b.getAttribute("data-theme-opt");
+      // Choosing a specific dark theme implies dark/system rendering; keep colorMode unless it's forcing light.
+      if(state.colorMode==="light") state.colorMode="dark";
+      applyTheme(); persistSettings(); syncSettingChips(); syncAppearanceControls();
+    });
+  });
+  document.querySelectorAll("[data-cm-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.colorMode=b.getAttribute("data-cm-opt"); applyTheme(); persistSettings(); syncSettingChips(); syncAppearanceControls(); });
+  });
+  document.querySelectorAll("[data-bg-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.pageBg=b.getAttribute("data-bg-opt"); applyAppearance(); persistSettings(); syncSettingChips(); });
+  });
+  // Custom color pickers (live preview on input, persist on change).
+  document.querySelectorAll("input[data-col]").forEach(function(inp){
+    inp.addEventListener("input", function(){ state.customColors[inp.getAttribute("data-col")]=inp.value; applyCustomColors(); });
+    inp.addEventListener("change", function(){ state.customColors[inp.getAttribute("data-col")]=inp.value; applyCustomColors(); persistSettings(); });
+  });
+  if($("colorResetBtn")) $("colorResetBtn").addEventListener("click", function(){
+    state.customColors={}; applyCustomColors(); persistSettings(); syncAppearanceControls();
+  });
+  if($("fontFamilySel")) $("fontFamilySel").addEventListener("change", function(){ state.fontFamily=this.value; applyAppearance(); persistSettings(); });
+  if($("fontSizeRange")) $("fontSizeRange").addEventListener("input", function(){
+    state.fontPx=parseFloat(this.value); $("fontSizeVal").textContent=state.fontPx+" px";
+    // keep legacy fontSize roughly in sync for backward compat
+    state.fontSize = state.fontPx<=15?"small":(state.fontPx>=17.5?"large":"default");
+    applyAppearance(); persistSettings();
+  });
+  if($("radiusRange")) $("radiusRange").addEventListener("input", function(){
+    state.radius=parseInt(this.value,10); $("radiusVal").textContent=state.radius+" px";
+    applyAppearance(); persistSettings();
   });
   document.querySelectorAll("[data-lang-opt]").forEach(function(b){
-    b.addEventListener("click", function(){ state.lang=b.getAttribute("data-lang-opt"); persistSettings(); applyI18n(); renderAll(); syncSettingChips(); });
+    b.addEventListener("click", function(){ state.lang=b.getAttribute("data-lang-opt"); persistSettings(); applyI18n(); renderAll(); syncSettingChips(); syncAppearanceControls(); });
   });
   document.querySelectorAll("[data-header-opt]").forEach(function(b){
     b.addEventListener("click", function(){ state.headerMode=b.getAttribute("data-header-opt"); persistSettings(); renderHeaderInfo(); syncSettingChips(); });
-  });
-  document.querySelectorAll("[data-fs-opt]").forEach(function(b){
-    b.addEventListener("click", function(){ state.fontSize=b.getAttribute("data-fs-opt"); persistSettings(); applyAppearance(); syncSettingChips(); });
   });
   document.querySelectorAll("[data-den-opt]").forEach(function(b){
     b.addEventListener("click", function(){ state.density=b.getAttribute("data-den-opt"); persistSettings(); applyAppearance(); syncSettingChips(); });
   });
   document.querySelectorAll("[data-tf-opt]").forEach(function(b){
-    b.addEventListener("click", function(){ state.timeFormat=b.getAttribute("data-tf-opt"); persistSettings(); syncSettingChips(); tickClock(); renderTasks(); renderDayEvents(); renderUpcomingBig(); renderJournal(); });
+    b.addEventListener("click", function(){ state.timeFormat=b.getAttribute("data-tf-opt"); persistSettings(); syncSettingChips(); tickClock(); renderTasks(); renderDayEvents(); renderUpcomingBig(); renderJournal(); renderWorkouts(); });
+  });
+  // Ticker on/off toggle (point 6): hides the whole widget when disabled.
+  if($("tickerEnabledChk")) $("tickerEnabledChk").addEventListener("change", function(){
+    state.tickerEnabled=this.checked; persistSettings(); renderTicker(); if(state.tickerEnabled){ lastRates={}; fetchRates(); }
   });
   $("tzPrimary").addEventListener("change", function(){ state.tzPrimary=$("tzPrimary").value; persistSettings(); tickClock(); });
   $("tzSecondary").addEventListener("change", function(){ state.tzSecondary=$("tzSecondary").value; persistSettings(); tickClock(); });
@@ -2626,7 +3048,10 @@
       });
       if(budget.history.length>240) budget.history.shift();
       budget.carry=tot.available;      // remaining rolls into next period as a separate income position
-      budget.once=[];                  // one-time expenses are period-specific
+      // Point 4: fixed (pinned) items survive the reset; the rest is cleared for the new month.
+      budget.income  = budget.income.filter(function(x){ return x.pinned; });   // keep pinned income sources
+      budget.monthly = budget.monthly.filter(function(x){ return x.pinned; });  // keep pinned recurring expenses
+      budget.once=[];                  // one-time expenses are always period-specific
       var span=daysBetweenISO(p.from,p.to); if(span<0) span=30;
       var newFrom=shiftISO(p.to,1);
       var newTo=shiftISO(newFrom,span);
@@ -2643,12 +3068,21 @@
     var sub="";
     if(opts.date && item.date) sub+=formatDateReadable(item.date);
     if(item.cat){ sub+=(sub?" · ":"")+item.cat; }
+    // Pin (point 4): only income and monthly (recurring) items can be pinned as "fixed".
+    var pinnable=(listKey==="income"||listKey==="monthly");
+    var pinHtml = pinnable ? '<button class="pin-btn'+(item.pinned?" active":"")+'" title="'+t(item.pinned?"unpin_fixed":"pin_fixed")+'">\uD83D\uDCCC</button>' : '';
     row.innerHTML='<div class="bl-main"><div class="bl-name"></div>'+(sub?'<div class="bl-sub"></div>':'')+'</div>'+
+      pinHtml+
       '<span class="bl-amt '+(opts.cls||"")+'"></span>'+
       '<button class="del-btn" title="'+t("delete")+'">'+t("delete")+'</button>';
     row.querySelector(".bl-name").textContent=item.name;
     if(sub) row.querySelector(".bl-sub").textContent=sub;
     row.querySelector(".bl-amt").textContent=(opts.sign||"")+budgetFmt(num(item.amount));
+    if(pinnable){
+      row.querySelector(".pin-btn").addEventListener("click", function(){
+        item.pinned=!item.pinned; saveBudget(); renderBudget(); // persist pinned flag with budget data
+      });
+    }
     row.querySelector(".del-btn").addEventListener("click", function(){
       budget[listKey]=budget[listKey].filter(function(x){return x.id!==item.id;}); saveBudget(); renderBudget();
     });
@@ -2794,6 +3228,7 @@
   applyTheme();
   applyAppearance();
   applyI18n();
+  initAccordions();     // reusable collapsible sections (settings, budget, home daily, exercise DB)
   $("wDate").value=todayISO();
   var _td=$("taskDate"); if(_td) _td.value=todayISO();
   addExerciseBlock();
@@ -2807,6 +3242,24 @@
   checkUpcoming();
   setInterval(checkUpcoming, 60000);
 
+  /* ===== Welcome pop-up — first visit only (point 1) ===== */
+  (function initWelcome(){
+    var KEY="welcomeSeen";
+    var seen;
+    try{ seen=localStorage.getItem(KEY); }catch(e){ seen="1"; } // if storage is blocked, don't nag
+    function dismiss(){
+      $("welcomeOverlay").classList.remove("active");
+      try{ localStorage.setItem(KEY,"1"); }catch(e){}
+    }
+    if(!seen){
+      $("welcomeOverlay").classList.add("active");
+      $("welcomeStartBtn").addEventListener("click", dismiss);
+      $("welcomeCloseBtn").addEventListener("click", dismiss);
+      // backdrop click also dismisses (handled by generic overlay handler) — persist the flag then too
+      $("welcomeOverlay").addEventListener("click", function(e){ if(e.target===$("welcomeOverlay")) dismiss(); });
+    }
+  })();
+
 })();
 </script>
 
@@ -2814,7 +3267,7 @@
   /* ===== Service Worker: offline cache-first for the page ===== */
   if("serviceWorker" in navigator){
     var swSource=[
-      "const CACHE_NAME='futureapp-cache-v5';",
+      "const CACHE_NAME='futureapp-cache-v8';",
       "self.addEventListener('install',function(event){",
       "  self.skipWaiting();",
       "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
