@@ -181,7 +181,19 @@
   }
   input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:var(--glow);}
   textarea{resize:vertical;min-height:56px;}
-  .row{display:flex;gap:10px;}.row>div{flex:1;}
+  /* iOS/Safari fix: natywne pola date/time mają wbudowaną minimalną szerokość i wystają
+     poza kontener mimo width:100%. Zdjęcie natywnego wyglądu sprawia, że pole trzyma się
+     szerokości rodzica i zachowuje oba zaokrąglone rogi ramki. */
+  input[type=date],input[type=time]{
+    -webkit-appearance:none;appearance:none;
+    min-width:0;max-width:100%;display:block;
+  }
+  input[type=date]::-webkit-date-and-time-value,
+  input[type=time]::-webkit-date-and-time-value{
+    text-align:center;min-height:1.2em;margin:0;
+  }
+  .row{display:flex;gap:10px;}.row>div{flex:1;min-width:0;}
+  .wk-daterow{align-items:flex-end;}
 
   .btn-primary{
     margin-top:14px;background:transparent;color:var(--accent);border:1px solid var(--accent);
@@ -573,11 +585,17 @@
     /* budget line: let name/amount/actions wrap instead of overflowing */
     .bud-line{flex-wrap:wrap;}
     .bud-line .bl-main{flex:1 1 60%;}
-    /* Training: keep date / start / end side by side and centered (per request) */
-    .wk-timerow{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:8px;}
-    .wk-timerow>div{flex:1 1 0;min-width:88px;margin:0;}
+    /* Training: date row — full-width, centered label/value, button below */
+    .wk-daterow{align-items:stretch;}
+    .wk-daterow>div{width:100%;}
+    .wk-daterow label{text-align:center;}
+    .wk-daterow input[type=date]{text-align:center;}
+    .wk-daterow>.btn-ghost{width:100%;margin-top:8px;}
+    /* Training: keep start / end side by side, compact so they never overlap or overflow */
+    .wk-timerow{flex-direction:row;flex-wrap:nowrap;justify-content:center;align-items:flex-end;gap:8px;}
+    .wk-timerow>div{flex:1 1 50%;min-width:0;margin:0;}
     .wk-timerow>div label{text-align:center;}
-    .wk-timerow input[type=date],.wk-timerow input[type=time]{text-align:center;}
+    .wk-timerow input[type=date],.wk-timerow input[type=time]{text-align:center;padding-left:6px;padding-right:6px;}
     .wk-timerow>.btn-ghost{flex:1 1 100%;order:5;margin-top:6px;}
     /* thumb-friendly touch targets (min 44px) */
     input[type=text],input[type=email],input[type=date],input[type=time],input[type=number],
@@ -604,7 +622,6 @@
   @media (max-width:360px){
     .tick{min-width:96px;}
     .site-name{font-size:1.05rem;}
-    .wk-timerow>div{flex:1 1 42%;} /* date on its own line, start+end share the next */
     .stat-tiles{grid-template-columns:1fr;}
   }
 </style>
@@ -723,7 +740,7 @@
 
     <div class="tab-panel active" id="tab-training">
       <div class="card">
-        <div class="row" style="align-items:flex-end;">
+        <div class="row wk-daterow">
           <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
           <button class="btn-ghost" id="repeatLastBtn" style="white-space:nowrap;" data-i18n="repeat_last">↻ Powtórz ostatni</button>
         </div>
