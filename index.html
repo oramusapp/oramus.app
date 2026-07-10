@@ -348,7 +348,7 @@
   }
   .gear-btn:hover{transform:rotate(30deg);}
   .overlay{
-    position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);
+    position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
     display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
   }
   .overlay.active{display:flex;}
@@ -356,6 +356,10 @@
      Use a light, cohesive backdrop instead so the settings read as fully light. */
   html[data-theme="light"] .overlay{background:rgba(226,231,240,0.72);}
   html[data-theme="light"] .modal{box-shadow:0 10px 40px rgba(20,30,50,0.18);}
+  /* Settings-backdrop mode (toggle): "solid" replaces the blur with an opaque static colour
+     that follows the theme / custom colours (var(--bg)); "blur" keeps the translucent blur above. */
+  body.ov-solid .overlay{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;}
+  html[data-theme="light"] body.ov-solid .overlay{background:var(--bg);}
   .modal{
     background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--glow);
     width:100%;max-width:520px;padding:22px;margin:auto;
@@ -1098,6 +1102,11 @@
           <button class="theme-chip" data-bg-opt="gradient" data-i18n="bg_gradient">Gradient</button>
           <button class="theme-chip" data-bg-opt="pattern" data-i18n="bg_pattern">Wzór</button>
         </div>
+        <div class="mini-label" style="margin-top:12px;" data-i18n="set_settingsbg">Tło panelu ustawień</div>
+        <div class="theme-opts" id="settingsBgOpts">
+          <button class="theme-chip" data-sbg-opt="blur" data-i18n="sbg_blur">Rozmyte</button>
+          <button class="theme-chip" data-sbg-opt="solid" data-i18n="sbg_solid">Statyczny kolor</button>
+        </div>
       </div>
     </div>
 
@@ -1314,6 +1323,7 @@
       acc_themes:"Motywy", acc_colors:"Kolory", acc_typo:"Typografia", acc_layout:"Układ",
       set_colormode:"Tryb", cm_dark:"Ciemny", cm_light:"Jasny", cm_system:"Systemowy",
       set_bg:"Tło strony", bg_default:"Domyślne", bg_gradient:"Gradient", bg_pattern:"Wzór",
+      set_settingsbg:"Tło panelu ustawień", sbg_blur:"Rozmyte", sbg_solid:"Statyczny kolor",
       col_accent:"Kolor akcentu", col_bg:"Kolor tła", col_text:"Kolor tekstu", col_panel:"Kolor kart/paneli", col_reset:"Przywróć kolory motywu",
       set_font:"Czcionka", font_default:"Domyślna (motyw)", font_system:"Systemowa", font_serif:"Szeryfowa", font_mono:"Monospace", font_rounded:"Zaokrąglona",
       set_radius:"Zaokrąglenie rogów", ticker_enable:"Pokazuj widget kursów walut",
@@ -1419,6 +1429,7 @@
       acc_themes:"Themes", acc_colors:"Colors", acc_typo:"Typography", acc_layout:"Layout",
       set_colormode:"Mode", cm_dark:"Dark", cm_light:"Light", cm_system:"System",
       set_bg:"Page background", bg_default:"Default", bg_gradient:"Gradient", bg_pattern:"Pattern",
+      set_settingsbg:"Settings panel backdrop", sbg_blur:"Blurred", sbg_solid:"Solid color",
       col_accent:"Accent color", col_bg:"Background color", col_text:"Text color", col_panel:"Card/panel color", col_reset:"Reset to theme colors",
       set_font:"Font", font_default:"Default (theme)", font_system:"System", font_serif:"Serif", font_mono:"Monospace", font_rounded:"Rounded",
       set_radius:"Corner radius", ticker_enable:"Show currency ticker widget",
@@ -1532,6 +1543,7 @@
     // --- rozbudowana personalizacja wyglądu ---
     colorMode: settings.colorMode || "dark",    // dark | light | system
     pageBg: settings.pageBg || "default",        // default | gradient | pattern
+    settingsBg: settings.settingsBg || "blur",   // blur | solid — tło panelu ustawień (nakładki)
     fontFamily: settings.fontFamily || "default",// default | system | serif | mono | rounded
     fontPx: (typeof settings.fontPx==="number") ? settings.fontPx : legacyFontPx(settings.fontSize),
     radius: (typeof settings.radius==="number") ? settings.radius : 10,
@@ -1553,7 +1565,7 @@
       pinCalendarEnabled:state.pinCalendarEnabled, pinJournalHash:state.pinJournalHash, pinCalendarHash:state.pinCalendarHash,
       tickerPairs:state.tickerPairs, tickerEnabled:state.tickerEnabled,
       fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat,
-      colorMode:state.colorMode, pageBg:state.pageBg, fontFamily:state.fontFamily,
+      colorMode:state.colorMode, pageBg:state.pageBg, settingsBg:state.settingsBg, fontFamily:state.fontFamily,
       fontPx:state.fontPx, radius:state.radius, customColors:state.customColors, tileColors:state.tileColors
     });
   }
@@ -1608,6 +1620,8 @@
     b.classList.remove("bg-gradient","bg-pattern");
     if(state.pageBg==="gradient") b.classList.add("bg-gradient");
     else if(state.pageBg==="pattern") b.classList.add("bg-pattern");
+    // Settings-overlay backdrop: solid static colour vs. blurred (default).
+    b.classList.toggle("ov-solid", state.settingsBg==="solid");
   }
   // React to OS theme changes live when in "system" mode.
   try{
@@ -2890,6 +2904,7 @@
     document.querySelectorAll("[data-tf-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-tf-opt")===state.timeFormat); });
     document.querySelectorAll("[data-cm-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-cm-opt")===state.colorMode); });
     document.querySelectorAll("[data-bg-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-bg-opt")===state.pageBg); });
+    document.querySelectorAll("[data-sbg-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-sbg-opt")===state.settingsBg); });
   }
   // Reflects current appearance values into the settings form controls (colors, sliders, selects, toggles).
   function syncAppearanceControls(){
@@ -2944,6 +2959,9 @@
   });
   document.querySelectorAll("[data-bg-opt]").forEach(function(b){
     b.addEventListener("click", function(){ state.pageBg=b.getAttribute("data-bg-opt"); applyAppearance(); persistSettings(); syncSettingChips(); });
+  });
+  document.querySelectorAll("[data-sbg-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.settingsBg=b.getAttribute("data-sbg-opt"); applyAppearance(); persistSettings(); syncSettingChips(); });
   });
   // Custom color pickers (live preview on input, persist on change).
   document.querySelectorAll("input[data-col]").forEach(function(inp){
@@ -3267,7 +3285,7 @@
   /* ===== Service Worker: offline cache-first for the page ===== */
   if("serviceWorker" in navigator){
     var swSource=[
-      "const CACHE_NAME='futureapp-cache-v8';",
+      "const CACHE_NAME='futureapp-cache-v9';",
       "self.addEventListener('install',function(event){",
       "  self.skipWaiting();",
       "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
