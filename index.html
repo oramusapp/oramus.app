@@ -250,6 +250,16 @@
   .tab-btn.active{color:var(--accent);border-color:var(--accent);box-shadow:var(--glow);}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;animation:viewIn 0.25s ease;}
+  /* Training sub-module picker (Strength / Running / Combat) */
+  .trn-picker{display:grid;grid-template-columns:1fr;gap:12px;}
+  .trn-tile{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px 16px;cursor:pointer;color:var(--text);transition:box-shadow .2s,border-color .2s,transform .15s;}
+  .trn-tile:hover{transform:translateY(-2px);border-color:var(--accent2);box-shadow:var(--glow2);}
+  .trn-tile .trn-ico{font-size:1.7rem;line-height:1;}
+  .trn-tile .trn-name{font-family:var(--font-mono);font-size:1.05rem;font-weight:700;letter-spacing:0.02em;}
+  .trn-tile .trn-sub{color:var(--text-dim);font-size:0.78rem;}
+  .trn-back{margin-bottom:12px;}
 
   /* Workout */
   .exercise-block{border:1px solid var(--border-soft);border-radius:9px;padding:14px;margin-top:12px;background:var(--bg-input);}
@@ -284,6 +294,24 @@
   .stat.f .st-num{color:#f59e0b;}
   .stat.bmr .st-num{color:var(--accent2);}
   .stat.tdee .st-num{color:#22c55e;}
+  /* daily requirement shown under each stat number (pulled from the calorie calculator) */
+  .stat .st-goal{font-family:var(--font-mono);font-size:0.64rem;color:var(--text-dim);margin-top:3px;min-height:0.8em;}
+  .stat.kcal .st-goal{color:color-mix(in srgb,var(--accent) 70%,var(--text-dim));}
+  /* collapsible meal categories (breakfast/lunch/...) — head becomes a toggle with an arrow */
+  .meal-cat-toggle{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:none;cursor:pointer;text-align:left;color:inherit;font:inherit;}
+  .meal-cat-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.3s ease,opacity 0.25s ease;}
+  .meal-cat-body.open{max-height:1600px;opacity:1;}
+  .meal-cat-arrow{font-size:0.7rem;color:var(--accent2);transition:transform 0.3s ease;}
+  .meal-cat-toggle[aria-expanded="true"] .meal-cat-arrow{transform:rotate(180deg);}
+  .meal-cat-ksum{font-family:var(--font-mono);font-size:0.66rem;color:var(--text-dim);text-transform:none;letter-spacing:0;}
+  /* PR (personal record) toast */
+  .pr-toast-wrap{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));z-index:400;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px;}
+  .pr-toast{background:var(--bg-panel);border:1px solid var(--accent);border-radius:12px;box-shadow:var(--glow);padding:12px 18px;max-width:420px;width:auto;
+    font-family:var(--font-mono);font-size:0.9rem;color:var(--accent);text-align:center;
+    animation:prIn 0.35s ease, prOut 0.4s ease 3.4s forwards;}
+  .pr-toast .pr-sub{display:block;color:var(--text);font-size:0.82rem;margin-top:4px;}
+  @keyframes prIn{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  @keyframes prOut{to{transform:translateY(24px);opacity:0;}}
   /* segmented controls */
   .seg{display:flex;gap:6px;flex-wrap:wrap;}
   .seg-btn{flex:1;min-width:70px;background:transparent;border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:0.8rem;color:var(--text-dim);font-family:var(--font-mono);}
@@ -345,6 +373,10 @@
   .meal-day-history:last-child{border:none;margin:0;padding:0;}
   .meal-day-history .mh-date{font-family:var(--font-mono);font-weight:700;font-size:0.88rem;color:var(--accent);display:flex;justify-content:space-between;}
   .meal-day-history .mh-total{color:var(--accent2);}
+  .meal-day-history .mh-macros{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-top:4px;}
+  .run-note{font-size:0.78rem;color:var(--text-dim);margin-top:6px;font-style:italic;}
+  /* history lists can be long — allow the accordion to expand fully when open */
+  #accMealHist.open,#accWkHist.open{max-height:100000px;}
 
   /* Journal */
   .journal-entry{padding:14px 0;border-bottom:1px solid var(--border-soft);}
@@ -776,6 +808,16 @@
     </div>
 
     <div class="tab-panel active" id="tab-training">
+      <!-- Sub-module picker: choose a training type -->
+      <div class="trn-picker" id="trnPicker">
+        <button class="trn-tile" data-trn="strength"><span class="trn-ico">\uD83C\uDFCB\uFE0F</span><span class="trn-name" data-i18n="trn_strength">Trening siłowy</span><span class="trn-sub" data-i18n="trn_strength_sub">Serie, ciężary, rekordy</span></button>
+        <button class="trn-tile" data-trn="running"><span class="trn-ico">\uD83C\uDFC3</span><span class="trn-name" data-i18n="trn_running">Bieganie</span><span class="trn-sub" data-i18n="trn_running_sub">Dystans, czas, tempo</span></button>
+        <button class="trn-tile" data-trn="combat"><span class="trn-ico">\uD83E\uDD4A</span><span class="trn-name" data-i18n="trn_combat">Sporty walki</span><span class="trn-sub" data-i18n="trn_combat_sub">Dyscyplina, rundy, sparing</span></button>
+      </div>
+
+      <!-- Trening siłowy (existing module) -->
+      <div class="trn-panel" id="trn-strength" style="display:none;">
+        <button class="btn-ghost trn-back" data-trn-back>&larr; <span data-i18n="trn_back">Wróć do wyboru</span></button>
       <div class="card">
         <div class="row wk-daterow">
           <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
@@ -831,7 +873,95 @@
         </div>
       </div>
 
-      <div class="card"><div id="workoutHistory"></div></div>
+      <div class="card">
+        <button class="acc-head" data-acc="wk_hist" data-acc-open aria-controls="accWkHist">
+          <h4 data-i18n="wk_history_title">Historia treningów</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+        </button>
+        <div class="db-collapse" id="accWkHist"><div id="workoutHistory"></div></div>
+      </div>
+      </div><!-- /trn-strength -->
+
+      <!-- Bieganie -->
+      <div class="trn-panel" id="trn-running" style="display:none;">
+        <button class="btn-ghost trn-back" data-trn-back>&larr; <span data-i18n="trn_back">Wróć do wyboru</span></button>
+        <div class="card">
+          <h4 data-i18n="run_add_title" style="margin-top:0;">Dodaj bieg</h4>
+          <div class="row wk-daterow">
+            <div><label for="runDate" data-i18n="date">Data</label><input type="date" id="runDate"></div>
+          </div>
+          <div class="row">
+            <div><label for="runDist" data-i18n="run_distance">Dystans (km)</label><input type="number" id="runDist" min="0" step="0.01" placeholder="np. 5.2"></div>
+            <div><label for="runTime" data-i18n="run_time">Czas (mm:ss)</label><input type="text" id="runTime" inputmode="numeric" data-i18n-ph="run_time_ph" placeholder="np. 28:30"></div>
+          </div>
+          <div class="calc-out" id="runPacePreview" style="margin-bottom:10px;">—</div>
+          <label for="runNote" data-i18n="run_note">Notatka (opcjonalnie)</label>
+          <input type="text" id="runNote" data-i18n-ph="run_note_ph" placeholder="np. Las, interwały...">
+          <button class="btn-primary" id="addRunBtn" data-i18n="run_save">Zapisz bieg</button>
+        </div>
+        <div class="card">
+          <div class="stat-tiles" id="runStats">
+            <div class="stat kcal"><div class="st-label" data-i18n="run_total_dist">Łączny dystans</div><div class="st-num" id="runSumDist">0 km</div></div>
+            <div class="stat p"><div class="st-label" data-i18n="run_count">Liczba biegów</div><div class="st-num" id="runCount">0</div></div>
+            <div class="stat c"><div class="st-label" data-i18n="run_best">Najdłuższy bieg</div><div class="st-num" id="runBest">0 km</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <button class="acc-head" data-acc="run_hist" data-acc-open aria-controls="accRunHist">
+            <h4 data-i18n="run_history">Historia biegów</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+          </button>
+          <div class="db-collapse" id="accRunHist"><div id="runHistory"></div></div>
+        </div>
+      </div><!-- /trn-running -->
+
+      <!-- Sporty walki -->
+      <div class="trn-panel" id="trn-combat" style="display:none;">
+        <button class="btn-ghost trn-back" data-trn-back>&larr; <span data-i18n="trn_back">Wróć do wyboru</span></button>
+        <div class="card">
+          <h4 data-i18n="cbt_add_title" style="margin-top:0;">Dodaj sesję</h4>
+          <div class="row wk-daterow">
+            <div><label for="cbtDate" data-i18n="date">Data</label><input type="date" id="cbtDate"></div>
+          </div>
+          <label for="cbtDiscipline" data-i18n="cbt_discipline">Dyscyplina</label>
+          <select id="cbtDiscipline">
+            <option value="boxing" data-i18n="cbt_boxing">Boks</option>
+            <option value="kickboxing" data-i18n="cbt_kickboxing">Kickboxing</option>
+            <option value="muaythai" data-i18n="cbt_muaythai">Muay Thai</option>
+            <option value="mma" data-i18n="cbt_mma">MMA</option>
+            <option value="bjj" data-i18n="cbt_bjj">BJJ</option>
+            <option value="judo" data-i18n="cbt_judo">Judo</option>
+            <option value="wrestling" data-i18n="cbt_wrestling">Zapasy</option>
+            <option value="karate" data-i18n="cbt_karate">Karate</option>
+            <option value="other" data-i18n="cbt_other">Inne</option>
+          </select>
+          <label for="cbtType" data-i18n="cbt_type">Rodzaj treningu</label>
+          <select id="cbtType">
+            <option value="technique" data-i18n="cbt_technique">Technika</option>
+            <option value="sparring" data-i18n="cbt_sparring">Sparing</option>
+            <option value="bag" data-i18n="cbt_bag">Worek / tarcze</option>
+            <option value="conditioning" data-i18n="cbt_conditioning">Kondycja</option>
+          </select>
+          <div class="row">
+            <div><label for="cbtRounds" data-i18n="cbt_rounds">Rundy</label><input type="number" id="cbtRounds" min="0" step="1" placeholder="np. 6"></div>
+            <div><label for="cbtMinutes" data-i18n="cbt_minutes">Czas (min)</label><input type="number" id="cbtMinutes" min="0" step="1" placeholder="np. 60"></div>
+          </div>
+          <label for="cbtNote" data-i18n="cbt_note">Notatka (opcjonalnie)</label>
+          <input type="text" id="cbtNote" data-i18n-ph="cbt_note_ph" placeholder="np. Praca nad obroną...">
+          <button class="btn-primary" id="addCbtBtn" data-i18n="cbt_save">Zapisz sesję</button>
+        </div>
+        <div class="card">
+          <div class="stat-tiles" id="cbtStats">
+            <div class="stat kcal"><div class="st-label" data-i18n="cbt_sessions">Liczba sesji</div><div class="st-num" id="cbtCount">0</div></div>
+            <div class="stat p"><div class="st-label" data-i18n="cbt_total_min">Łączny czas</div><div class="st-num" id="cbtSumMin">0 min</div></div>
+            <div class="stat c"><div class="st-label" data-i18n="cbt_total_rounds">Łącznie rund</div><div class="st-num" id="cbtSumRounds">0</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <button class="acc-head" data-acc="cbt_hist" data-acc-open aria-controls="accCbtHist">
+            <h4 data-i18n="cbt_history">Historia sesji</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+          </button>
+          <div class="db-collapse" id="accCbtHist"><div id="cbtHistory"></div></div>
+        </div>
+      </div><!-- /trn-combat -->
     </div>
 
     <div class="tab-panel" id="tab-calories">
@@ -846,14 +976,10 @@
         </div>
 
         <div class="stat-tiles">
-          <div class="stat kcal"><div class="st-label" data-i18n="kcal_sum">Suma kalorii</div><div class="st-num" id="dayKcalTotal">0</div></div>
-          <div class="stat p"><div class="st-label" data-i18n="protein_short">Białko</div><div class="st-num" id="dayProtTotal">0 g</div></div>
-          <div class="stat c"><div class="st-label" data-i18n="carbs_short">Węglowodany</div><div class="st-num" id="dayCarbTotal">0 g</div></div>
-          <div class="stat f"><div class="st-label" data-i18n="fat_short">Tłuszcze</div><div class="st-num" id="dayFatTotal">0 g</div></div>
-        </div>
-        <div id="goalWrap" style="display:none;margin-bottom:14px;">
-          <div class="goal-bar"><div class="goal-fill" id="goalFill"></div></div>
-          <div class="goal-text" id="goalText"></div>
+          <div class="stat kcal"><div class="st-label" data-i18n="kcal_sum">Suma kalorii</div><div class="st-num" id="dayKcalTotal">0</div><div class="st-goal" id="dayKcalGoal"></div></div>
+          <div class="stat p"><div class="st-label" data-i18n="protein_short">Białko</div><div class="st-num" id="dayProtTotal">0 g</div><div class="st-goal" id="dayProtGoal"></div></div>
+          <div class="stat f"><div class="st-label" data-i18n="fat_short">Tłuszcze</div><div class="st-num" id="dayFatTotal">0 g</div><div class="st-goal" id="dayFatGoal"></div></div>
+          <div class="stat c"><div class="st-label" data-i18n="carbs_short">Węglowodany</div><div class="st-num" id="dayCarbTotal">0 g</div><div class="st-goal" id="dayCarbGoal"></div></div>
         </div>
 
         <div class="db-section">
@@ -906,7 +1032,12 @@
         </div>
       </div>
 
-      <div class="card"><div id="mealHistory"></div></div>
+      <div class="card">
+        <button class="acc-head" data-acc="meal_hist" data-acc-open aria-controls="accMealHist">
+          <h4 data-i18n="meal_history_title">Historia żywienia</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+        </button>
+        <div class="db-collapse" id="accMealHist"><div id="mealHistory"></div></div>
+      </div>
     </div>
 
     <div class="tab-panel" id="tab-calc">
@@ -1474,7 +1605,10 @@
       rm_exercise:"Usuń ćwiczenie", note:"Notatka", weight_ph:"Ciężar (kg)", reps_ph:"Powtórzenia",
       kcal_sum:"Suma kalorii", meal_name:"Nazwa posiłku", meal_name_ph:"np. Owsianka z owocami",
       protein_short:"Białko", carbs_short:"Węglowodany", fat_short:"Tłuszcze",
-      meals_add_title:"Dodaj posiłek", meals_day_title:"Posiłki dnia",
+      meals_add_title:"Dodaj posiłek", meals_day_title:"Posiłki dnia", meal_history_title:"Historia żywienia", wk_history_title:"Historia treningów", pr_new:"Nowy rekord!",
+      trn_strength:"Trening siłowy", trn_strength_sub:"Serie, ciężary, rekordy", trn_running:"Bieganie", trn_running_sub:"Dystans, czas, tempo", trn_combat:"Sporty walki", trn_combat_sub:"Dyscyplina, rundy, sparing", trn_back:"Wróć do wyboru",
+      run_add_title:"Dodaj bieg", run_distance:"Dystans (km)", run_time:"Czas", run_time_ph:"np. 28:30", run_note:"Notatka (opcjonalnie)", run_note_ph:"np. Las, interwały...", run_save:"Zapisz bieg", run_pace:"Tempo", run_history:"Historia biegów", run_empty:"Brak zapisanych biegów.", run_fill:"Podaj datę i dystans biegu.", run_total_dist:"Łączny dystans", run_count:"Liczba biegów", run_best:"Najdłuższy bieg", run_record:"Nowy rekord biegu!",
+      cbt_add_title:"Dodaj sesję", cbt_discipline:"Dyscyplina", cbt_boxing:"Boks", cbt_kickboxing:"Kickboxing", cbt_muaythai:"Muay Thai", cbt_mma:"MMA", cbt_bjj:"BJJ", cbt_judo:"Judo", cbt_wrestling:"Zapasy", cbt_karate:"Karate", cbt_other:"Inne", cbt_type:"Rodzaj treningu", cbt_technique:"Technika", cbt_sparring:"Sparing", cbt_bag:"Worek / tarcze", cbt_conditioning:"Kondycja", cbt_rounds:"Rundy", cbt_rounds_short:"rund", cbt_minutes:"Czas (min)", cbt_note:"Notatka (opcjonalnie)", cbt_note_ph:"np. Praca nad obroną...", cbt_save:"Zapisz sesję", cbt_history:"Historia sesji", cbt_empty:"Brak zapisanych sesji.", cbt_fill:"Podaj datę sesji.", cbt_sessions:"Liczba sesji", cbt_total_min:"Łączny czas", cbt_total_rounds:"Łącznie rund",
       calc_data:"Twoje dane", calc_results:"Wyniki", calc_target_label:"Dzienne zapotrzebowanie",
       calc_macros_label:"Sugerowane makroskładniki",
       kcal:"Kalorie (kcal)", protein:"Białko (g)", carbs:"Węglow. (g)", fat:"Tłuszcze (g)", add_meal:"Dodaj posiłek",
@@ -1595,7 +1729,10 @@
       rm_exercise:"Remove exercise", note:"Note", weight_ph:"Weight (kg)", reps_ph:"Reps",
       kcal_sum:"Total calories", meal_name:"Meal name", meal_name_ph:"e.g. Oatmeal with fruit",
       protein_short:"Protein", carbs_short:"Carbs", fat_short:"Fat",
-      meals_add_title:"Add a meal", meals_day_title:"Meals of the day",
+      meals_add_title:"Add a meal", meals_day_title:"Meals of the day", meal_history_title:"Meal history", wk_history_title:"Workout history", pr_new:"New personal record!",
+      trn_strength:"Strength training", trn_strength_sub:"Sets, weights, records", trn_running:"Running", trn_running_sub:"Distance, time, pace", trn_combat:"Combat sports", trn_combat_sub:"Discipline, rounds, sparring", trn_back:"Back to selection",
+      run_add_title:"Add a run", run_distance:"Distance (km)", run_time:"Time", run_time_ph:"e.g. 28:30", run_note:"Note (optional)", run_note_ph:"e.g. Forest, intervals...", run_save:"Save run", run_pace:"Pace", run_history:"Run history", run_empty:"No runs saved yet.", run_fill:"Enter the run date and distance.", run_total_dist:"Total distance", run_count:"Runs", run_best:"Longest run", run_record:"New running record!",
+      cbt_add_title:"Add a session", cbt_discipline:"Discipline", cbt_boxing:"Boxing", cbt_kickboxing:"Kickboxing", cbt_muaythai:"Muay Thai", cbt_mma:"MMA", cbt_bjj:"BJJ", cbt_judo:"Judo", cbt_wrestling:"Wrestling", cbt_karate:"Karate", cbt_other:"Other", cbt_type:"Session type", cbt_technique:"Technique", cbt_sparring:"Sparring", cbt_bag:"Bag / pads", cbt_conditioning:"Conditioning", cbt_rounds:"Rounds", cbt_rounds_short:"rounds", cbt_minutes:"Time (min)", cbt_note:"Note (optional)", cbt_note_ph:"e.g. Working on defense...", cbt_save:"Save session", cbt_history:"Session history", cbt_empty:"No sessions saved yet.", cbt_fill:"Enter the session date.", cbt_sessions:"Sessions", cbt_total_min:"Total time", cbt_total_rounds:"Total rounds",
       calc_data:"Your details", calc_results:"Results", calc_target_label:"Daily requirement",
       calc_macros_label:"Suggested macros",
       kcal:"Calories (kcal)", protein:"Protein (g)", carbs:"Carbs (g)", fat:"Fat (g)", add_meal:"Add meal",
@@ -1921,6 +2058,7 @@
     reallyShow(name);
     if(name==="home"){ renderUpcomingBig(); renderDaily(); }
     if(name==="budget"){ renderBudget(); }
+    if(name==="fitness" && typeof showTrnPanel==="function") showTrnPanel(null); // start at the training-type picker
     if(name==="todo"){ var td=$("taskDate"); if(td) td.value=todayISO(); } // default to today, editable
   }
   document.querySelectorAll("[data-home]").forEach(function(b){
@@ -2116,6 +2254,7 @@
       document.querySelectorAll(".tab-panel").forEach(function(x){x.classList.remove("active");});
       b.classList.add("active");
       $("tab-"+b.getAttribute("data-tab")).classList.add("active");
+      if(b.getAttribute("data-tab")==="training" && typeof showTrnPanel==="function") showTrnPanel(null);
     });
   });
 
@@ -2140,9 +2279,10 @@
   }
 
   function makeStepper(cls,ph,step,val){
+    var phKey = cls==="set-weight" ? "weight_ph" : "reps_ph";
     return '<div class="stepper">'+
       '<button type="button" class="stp minus" data-step="'+cls+'">−</button>'+
-      '<input type="number" class="'+cls+'" placeholder="'+ph+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==""?val:"")+'">'+
+      '<input type="number" class="'+cls+'" data-i18n-ph="'+phKey+'" placeholder="'+ph+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==""?val:"")+'">'+
       '<button type="button" class="stp plus" data-step="'+cls+'">+</button>'+
     '</div>';
   }
@@ -2167,13 +2307,13 @@
   function addExerciseBlock(prefill){
     var container=$("exercisesContainer");
     var block=document.createElement("div"); block.className="exercise-block";
-    block.innerHTML='<div class="exercise-block-header"><span>'+t("exercise")+'</span>'+
-      '<button type="button" class="btn-small rm-exercise">'+t("rm_exercise")+'</button></div>'+
-      '<label>'+t("ex_name")+'</label><input type="text" class="ex-name" list="exerciseNames" placeholder="'+t("ex_name_ph")+'">'+
+    block.innerHTML='<div class="exercise-block-header"><span data-i18n="exercise">'+t("exercise")+'</span>'+
+      '<button type="button" class="btn-small rm-exercise" data-i18n="rm_exercise">'+t("rm_exercise")+'</button></div>'+
+      '<label data-i18n="ex_name">'+t("ex_name")+'</label><input type="text" class="ex-name" list="exerciseNames" data-i18n-ph="ex_name_ph" placeholder="'+t("ex_name_ph")+'">'+
       '<div class="ex-hint" style="display:none;"></div>'+
-      '<label>'+t("sets")+'</label><div class="sets-container"></div>'+
-      '<button type="button" class="btn-ghost add-set-btn" style="margin-top:8px;">'+t("add_set")+'</button>'+
-      '<label>'+t("note")+'</label><textarea class="ex-note"></textarea>';
+      '<label data-i18n="sets">'+t("sets")+'</label><div class="sets-container"></div>'+
+      '<button type="button" class="btn-ghost add-set-btn" style="margin-top:8px;" data-i18n="add_set">'+t("add_set")+'</button>'+
+      '<label data-i18n="note">'+t("note")+'</label><textarea class="ex-note"></textarea>';
     block.querySelector(".rm-exercise").addEventListener("click", function(){
       if(container.querySelectorAll(".exercise-block").length>1) block.remove(); else alert(t("min_one_ex"));
     });
@@ -2344,19 +2484,58 @@
   });
 
   var editingWorkoutId=null;
+  // Highest weight lifted (with >=1 rep) per exercise across all saved workouts.
+  function prBestMap(){
+    var best={};
+    workouts.forEach(function(w){ (w.exercises||[]).forEach(function(ex){
+      var key=(ex.name||"").trim().toLowerCase(); if(!key) return;
+      (ex.sets||[]).forEach(function(s){ if(num(s.reps)>=1){ var wt=num(s.weight); if(!(key in best)||wt>best[key]) best[key]=wt; } });
+    });});
+    return best;
+  }
+  // Returns [{name,weight}] for exercises that beat their previous best (>=1 rep at a heavier weight).
+  function detectPRs(newExercises){
+    var best=prBestMap(), prs=[];
+    newExercises.forEach(function(ex){
+      var key=(ex.name||"").trim().toLowerCase(); if(!key) return;
+      var maxNew=null;
+      (ex.sets||[]).forEach(function(s){ if(num(s.reps)>=1){ var wt=num(s.weight); if(maxNew===null||wt>maxNew) maxNew=wt; } });
+      if(maxNew!==null && maxNew>0 && maxNew>(best[key]||0)) prs.push({name:ex.name, weight:maxNew});
+    });
+    return prs;
+  }
+  // Generic bottom toast (used for PRs and running records).
+  function pushToast(mainText, subText){
+    var wrap=document.getElementById("prToastWrap");
+    if(!wrap){ wrap=document.createElement("div"); wrap.id="prToastWrap"; wrap.className="pr-toast-wrap"; document.body.appendChild(wrap); }
+    var el=document.createElement("div"); el.className="pr-toast";
+    el.innerHTML='\uD83C\uDFC6 <span class="pr-main"></span><span class="pr-sub"></span>';
+    el.querySelector(".pr-main").textContent=mainText;
+    el.querySelector(".pr-sub").textContent=subText||"";
+    wrap.appendChild(el);
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 4000);
+  }
+  function showPrToast(prs){
+    if(!prs || !prs.length) return;
+    prs.forEach(function(pr){ pushToast(t("pr_new"), pr.name+": "+String(pr.weight)+" kg"); });
+  }
   $("addWorkoutBtn").addEventListener("click", function(){
     var date=$("wDate").value;
     var exercises=collectExercises();
     if(!date||exercises.length===0){ alert(t("fill_workout")); return; }
+    var prs=[];
     if(editingWorkoutId){
       // Edycja: czas trwania (i ewentualne stare pola start/end) zostają bez zmian.
       workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; } });
     } else {
+      // Detect personal records BEFORE adding this workout to history.
+      prs=detectPRs(exercises);
       var durSec = wkTimerStart ? Math.max(0, Math.floor((Date.now()-wkTimerStart)/1000)) : null;
       workouts.push({id:uid(),date:date,exercises:exercises,durSec:durSec});
     }
     saveWorkouts(); refreshExerciseDatalist();
     resetWorkoutForm(); renderWorkouts();
+    showPrToast(prs);
   });
   // Duration in minutes between two "HH:MM" strings; if end <= start, assumes the session crossed midnight (+24h).
   function workoutDurationMin(start,end){
@@ -2645,18 +2824,15 @@
     renderMealDay(); renderMealHistory(); renderRecent();
   }
 
-  function calorieGoal(){ return num(localStorage.getItem("calorieGoal")||0); }
-  function renderGoalBar(consumed){
-    var goal=calorieGoal();
-    if(goal<=0){ $("goalWrap").style.display="none"; return; }
-    $("goalWrap").style.display="block";
-    var pct=Math.min(100,Math.round(consumed/goal*100));
-    var fill=$("goalFill"); fill.style.width=pct+"%";
-    fill.classList.toggle("over", consumed>goal);
-    var over = consumed>goal;
-    $("goalText").textContent=Math.round(consumed)+" / "+goal+" kcal — "+
-      (over?("+"+Math.round(consumed-goal)+" "+t("over_goal")):(pct+"% "+t("of_goal")));
+  // Daily requirement targets pulled from the calorie calculator (persisted when the user sets them).
+  // Backward-compatible with the older single "calorieGoal" value.
+  function calorieTargets(){
+    var d=loadJSON("calorieTargets",null);
+    if(d && typeof d==="object" && num(d.kcal)>0) return {kcal:num(d.kcal),p:num(d.p),c:num(d.c),f:num(d.f)};
+    var g=num(localStorage.getItem("calorieGoal")||0);
+    return g>0 ? {kcal:g,p:0,c:0,f:0} : null;
   }
+  function setStatGoal(id, txt){ var el=$(id); if(el) el.textContent=txt; }
 
   function renderMealDay(){
     $("mealDayTitle").textContent=formatDateReadable(mealDayCursor);
@@ -2667,19 +2843,38 @@
     $("dayProtTotal").textContent=tp.toFixed(1)+" g";
     $("dayCarbTotal").textContent=tc.toFixed(1)+" g";
     $("dayFatTotal").textContent=tf.toFixed(1)+" g";
-    renderGoalBar(tk);
+    // Show the daily requirement (from the calculator) beneath each stat, replacing the old goal bar.
+    var tg=calorieTargets();
+    setStatGoal("dayKcalGoal", tg ? "/ "+Math.round(tg.kcal)+" kcal" : "");
+    setStatGoal("dayProtGoal", (tg&&tg.p>0) ? "/ "+Math.round(tg.p)+" g" : "");
+    setStatGoal("dayFatGoal",  (tg&&tg.f>0) ? "/ "+Math.round(tg.f)+" g" : "");
+    setStatGoal("dayCarbGoal", (tg&&tg.c>0) ? "/ "+Math.round(tg.c)+" g" : "");
     var list=$("mealListForDay"); list.innerHTML="";
     if(dm.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_meals")+'</div>'; return; }
-    // group by category, each in its own bordered container (readable separators + zebra rows)
+    // group by category, each collapsible (state persisted per category)
     CAT_ORDER.forEach(function(cat){
       var items=dm.filter(function(m){ return (m.cat||"snack")===cat; });
       if(items.length===0) return;
+      var catK=items.reduce(function(s,m){return s+num(m.kcal);},0);
+      var accKey="mealcat_"+cat;
+      var open=(accState[accKey]!==undefined)?!!accState[accKey]:true; // default expanded
       var group=document.createElement("div"); group.className="meal-cat-group";
-      var head=document.createElement("div"); head.className="meal-cat-head"; head.textContent=t(CAT_KEYS[cat]); group.appendChild(head);
-      items.forEach(function(m){ group.appendChild(renderMealItem(m)); });
+      var headBtn=document.createElement("button"); headBtn.type="button"; headBtn.className="meal-cat-head meal-cat-toggle";
+      headBtn.setAttribute("aria-expanded", open?"true":"false");
+      headBtn.innerHTML='<span></span><span style="display:flex;align-items:center;gap:8px;"><span class="meal-cat-ksum">'+Math.round(catK)+' kcal</span><span class="meal-cat-arrow">\u25BC</span></span>';
+      headBtn.querySelector("span").textContent=t(CAT_KEYS[cat]);
+      var body=document.createElement("div"); body.className="meal-cat-body"+(open?" open":"");
+      items.forEach(function(m){ body.appendChild(renderMealItem(m)); });
+      headBtn.addEventListener("click", function(){
+        var now=!body.classList.contains("open");
+        body.classList.toggle("open", now);
+        headBtn.setAttribute("aria-expanded", now?"true":"false");
+        accState[accKey]=now; saveJSON("accordions",accState);
+      });
+      group.appendChild(headBtn); group.appendChild(body);
       list.appendChild(group);
     });
-    // any meals with unknown category
+    // any meals with unknown category (kept always-visible)
     var others=dm.filter(function(m){ return CAT_ORDER.indexOf(m.cat||"snack")===-1; });
     if(others.length){
       var og=document.createElement("div"); og.className="meal-cat-group";
@@ -2731,18 +2926,15 @@
     if(meals.length===0){ c.innerHTML='<div class="empty-note">'+t("empty_meal_hist")+'</div>'; return; }
     var byDay={}; meals.forEach(function(m){ (byDay[m.date]=byDay[m.date]||[]).push(m); });
     Object.keys(byDay).sort(function(a,b){return new Date(b)-new Date(a);}).forEach(function(day){
-      var dm=byDay[day]; var total=dm.reduce(function(s,m){return s+num(m.kcal);},0);
+      var dm=byDay[day];
+      var tk=0,tp=0,tc=0,tf=0;
+      dm.forEach(function(m){ tk+=num(m.kcal); tp+=num(m.protein); tc+=num(m.carbs); tf+=num(m.fat); });
       var block=document.createElement("div"); block.className="meal-day-history";
-      block.innerHTML='<div class="mh-date"><span></span><span class="mh-total"></span></div>';
+      block.innerHTML='<div class="mh-date"><span></span><span class="mh-total"></span></div><div class="mh-macros"></div>';
       block.querySelector(".mh-date span").textContent=formatDateReadable(day);
-      block.querySelector(".mh-total").textContent=Math.round(total)+" kcal";
-      dm.forEach(function(m){
-        var row=document.createElement("div"); row.className="meal-item";
-        row.innerHTML='<div class="meal-name"></div><span class="meal-kcal"></span>';
-        row.querySelector(".meal-name").textContent=m.name;
-        row.querySelector(".meal-kcal").textContent=Math.round(num(m.kcal))+" kcal";
-        block.appendChild(row);
-      });
+      block.querySelector(".mh-total").textContent=Math.round(tk)+" kcal";
+      // Only the daily total + macros in parentheses (protein, fat, carbs) — no individual meals.
+      block.querySelector(".mh-macros").textContent="("+t("protein_short")+": "+tp.toFixed(0)+" g · "+t("fat_short")+": "+tf.toFixed(0)+" g · "+t("carbs_short")+": "+tc.toFixed(0)+" g)";
       c.appendChild(block);
     });
   }
@@ -2767,7 +2959,7 @@
   document.querySelectorAll("#calcSexSeg .seg-btn").forEach(function(b){
     b.addEventListener("click", function(){ document.querySelectorAll("#calcSexSeg .seg-btn").forEach(function(x){x.classList.remove("active");}); b.classList.add("active"); calcSex=b.getAttribute("data-sex"); });
   });
-  var lastCalcTarget=0;
+  var lastCalcTarget=0, lastCalcP=0, lastCalcC=0, lastCalcF=0;
   $("calcRunBtn").addEventListener("click", function(){
     var age=num($("calcAge").value), h=num($("calcHeight").value), w=num($("calcWeight").value);
     var act=parseFloat($("calcActivity").value)||1.2;
@@ -2787,13 +2979,139 @@
     var fatKcal=target*0.25; var fat=Math.round(fatKcal/9);
     var carbs=Math.round((target - protein*4 - fat*9)/4);
     if(carbs<0) carbs=0;
+    lastCalcP=protein; lastCalcF=fat; lastCalcC=carbs;
     $("calcMacroP").textContent=protein+" g";
     $("calcMacroF").textContent=fat+" g";
     $("calcMacroC").textContent=carbs+" g";
     $("calcResult").style.display="block";
   });
   $("setGoalBtn").addEventListener("click", function(){
-    if(lastCalcTarget>0){ localStorage.setItem("calorieGoal", lastCalcTarget); renderMealDay(); alert(t("goal_set_done")); }
+    if(lastCalcTarget>0){
+      // Persist full daily requirement (kcal + macros) so the calorie tiles can show it.
+      saveJSON("calorieTargets", {kcal:lastCalcTarget, p:lastCalcP, c:lastCalcC, f:lastCalcF});
+      localStorage.setItem("calorieGoal", lastCalcTarget); // backward compatibility
+      renderMealDay(); alert(t("goal_set_done"));
+    }
+  });
+
+  /* ================= TRENING: nawigacja podmodułów ================= */
+  // Pokazuje jeden z podmodułów treningu (siłowy/bieganie/walki) lub ekran wyboru (which=null).
+  function showTrnPanel(which){
+    var picker=$("trnPicker"); if(!picker) return;
+    ["strength","running","combat"].forEach(function(k){ var p=$("trn-"+k); if(p) p.style.display=(k===which)?"block":"none"; });
+    picker.style.display = which ? "none" : "grid";
+    if(which==="running" && $("runDate") && !$("runDate").value) $("runDate").value=todayISO();
+    if(which==="combat" && $("cbtDate") && !$("cbtDate").value) $("cbtDate").value=todayISO();
+  }
+  document.querySelectorAll("[data-trn]").forEach(function(b){
+    b.addEventListener("click", function(){ showTrnPanel(b.getAttribute("data-trn")); });
+  });
+  document.querySelectorAll("[data-trn-back]").forEach(function(b){
+    b.addEventListener("click", function(){ showTrnPanel(null); });
+  });
+
+  /* ================= BIEGANIE ================= */
+  var runs=loadJSON("runs",[]);
+  function saveRuns(){ saveJSON("runs",runs); }
+  // Parsuje czas "mm:ss", "h:mm:ss" lub liczbę minut na sekundy.
+  function parseRunTime(str){
+    if(!str) return null; str=(""+str).trim().replace(",",".");
+    if(str.indexOf(":")===-1){ var mm=parseFloat(str); return isNaN(mm)?null:Math.round(mm*60); }
+    var parts=str.split(":").map(function(x){return parseInt(x,10);});
+    if(parts.some(function(n){return isNaN(n);})) return null;
+    if(parts.length===2) return parts[0]*60+parts[1];
+    if(parts.length===3) return parts[0]*3600+parts[1]*60+parts[2];
+    return null;
+  }
+  function fmtRunTime(sec){
+    if(sec==null) return "";
+    var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+    if(h>0) return h+":"+pad(m)+":"+pad(s);
+    return m+":"+pad(s);
+  }
+  function fmtPace(secPerKm){
+    if(secPerKm==null||!isFinite(secPerKm)||secPerKm<=0) return "—";
+    var m=Math.floor(secPerKm/60), s=Math.round(secPerKm%60);
+    if(s===60){m++;s=0;}
+    return m+":"+pad(s)+" /km";
+  }
+  function updateRunPacePreview(){
+    var dist=num($("runDist").value), sec=parseRunTime($("runTime").value);
+    $("runPacePreview").textContent = (dist>0 && sec) ? (t("run_pace")+": "+fmtPace(sec/dist)) : "—";
+  }
+  function renderRuns(){
+    var c=$("runHistory"); if(!c) return; c.innerHTML="";
+    // stat tiles
+    var totalDist=runs.reduce(function(s,r){return s+num(r.distance);},0);
+    var best=runs.reduce(function(m,r){return Math.max(m,num(r.distance));},0);
+    if($("runSumDist")) $("runSumDist").textContent=totalDist.toFixed(1)+" km";
+    if($("runCount")) $("runCount").textContent=String(runs.length);
+    if($("runBest")) $("runBest").textContent=best.toFixed(2)+" km";
+    if(runs.length===0){ c.innerHTML='<div class="empty-note">'+t("run_empty")+'</div>'; return; }
+    runs.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).forEach(function(r){
+      var row=document.createElement("div"); row.className="meal-day-history";
+      row.innerHTML='<div class="mh-date"><span></span><span class="mh-total"></span></div><div class="mh-macros"></div>'+
+        (r.note?'<div class="run-note"></div>':'')+
+        '<div style="text-align:right;margin-top:4px;"><button class="del-btn" data-id="'+r.id+'">'+t("delete")+'</button></div>';
+      row.querySelector(".mh-date span").textContent=formatDateReadable(r.date);
+      row.querySelector(".mh-total").textContent=num(r.distance).toFixed(2)+" km";
+      var sec=num(r.durSec)||null;
+      row.querySelector(".mh-macros").textContent=(sec?(t("run_time")+": "+fmtRunTime(sec)+" · "):"")+
+        (sec&&num(r.distance)>0?(t("run_pace")+": "+fmtPace(sec/num(r.distance))):"");
+      if(r.note) row.querySelector(".run-note").textContent=r.note;
+      row.querySelector(".del-btn").addEventListener("click", function(){ runs=runs.filter(function(x){return x.id!==r.id;}); saveRuns(); renderRuns(); });
+      c.appendChild(row);
+    });
+  }
+  if($("runDist")) $("runDist").addEventListener("input", updateRunPacePreview);
+  if($("runTime")) $("runTime").addEventListener("input", updateRunPacePreview);
+  if($("addRunBtn")) $("addRunBtn").addEventListener("click", function(){
+    var date=$("runDate").value, dist=num($("runDist").value), sec=parseRunTime($("runTime").value);
+    if(!date||dist<=0){ alert(t("run_fill")); return; }
+    // Rekord: nowy najdłuższy bieg (przed dodaniem).
+    var prevBest=runs.reduce(function(m,r){return Math.max(m,num(r.distance));},0);
+    runs.push({id:uid(),date:date,distance:dist,durSec:sec,note:$("runNote").value.trim()});
+    saveRuns(); renderRuns();
+    $("runDist").value=""; $("runTime").value=""; $("runNote").value=""; $("runPacePreview").textContent="—"; $("runDate").value=todayISO();
+    if(dist>prevBest && prevBest>0) pushToast(t("run_record"), t("run_best")+": "+dist.toFixed(2)+" km");
+  });
+
+  /* ================= SPORTY WALKI ================= */
+  var combats=loadJSON("combats",[]);
+  function saveCombats(){ saveJSON("combats",combats); }
+  var CBT_DISC={boxing:"cbt_boxing",kickboxing:"cbt_kickboxing",muaythai:"cbt_muaythai",mma:"cbt_mma",bjj:"cbt_bjj",judo:"cbt_judo",wrestling:"cbt_wrestling",karate:"cbt_karate",other:"cbt_other"};
+  var CBT_TYPE={technique:"cbt_technique",sparring:"cbt_sparring",bag:"cbt_bag",conditioning:"cbt_conditioning"};
+  function renderCombats(){
+    var c=$("cbtHistory"); if(!c) return; c.innerHTML="";
+    var sumMin=combats.reduce(function(s,x){return s+num(x.minutes);},0);
+    var sumRounds=combats.reduce(function(s,x){return s+num(x.rounds);},0);
+    if($("cbtCount")) $("cbtCount").textContent=String(combats.length);
+    if($("cbtSumMin")) $("cbtSumMin").textContent=Math.round(sumMin)+" min";
+    if($("cbtSumRounds")) $("cbtSumRounds").textContent=String(Math.round(sumRounds));
+    if(combats.length===0){ c.innerHTML='<div class="empty-note">'+t("cbt_empty")+'</div>'; return; }
+    combats.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).forEach(function(x){
+      var row=document.createElement("div"); row.className="meal-day-history";
+      row.innerHTML='<div class="mh-date"><span></span><span class="mh-total"></span></div><div class="mh-macros"></div>'+
+        (x.note?'<div class="run-note"></div>':'')+
+        '<div style="text-align:right;margin-top:4px;"><button class="del-btn" data-id="'+x.id+'">'+t("delete")+'</button></div>';
+      row.querySelector(".mh-date span").textContent=formatDateReadable(x.date);
+      row.querySelector(".mh-total").textContent=t(CBT_DISC[x.discipline]||"cbt_other");
+      var bits=[t(CBT_TYPE[x.type]||"cbt_technique")];
+      if(num(x.rounds)>0) bits.push(num(x.rounds)+" "+t("cbt_rounds_short"));
+      if(num(x.minutes)>0) bits.push(num(x.minutes)+" min");
+      row.querySelector(".mh-macros").textContent=bits.join(" · ");
+      if(x.note) row.querySelector(".run-note").textContent=x.note;
+      row.querySelector(".del-btn").addEventListener("click", function(){ combats=combats.filter(function(y){return y.id!==x.id;}); saveCombats(); renderCombats(); });
+      c.appendChild(row);
+    });
+  }
+  if($("addCbtBtn")) $("addCbtBtn").addEventListener("click", function(){
+    var date=$("cbtDate").value;
+    if(!date){ alert(t("cbt_fill")); return; }
+    combats.push({id:uid(),date:date,discipline:$("cbtDiscipline").value,type:$("cbtType").value,
+      rounds:num($("cbtRounds").value),minutes:num($("cbtMinutes").value),note:$("cbtNote").value.trim()});
+    saveCombats(); renderCombats();
+    $("cbtRounds").value=""; $("cbtMinutes").value=""; $("cbtNote").value=""; $("cbtDate").value=todayISO();
   });
 
   /* ================= JOURNAL ================= */
@@ -3186,40 +3504,52 @@
   }
 
   /* ================= HEADER QUOTE / FACT ================= */
+  // New Testament quotes — bilingual (public-domain Biblia Gdańska / KJV). ref = PL abbr, refEn = EN abbr.
   var quotes=[
-    {text:"Albowiem tak Bóg umiłował świat, że Syna swego jednorodzonego dał, aby każdy, kto weń wierzy, nie zginął, ale miał żywot wieczny.", ref:"Jan 3:16"},
-    {text:"Błogosławieni pokój czyniący, albowiem oni synami Bożymi nazwani będą.", ref:"Mt 5:9"},
-    {text:"Wszystko mogę w Tym, który mnie umacnia.", ref:"Flp 4:13"},
-    {text:"Pójdźcie do mnie wszyscy, którzy jesteście spracowani i obciążeni, a Ja wam sprawię odpocznienie.", ref:"Mt 11:28"},
-    {text:"A wiemy, że tym, którzy Boga miłują, wszystkie rzeczy dopomagają ku dobremu.", ref:"Rz 8:28"},
-    {text:"Jam jest droga, i prawda, i żywot.", ref:"Jan 14:6"},
-    {text:"Miłość jest cierpliwa, miłość jest łaskawa; nie zazdrości.", ref:"1 Kor 13:4"},
-    {text:"Owocem zaś Ducha jest miłość, wesele, pokój, cierpliwość, uprzejmość, dobrotliwość.", ref:"Gal 5:22"},
-    {text:"Albowiem łaską zbawieni jesteście przez wiarę, a to dar Boży jest.", ref:"Ef 2:8"},
-    {text:"Jeźli komu z was schodzi na mądrości, niech jej prosi u Boga.", ref:"Jak 1:5"},
-    {text:"Szukajcie najprzód królestwa Bożego, a to wszystko będzie wam przydane.", ref:"Mt 6:33"},
-    {text:"Przemieńcie się przez odnowienie umysłu waszego.", ref:"Rz 12:2"},
-    {text:"Jeźli kto jest w Chrystusie, nowem jest stworzeniem.", ref:"2 Kor 5:17"},
-    {text:"A wiara jest gruntem tych rzeczy, których się spodziewamy.", ref:"Hbr 11:1"},
-    {text:"Wszystko staranie wasze wrzuciwszy na niego, gdyż on ma pieczę o was.", ref:"1 P 5:7"},
-    {text:"A poznacie prawdę, a prawda was wyswobodzi.", ref:"Jan 8:32"},
-    {text:"Nauczajcie wszystkie narody, chrzcząc je w imię Ojca i Syna, i Ducha Świętego.", ref:"Mt 28:19"},
-    {text:"A jako chcecie, aby wam ludzie czynili, tak i wy czyńcie im.", ref:"Łk 6:31"},
-    {text:"Jeźli usty wyznasz Pana Jezusa i uwierzysz w sercu twojem, zbawiony będziesz.", ref:"Rz 10:9"},
-    {text:"My go miłujemy, iż on nas pierwej umiłował.", ref:"1 Jan 4:19"},
-    {text:"Nie troszczcie się o nic, ale we wszystkiem przez modlitwę żądności wasze niech będą znajome u Boga.", ref:"Flp 4:6"},
-    {text:"Wszystko, cokolwiek czynicie, z duszy czyńcie, jako Panu.", ref:"Kol 3:23"},
-    {text:"Nie dał nam Bóg Ducha bojaźni, ale mocy i miłości, i zdrowego zmysłu.", ref:"2 Tm 1:7"},
-    {text:"Większej miłości nad tę żaden nie ma, jaką kto duszę swoję kładzie za przyjacioły swoje.", ref:"Jan 15:13"},
-    {text:"Proście, a będzie wam dano; szukajcie, a znajdziecie.", ref:"Mt 7:7"},
-    {text:"Dobrze czyniąc, nie słabiejmy; albowiem czasu swojego żąć będziemy.", ref:"Gal 6:9"},
-    {text:"Bądźcie jedni ku drugim dobrotliwi, miłosierni, odpuszczając sobie.", ref:"Ef 4:32"},
-    {text:"Zawsze się radujcie. Bez przestanku się módlcie. Za wszystko dziękujcie.", ref:"1 Tes 5:16"},
-    {text:"Nie zaniecham cię, ani cię opuszczę.", ref:"Hbr 13:5"},
-    {text:"I otrze Bóg wszelką łzę z oczów ich, a śmierci więcej nie będzie.", ref:"Obj 21:4"},
-    {text:"Na początku było Słowo, a Słowo było u Boga, a Bogiem było Słowo.", ref:"Jan 1:1"},
-    {text:"Tak niechaj świeci światłość wasza przed ludźmi.", ref:"Mt 5:16"},
-    {text:"Gdy jeszcze byliśmy grzesznymi, Chrystus za nas umarł.", ref:"Rz 5:8"}
+    {pl:"Albowiem tak Bóg umiłował świat, że Syna swego jednorodzonego dał, aby każdy, kto weń wierzy, nie zginął, ale miał żywot wieczny.", en:"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.", ref:"Jan 3:16", refEn:"John 3:16"},
+    {pl:"Błogosławieni pokój czyniący, albowiem oni synami Bożymi nazwani będą.", en:"Blessed are the peacemakers: for they shall be called the children of God.", ref:"Mt 5:9", refEn:"Matt 5:9"},
+    {pl:"Wszystko mogę w Tym, który mnie umacnia.", en:"I can do all things through Christ which strengtheneth me.", ref:"Flp 4:13", refEn:"Phil 4:13"},
+    {pl:"Pójdźcie do mnie wszyscy, którzy jesteście spracowani i obciążeni, a Ja wam sprawię odpocznienie.", en:"Come unto me, all ye that labour and are heavy laden, and I will give you rest.", ref:"Mt 11:28", refEn:"Matt 11:28"},
+    {pl:"A wiemy, że tym, którzy Boga miłują, wszystkie rzeczy dopomagają ku dobremu.", en:"And we know that all things work together for good to them that love God.", ref:"Rz 8:28", refEn:"Rom 8:28"},
+    {pl:"Jam jest droga, i prawda, i żywot.", en:"I am the way, the truth, and the life.", ref:"Jan 14:6", refEn:"John 14:6"},
+    {pl:"Miłość jest cierpliwa, miłość jest łaskawa; nie zazdrości.", en:"Charity suffereth long, and is kind; charity envieth not.", ref:"1 Kor 13:4", refEn:"1 Cor 13:4"},
+    {pl:"Owocem zaś Ducha jest miłość, wesele, pokój, cierpliwość, uprzejmość, dobrotliwość.", en:"But the fruit of the Spirit is love, joy, peace, longsuffering, gentleness, goodness.", ref:"Gal 5:22", refEn:"Gal 5:22"},
+    {pl:"Albowiem łaską zbawieni jesteście przez wiarę, a to dar Boży jest.", en:"For by grace are ye saved through faith; and that not of yourselves: it is the gift of God.", ref:"Ef 2:8", refEn:"Eph 2:8"},
+    {pl:"Jeźli komu z was schodzi na mądrości, niech jej prosi u Boga.", en:"If any of you lack wisdom, let him ask of God.", ref:"Jak 1:5", refEn:"Jas 1:5"},
+    {pl:"Szukajcie najprzód królestwa Bożego, a to wszystko będzie wam przydane.", en:"But seek ye first the kingdom of God, and all these things shall be added unto you.", ref:"Mt 6:33", refEn:"Matt 6:33"},
+    {pl:"Przemieńcie się przez odnowienie umysłu waszego.", en:"Be ye transformed by the renewing of your mind.", ref:"Rz 12:2", refEn:"Rom 12:2"},
+    {pl:"Jeźli kto jest w Chrystusie, nowem jest stworzeniem.", en:"If any man be in Christ, he is a new creature.", ref:"2 Kor 5:17", refEn:"2 Cor 5:17"},
+    {pl:"A wiara jest gruntem tych rzeczy, których się spodziewamy.", en:"Now faith is the substance of things hoped for, the evidence of things not seen.", ref:"Hbr 11:1", refEn:"Heb 11:1"},
+    {pl:"Wszystko staranie wasze wrzuciwszy na niego, gdyż on ma pieczę o was.", en:"Casting all your care upon him; for he careth for you.", ref:"1 P 5:7", refEn:"1 Pet 5:7"},
+    {pl:"A poznacie prawdę, a prawda was wyswobodzi.", en:"And ye shall know the truth, and the truth shall make you free.", ref:"Jan 8:32", refEn:"John 8:32"},
+    {pl:"Nauczajcie wszystkie narody, chrzcząc je w imię Ojca i Syna, i Ducha Świętego.", en:"Teach all nations, baptizing them in the name of the Father, and of the Son, and of the Holy Ghost.", ref:"Mt 28:19", refEn:"Matt 28:19"},
+    {pl:"A jako chcecie, aby wam ludzie czynili, tak i wy czyńcie im.", en:"And as ye would that men should do to you, do ye also to them likewise.", ref:"Łk 6:31", refEn:"Luke 6:31"},
+    {pl:"Jeźli usty wyznasz Pana Jezusa i uwierzysz w sercu twojem, zbawiony będziesz.", en:"If thou shalt confess with thy mouth the Lord Jesus, and believe in thine heart, thou shalt be saved.", ref:"Rz 10:9", refEn:"Rom 10:9"},
+    {pl:"My go miłujemy, iż on nas pierwej umiłował.", en:"We love him, because he first loved us.", ref:"1 Jan 4:19", refEn:"1 John 4:19"},
+    {pl:"Nie troszczcie się o nic, ale we wszystkiem przez modlitwę żądności wasze niech będą znajome u Boga.", en:"Be careful for nothing; but in every thing by prayer let your requests be made known unto God.", ref:"Flp 4:6", refEn:"Phil 4:6"},
+    {pl:"Wszystko, cokolwiek czynicie, z duszy czyńcie, jako Panu.", en:"And whatsoever ye do, do it heartily, as to the Lord.", ref:"Kol 3:23", refEn:"Col 3:23"},
+    {pl:"Nie dał nam Bóg Ducha bojaźni, ale mocy i miłości, i zdrowego zmysłu.", en:"For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind.", ref:"2 Tm 1:7", refEn:"2 Tim 1:7"},
+    {pl:"Większej miłości nad tę żaden nie ma, jaką kto duszę swoję kładzie za przyjacioły swoje.", en:"Greater love hath no man than this, that a man lay down his life for his friends.", ref:"Jan 15:13", refEn:"John 15:13"},
+    {pl:"Proście, a będzie wam dano; szukajcie, a znajdziecie.", en:"Ask, and it shall be given you; seek, and ye shall find.", ref:"Mt 7:7", refEn:"Matt 7:7"},
+    {pl:"Dobrze czyniąc, nie słabiejmy; albowiem czasu swojego żąć będziemy.", en:"And let us not be weary in well doing: for in due season we shall reap.", ref:"Gal 6:9", refEn:"Gal 6:9"},
+    {pl:"Bądźcie jedni ku drugim dobrotliwi, miłosierni, odpuszczając sobie.", en:"And be ye kind one to another, tenderhearted, forgiving one another.", ref:"Ef 4:32", refEn:"Eph 4:32"},
+    {pl:"Zawsze się radujcie. Bez przestanku się módlcie. Za wszystko dziękujcie.", en:"Rejoice evermore. Pray without ceasing. In every thing give thanks.", ref:"1 Tes 5:16", refEn:"1 Thess 5:16"},
+    {pl:"Nie zaniecham cię, ani cię opuszczę.", en:"I will never leave thee, nor forsake thee.", ref:"Hbr 13:5", refEn:"Heb 13:5"},
+    {pl:"I otrze Bóg wszelką łzę z oczów ich, a śmierci więcej nie będzie.", en:"And God shall wipe away all tears from their eyes; and there shall be no more death.", ref:"Obj 21:4", refEn:"Rev 21:4"},
+    {pl:"Na początku było Słowo, a Słowo było u Boga, a Bogiem było Słowo.", en:"In the beginning was the Word, and the Word was with God, and the Word was God.", ref:"Jan 1:1", refEn:"John 1:1"},
+    {pl:"Tak niechaj świeci światłość wasza przed ludźmi.", en:"Let your light so shine before men.", ref:"Mt 5:16", refEn:"Matt 5:16"},
+    {pl:"Gdy jeszcze byliśmy grzesznymi, Chrystus za nas umarł.", en:"While we were yet sinners, Christ died for us.", ref:"Rz 5:8", refEn:"Rom 5:8"},
+    {pl:"Czuwajcie, stójcie w wierze, mężnie sobie poczynajcie, zmacniajcie się.", en:"Watch ye, stand fast in the faith, quit you like men, be strong.", ref:"1 Kor 16:13", refEn:"1 Cor 16:13"},
+    {pl:"Bo nie mamy tu miasta trwałego, ale onego przyszłego szukamy.", en:"For here have we no continuing city, but we seek one to come.", ref:"Hbr 13:14", refEn:"Heb 13:14"},
+    {pl:"Pan jest pasterzem moim, na niczem mi nie zejdzie.", en:"The Lord is my shepherd; I shall not want.", ref:"Ps 23:1", refEn:"Ps 23:1"},
+    {pl:"Niech się nie trwoży serce wasze; wierzcie w Boga i w mię wierzcie.", en:"Let not your heart be troubled: ye believe in God, believe also in me.", ref:"Jan 14:1", refEn:"John 14:1"},
+    {pl:"Bo gdzie są dwaj albo trzej zgromadzeni w imię moje, tam jestem w pośrodku ich.", en:"For where two or three are gathered together in my name, there am I in the midst of them.", ref:"Mt 18:20", refEn:"Matt 18:20"},
+    {pl:"Bieg wykonałem, wiaręm zachował.", en:"I have finished my course, I have kept the faith.", ref:"2 Tm 4:7", refEn:"2 Tim 4:7"},
+    {pl:"Znoście jedni drugich brzemiona, a tak wypełnijcie zakon Chrystusowy.", en:"Bear ye one another's burdens, and so fulfil the law of Christ.", ref:"Gal 6:2", refEn:"Gal 6:2"},
+    {pl:"Radujcie się w Panu zawsze; znowu mówię, radujcie się.", en:"Rejoice in the Lord alway: and again I say, Rejoice.", ref:"Flp 4:4", refEn:"Phil 4:4"},
+    {pl:"Bądźcie tedy naśladowcami Bożymi, jako dzieci miłe.", en:"Be ye therefore followers of God, as dear children.", ref:"Ef 5:1", refEn:"Eph 5:1"},
+    {pl:"Nadzieja zawstydzić nie może, przeto że miłość Boża rozlana jest w sercach naszych.", en:"And hope maketh not ashamed; because the love of God is shed abroad in our hearts.", ref:"Rz 5:5", refEn:"Rom 5:5"},
+    {pl:"Czujcież tedy, ponieważ nie wiecie, której godziny Pan wasz przyjdzie.", en:"Watch therefore: for ye know not what hour your Lord doth come.", ref:"Mt 24:42", refEn:"Matt 24:42"}
   ];
   var factsPL=[
     "Miód nigdy się nie psuje – archeolodzy znaleźli jadalny miód sprzed 3000 lat.",
@@ -3251,7 +3581,20 @@
     "Motyle czują smak stopami.",
     "Ludzkie kości są, gram za gram, mocniejsze od stali w niektórych testach.",
     "Kolibry to jedyne ptaki potrafiące latać do tyłu.",
-    "W jednej łyżeczce materii gwiazdy neutronowej mieści się masa liczona w miliardach ton."
+    "W jednej łyżeczce materii gwiazdy neutronowej mieści się masa liczona w miliardach ton.",
+    "Wombaty produkują odchody w kształcie sześcianu.",
+    "Ludzki żołądek dostaje nową wyściółkę śluzową co kilka dni, by nie strawić sam siebie.",
+    "Największy żyjący organizm to grzyb miodowy w Oregonie, zajmujący ok. 9 km².",
+    "Pyłek Słońca dociera do Ziemi w około 8 minut i 20 sekund.",
+    "Delfiny nadają sobie nawzajem imiona w postaci charakterystycznych gwizdów.",
+    "Tytan, księżyc Saturna, ma jeziora z ciekłego metanu.",
+    "Ludzkie oko potrafi dostrzec pojedynczy foton w idealnych warunkach.",
+    "Bambus potrafi urosnąć nawet o 90 cm w ciągu jednej doby.",
+    "Serce kreveta modliszkowego uderza szybciej niż ludzkie oko potrafi zarejestrować cios.",
+    "Neptun został odkryty dzięki obliczeniom matematycznym, zanim ktokolwiek go zobaczył.",
+    "Pingwiny cesarskie potrafią nurkować na głębokość ponad 500 metrów.",
+    "Około 8% ludzkiego genomu pochodzi ze starożytnych wirusów.",
+    "Jedna błyskawica zawiera dość energii, by opiec ok. 100 000 kromek chleba."
   ];
   var factsEN=[
     "Honey never spoils – archaeologists found edible honey over 3000 years old.",
@@ -3283,7 +3626,20 @@
     "Butterflies taste with their feet.",
     "Human bones are, gram for gram, stronger than steel in some tests.",
     "Hummingbirds are the only birds that can fly backwards.",
-    "A teaspoon of neutron star matter would weigh billions of tons."
+    "A teaspoon of neutron star matter would weigh billions of tons.",
+    "Wombats produce cube-shaped droppings.",
+    "The human stomach gets a new mucous lining every few days so it doesn't digest itself.",
+    "The largest living organism is a honey fungus in Oregon, spanning about 9 km².",
+    "Sunlight takes about 8 minutes and 20 seconds to reach Earth.",
+    "Dolphins give each other names in the form of signature whistles.",
+    "Saturn's moon Titan has lakes of liquid methane.",
+    "The human eye can detect a single photon under ideal conditions.",
+    "Bamboo can grow up to 90 cm in a single day.",
+    "The mantis shrimp strikes faster than the human eye can register.",
+    "Neptune was discovered through mathematics before anyone saw it.",
+    "Emperor penguins can dive to depths of over 500 metres.",
+    "About 8% of the human genome comes from ancient viruses.",
+    "A single lightning bolt holds enough energy to toast about 100,000 slices of bread."
   ];
   function dayOfYear(d){ var s=new Date(d.getFullYear(),0,0); return Math.floor((d-s)/86400000); }
   // Motivational quotes (point 5) — bilingual, ref = author.
@@ -3299,7 +3655,21 @@
     {text:"Zaczynaj od tego, co konieczne, potem rób to, co możliwe, a nagle robisz rzeczy niemożliwe.",ref:"Św. Franciszek"},
     {text:"Twoje ograniczenia to często tylko Twoja wyobraźnia.",ref:"Anonim"},
     {text:"Małe kroki każdego dnia prowadzą do wielkich zmian.",ref:"Anonim"},
-    {text:"Motywacja pozwala zacząć, nawyk pozwala wytrwać.",ref:"Jim Ryun"}
+    {text:"Motywacja pozwala zacząć, nawyk pozwala wytrwać.",ref:"Jim Ryun"},
+    {text:"Nie musisz być wielki, by zacząć, ale musisz zacząć, by być wielkim.",ref:"Zig Ziglar"},
+    {text:"Sekret wyprzedzenia innych to po prostu zacząć.",ref:"Mark Twain"},
+    {text:"Jakość nie jest dziełem przypadku; zawsze jest wynikiem wysiłku.",ref:"John Ruskin"},
+    {text:"Ból, który dziś czujesz, będzie siłą, którą jutro poczujesz.",ref:"Anonim"},
+    {text:"Nie zatrzymuj się, gdy jesteś zmęczony. Zatrzymaj się, gdy skończysz.",ref:"Anonim"},
+    {text:"Ciało osiąga to, w co wierzy umysł.",ref:"Napoleon Hill"},
+    {text:"Sukces to suma drobnych powtarzalnych decyzji.",ref:"John C. Maxwell"},
+    {text:"Trudne drogi często prowadzą do pięknych celów.",ref:"Anonim"},
+    {text:"Wygrywa nie ten najsilniejszy, lecz ten najbardziej wytrwały.",ref:"Anonim"},
+    {text:"Zrób dziś to, czego inni nie chcą, a jutro osiągniesz to, czego inni nie mogą.",ref:"Jerry Rice"},
+    {text:"Największą chwałą nie jest to, że nigdy nie upadamy, lecz że po każdym upadku wstajemy.",ref:"Nelson Mandela"},
+    {text:"Dyscyplina to wybieranie tego, czego pragniesz najbardziej, ponad to, czego pragniesz teraz.",ref:"Anonim"},
+    {text:"Każdy mistrz był kiedyś początkującym.",ref:"Anonim"},
+    {text:"Energia i wytrwałość pokonują wszystko.",ref:"Benjamin Franklin"}
   ];
   var motivEN=[
     {text:"Success is the sum of small efforts repeated day in and day out.",ref:"Robert Collier"},
@@ -3313,7 +3683,21 @@
     {text:"Start by doing what's necessary, then the possible, and suddenly you're doing the impossible.",ref:"St. Francis"},
     {text:"Your limitations are often just your imagination.",ref:"Anonymous"},
     {text:"Small steps every day lead to big changes.",ref:"Anonymous"},
-    {text:"Motivation gets you started; habit keeps you going.",ref:"Jim Ryun"}
+    {text:"Motivation gets you started; habit keeps you going.",ref:"Jim Ryun"},
+    {text:"You don't have to be great to start, but you have to start to be great.",ref:"Zig Ziglar"},
+    {text:"The secret of getting ahead is getting started.",ref:"Mark Twain"},
+    {text:"Quality is never an accident; it is always the result of effort.",ref:"John Ruskin"},
+    {text:"The pain you feel today will be the strength you feel tomorrow.",ref:"Anonymous"},
+    {text:"Don't stop when you're tired. Stop when you're done.",ref:"Anonymous"},
+    {text:"Whatever the mind can conceive and believe, it can achieve.",ref:"Napoleon Hill"},
+    {text:"Success is the sum of small repeated decisions.",ref:"John C. Maxwell"},
+    {text:"Hard roads often lead to beautiful destinations.",ref:"Anonymous"},
+    {text:"It's not the strongest who wins, but the most persistent.",ref:"Anonymous"},
+    {text:"Do today what others won't, and tomorrow you'll achieve what others can't.",ref:"Jerry Rice"},
+    {text:"The greatest glory is not in never falling, but in rising every time we fall.",ref:"Nelson Mandela"},
+    {text:"Discipline is choosing what you want most over what you want now.",ref:"Anonymous"},
+    {text:"Every expert was once a beginner.",ref:"Anonymous"},
+    {text:"Energy and persistence conquer all things.",ref:"Benjamin Franklin"}
   ];
   function renderHeaderInfo(){
     if(state.headerMode==="fact"){
@@ -3329,11 +3713,11 @@
       $("hiText").textContent=m.text;
       $("hiRef").textContent="— "+m.ref;
     } else {
-      // quote refreshed each load (random pick)
+      // NT quote refreshed each load — translated to English when the app language is English.
       var q = quotes[Math.floor(Math.random()*quotes.length)];
       $("hiLabel").textContent=t("quote_label");
-      $("hiText").textContent=q.text;
-      $("hiRef").textContent="— "+q.ref;
+      $("hiText").textContent = state.lang==="en" ? q.en : q.pl;
+      $("hiRef").textContent = "— " + (state.lang==="en" ? (q.refEn||q.ref) : q.ref);
     }
   }
 
@@ -3751,6 +4135,7 @@
     refreshExerciseDatalist(); refreshFoodList(); renderRecent();
     renderDaily(); renderBudget(); renderExerciseDb();
     renderTicker(); renderCurrencyGrid();
+    renderRuns(); renderCombats();
   }
 
   applyTheme();
@@ -3759,6 +4144,8 @@
   initAccordions();     // reusable collapsible sections (settings, budget, home daily, exercise DB)
   $("wDate").value=todayISO();
   var _td=$("taskDate"); if(_td) _td.value=todayISO();
+  var _rd=$("runDate"); if(_rd) _rd.value=todayISO();
+  var _cd=$("cbtDate"); if(_cd) _cd.value=todayISO();
   addExerciseBlock();
   renderAll();
   fetchRates();
@@ -3798,7 +4185,7 @@
   /* ===== Service Worker: offline cache-first for the page ===== */
   if("serviceWorker" in navigator){
     var swSource=[
-      "const CACHE_NAME='futureapp-cache-v11';",
+      "const CACHE_NAME='futureapp-cache-v13';",
       "self.addEventListener('install',function(event){",
       "  self.skipWaiting();",
       "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
