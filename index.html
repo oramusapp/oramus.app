@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FutureApp</title>
+<style>
+  /* ===== THEMES ===== */
+  :root{
+    --radius:10px;
+    --font-mono:"JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  /* Cyberpunk (default dark) */
+  html[data-theme="cyber"]{
+    --bg:#05060a; --bg-panel:#0b0e16; --bg-input:#0d1119;
+    --accent:#00fff7; --accent2:#ff2fd0; --danger:#ff3860;
+    --text:#dff8ff; --text-dim:#7c93a3;
+    --border:rgba(0,255,247,0.28); --border-soft:rgba(0,255,247,0.14);
+    --glow:0 0 6px rgba(0,255,247,0.55),0 0 18px rgba(0,255,247,0.18);
+    --glow2:0 0 6px rgba(255,47,208,0.55),0 0 18px rgba(255,47,208,0.18);
+    --scan:rgba(255,255,255,0.018);
+  }
+  /* Synthwave (violet/magenta) */
+  html[data-theme="synth"]{
+    --bg:#0d0618; --bg-panel:#160a26; --bg-input:#1c0f30;
+    --accent:#b388ff; --accent2:#ff5db1; --danger:#ff5470;
+    --text:#f2e9ff; --text-dim:#a08bc0;
+    --border:rgba(179,136,255,0.30); --border-soft:rgba(179,136,255,0.16);
+    --glow:0 0 6px rgba(179,136,255,0.55),0 0 18px rgba(179,136,255,0.18);
+    --glow2:0 0 6px rgba(255,93,177,0.55),0 0 18px rgba(255,93,177,0.18);
+    --scan:rgba(255,255,255,0.02);
+  }
+  /* Light */
+  html[data-theme="light"]{
+    --bg:#f4f6fb; --bg-panel:#ffffff; --bg-input:#f0f2f7;
+    --accent:#0a84ff; --accent2:#c026d3; --danger:#dc2626;
+    --text:#1a2230; --text-dim:#64748b;
+    --border:rgba(10,132,255,0.25); --border-soft:rgba(10,132,255,0.12);
+    --glow:0 1px 2px rgba(20,30,50,0.06),0 6px 18px rgba(20,30,50,0.08);
+    --glow2:0 1px 2px rgba(192,38,211,0.10),0 6px 18px rgba(192,38,211,0.10);
+    --scan:transparent;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-sans);
+    min-height:100vh;
+    padding-bottom:60px;
+    position:relative;
+    overflow-x:hidden;
+    transition:background 0.25s ease,color 0.25s ease;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  ::selection{background:var(--accent);color:var(--bg);}
+  a{color:var(--accent);}
+
+  /* scanline overlay */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9990;
+    background:repeating-linear-gradient(to bottom,var(--scan) 0px,var(--scan) 1px,transparent 2px,transparent 3px);
+    animation:scan 9s linear infinite;
+  }
+  @keyframes scan{0%{background-position:0 0;}100%{background-position:0 60px;}}
+  @keyframes flicker{0%,19%,21%,23%,80%,100%{opacity:1;}20%{opacity:0.6;}22%{opacity:0.85;}}
+  @keyframes viewIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes pulseDot{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+  /* ===== HEADER ===== */
+  header.topbar{
+    max-width:1040px;margin:0 auto;padding:16px 18px 4px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .site-name{
+    font-family:var(--font-mono);font-weight:700;font-size:1.3rem;letter-spacing:0.05em;
+    color:var(--accent);text-shadow:var(--glow);animation:flicker 6s infinite;white-space:nowrap;
+  }
+  .site-name span{color:var(--accent2);text-shadow:var(--glow2);}
+  .ticker{
+    display:flex;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:0.72rem;
+  }
+  .tick{
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;
+    padding:6px 10px;display:flex;flex-direction:column;gap:1px;min-width:90px;
+  }
+  .tick .tk-pair{color:var(--text-dim);font-size:0.62rem;letter-spacing:0.03em;}
+  .tick .tk-val{color:var(--accent);font-weight:700;}
+  .tick .tk-val.up{color:#22c55e;} .tick .tk-val.down{color:var(--danger);}
+  .header-info{
+    margin-left:auto;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--glow);padding:10px 14px;max-width:330px;font-family:var(--font-mono);
+    font-size:0.72rem;line-height:1.5;color:var(--text-dim);
+  }
+  .header-info .hi-label{
+    color:var(--accent2);text-transform:uppercase;letter-spacing:0.07em;font-size:0.58rem;
+    margin-bottom:5px;display:block;
+  }
+  .header-info .hi-text{color:var(--text);}
+  .header-info .hi-ref{display:block;margin-top:5px;color:var(--accent);text-align:right;}
+
+  main{max-width:1040px;margin:0 auto;padding:12px 18px 20px;}
+
+  /* clock + upcoming bar */
+  .subbar{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 18px;
+  }
+  @media (max-width:640px){.subbar{grid-template-columns:1fr;}}
+  .subcard{
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--glow);padding:16px 18px;
+  }
+  .subcard h3{
+    font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:0.09em;
+    color:var(--accent2);margin:0 0 8px;
+  }
+  .clock-main{font-family:var(--font-mono);font-size:1.7rem;color:var(--text);letter-spacing:0.03em;}
+  .clock-date{color:var(--text-dim);font-size:0.82rem;margin-top:2px;}
+  .clock-zone{color:var(--text-dim);font-size:0.66rem;font-family:var(--font-mono);margin-top:4px;}
+  .clock-second{
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);
+    font-family:var(--font-mono);
+  }
+  .clock-second .cs-time{font-size:1.05rem;color:var(--accent);}
+  .clock-second .cs-zone{font-size:0.62rem;color:var(--text-dim);}
+  .upcoming-big .ub-name{font-size:1.05rem;color:var(--text);}
+  .upcoming-big .ub-when{font-family:var(--font-mono);color:var(--accent);font-size:0.8rem;margin-top:4px;}
+  .upcoming-big .ub-desc{color:var(--text-dim);font-size:0.78rem;margin-top:4px;}
+  .empty-note{color:var(--text-dim);font-size:0.82rem;font-style:italic;}
+
+  /* ===== TILES ===== */
+  .tile-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:4px;}
+  @media (max-width:900px){.tile-grid{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:640px){.tile-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:420px){.tile-grid{grid-template-columns:1fr;}}
+  .tile{
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px 16px;text-align:left;display:flex;flex-direction:column;gap:8px;min-height:118px;
+    color:var(--text);transition:box-shadow 0.2s,border-color 0.2s,transform 0.15s;
+  }
+  .tile:hover{transform:translateY(-2px);border-color:var(--accent2);box-shadow:var(--glow2);}
+  .tile .tile-icon{font-size:1.5rem;line-height:1;}
+  .tile .tile-title{font-family:var(--font-mono);font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+  .tile .tile-sub{color:var(--text-dim);font-size:0.76rem;}
+  .tile .tile-lock{font-size:0.6rem;color:var(--accent2);font-family:var(--font-mono);letter-spacing:0.05em;}
+
+  /* ===== VIEWS ===== */
+  .view{display:none;}
+  .view.active{display:block;animation:viewIn 0.28s ease;}
+  .view-header{display:flex;align-items:center;gap:12px;margin:16px 0 18px;flex-wrap:wrap;}
+  .back-btn{
+    background:transparent;border:1px solid var(--border);border-radius:9px;padding:8px 12px;
+    font-size:0.82rem;color:var(--accent);display:flex;align-items:center;gap:6px;font-family:var(--font-mono);
+  }
+  .back-btn:hover{box-shadow:var(--glow);border-color:var(--accent);}
+  .view-header h2{font-family:var(--font-mono);font-size:1.15rem;margin:0;font-weight:700;color:var(--text);}
+
+  .card{
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px;margin-bottom:14px;
+  }
+
+  label{display:block;font-size:0.7rem;color:var(--text-dim);margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.04em;}
+  label:first-of-type{margin-top:0;}
+  input[type=text],input[type=email],input[type=date],input[type=time],input[type=number],
+  input[type=password],textarea,select{
+    width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;
+    font-size:0.92rem;font-family:inherit;background:var(--bg-input);color:var(--text);
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:var(--glow);}
+  textarea{resize:vertical;min-height:56px;}
+  .row{display:flex;gap:10px;}.row>div{flex:1;}
+
+  .btn-primary{
+    margin-top:14px;background:transparent;color:var(--accent);border:1px solid var(--accent);
+    border-radius:8px;padding:10px 16px;font-size:0.85rem;box-shadow:var(--glow);font-family:var(--font-mono);
+  }
+  .btn-primary:hover{background:color-mix(in srgb,var(--accent) 10%,transparent);}
+  .btn-ghost{background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.78rem;color:var(--text-dim);}
+  .btn-ghost:hover{border-color:var(--accent2);color:var(--accent2);}
+  .btn-small{background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.7rem;color:var(--text-dim);}
+  .btn-small:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* Todo */
+  .task-item{padding:12px 0;border-bottom:1px solid var(--border-soft);}
+  .task-item:last-child{border-bottom:none;}
+  .task-row{display:flex;align-items:flex-start;gap:10px;}
+  .task-item input[type=checkbox]{margin-top:3px;width:17px;height:17px;accent-color:var(--accent);flex-shrink:0;}
+  .task-main{flex:1;min-width:0;}
+  .task-name{font-size:0.95rem;}
+  .task-item.done .task-name{text-decoration:line-through;color:var(--text-dim);}
+  .task-meta{font-size:0.76rem;color:var(--text-dim);margin-top:2px;font-family:var(--font-mono);}
+  .task-meta.overdue{color:var(--danger);}
+  .task-actions{display:flex;gap:6px;flex-shrink:0;}
+  .del-btn{background:none;border:none;color:var(--text-dim);font-size:0.78rem;padding:4px 6px;font-family:var(--font-mono);}
+  .del-btn:hover{color:var(--danger);}
+  .task-edit-row{display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;}
+  .task-edit-row input{width:auto;flex:1;min-width:120px;}
+
+  /* Calendar */
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cal-nav button{background:transparent;border:1px solid var(--border);border-radius:8px;width:34px;height:34px;font-size:1rem;color:var(--accent);}
+  .cal-nav button:hover{box-shadow:var(--glow);}
+  .cal-nav .cal-title{font-family:var(--font-mono);font-weight:700;font-size:1rem;color:var(--text);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{text-align:center;font-size:0.62rem;color:var(--text-dim);padding-bottom:4px;text-transform:uppercase;font-family:var(--font-mono);}
+  .cal-day{aspect-ratio:1/1;border:1px solid var(--border-soft);border-radius:8px;padding:4px;font-size:0.74rem;background:var(--bg-input);display:flex;flex-direction:column;overflow:hidden;position:relative;color:var(--text);}
+  .cal-day:hover{border-color:var(--accent2);}
+  .cal-day.empty{background:transparent;border:none;cursor:default;}
+  .cal-day.today{border-color:var(--accent);border-width:2px;box-shadow:var(--glow);}
+  .cal-day .num{font-weight:700;font-family:var(--font-mono);}
+  .cal-day .dot-wrap{margin-top:auto;display:flex;gap:2px;flex-wrap:wrap;}
+  .cal-day .dot{width:5px;height:5px;border-radius:50%;background:var(--accent2);}
+  .day-events-list{margin-top:16px;}
+  .event-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border-soft);}
+  .event-item:last-child{border-bottom:none;}
+  .event-time{font-size:0.76rem;color:var(--accent);font-weight:700;white-space:nowrap;font-family:var(--font-mono);}
+  .event-desc{font-size:0.76rem;color:var(--text-dim);margin-top:2px;}
+
+  /* Fitness tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab-btn{
+    flex:1;background:transparent;border:1px solid var(--border);border-radius:9px;padding:12px;
+    font-family:var(--font-mono);font-size:0.9rem;color:var(--text-dim);letter-spacing:0.03em;
+  }
+  .tab-btn.active{color:var(--accent);border-color:var(--accent);box-shadow:var(--glow);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:viewIn 0.25s ease;}
+
+  /* Workout */
+  .exercise-block{border:1px solid var(--border-soft);border-radius:9px;padding:14px;margin-top:12px;background:var(--bg-input);}
+  .exercise-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .exercise-block-header span{font-family:var(--font-mono);color:var(--accent2);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;}
+  .set-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
+  .set-row input{flex:1;}
+  .set-row .rm-set{background:none;border:none;color:var(--text-dim);font-size:0.9rem;flex:0 0 auto;padding:2px 6px;}
+  .set-row .rm-set:hover{color:var(--danger);}
+  .workout-entry{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border-soft);}
+  .workout-entry:last-child{border:none;margin:0;padding:0;}
+  .workout-entry .w-date{font-family:var(--font-mono);font-weight:700;font-size:0.9rem;color:var(--accent);}
+  .workout-entry .w-exercise-block{margin-top:8px;padding-left:10px;border-left:2px solid var(--border);}
+  .workout-entry .w-exercise-name{font-size:0.88rem;color:var(--text);font-weight:600;}
+  .workout-entry .w-sets{font-size:0.78rem;color:var(--text-dim);margin-top:2px;font-family:var(--font-mono);}
+  .workout-entry .w-note{font-size:0.78rem;color:var(--text-dim);margin-top:2px;font-style:italic;}
+
+  /* Calories */
+  .day-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .day-nav button{background:transparent;border:1px solid var(--border);border-radius:8px;width:34px;height:34px;font-size:1rem;color:var(--accent);}
+  .day-nav button:hover{box-shadow:var(--glow);}
+  .day-nav .day-title{font-family:var(--font-mono);font-weight:700;font-size:0.92rem;color:var(--text);}
+  /* daily totals as stat tiles (readability) */
+  .stat-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px;}
+  .stat{border:1px solid var(--border);border-radius:9px;background:var(--bg-input);padding:12px 10px;text-align:center;}
+  .stat .st-label{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  .stat .st-num{font-family:var(--font-mono);font-size:1.15rem;color:var(--text);}
+  .stat.kcal{border-color:var(--accent);}
+  .stat.kcal .st-num{color:var(--accent);text-shadow:var(--glow);font-size:1.3rem;}
+  .stat.p .st-num{color:#22c55e;}
+  .stat.c .st-num{color:var(--accent2);}
+  .stat.f .st-num{color:#f59e0b;}
+  .stat.bmr .st-num{color:var(--accent2);}
+  .stat.tdee .st-num{color:#22c55e;}
+  /* segmented controls */
+  .seg{display:flex;gap:6px;flex-wrap:wrap;}
+  .seg-btn{flex:1;min-width:70px;background:transparent;border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:0.8rem;color:var(--text-dim);font-family:var(--font-mono);}
+  .seg-btn.active{color:var(--accent);border-color:var(--accent);box-shadow:var(--glow);}
+  .mini-label{font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin-bottom:6px;}
+  /* sub-tabs */
+  .subtabs{display:flex;gap:6px;margin:14px 0 4px;}
+  .subtab-btn{flex:1;background:transparent;border:none;border-bottom:2px solid var(--border-soft);padding:8px;font-size:0.82rem;color:var(--text-dim);}
+  .subtab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .msub-panel{display:none;padding-top:6px;}
+  .msub-panel.active{display:block;}
+  .calc-out{padding:9px 10px;border:1px solid var(--border-soft);border-radius:8px;background:var(--bg-input);font-family:var(--font-mono);font-size:0.8rem;color:var(--accent);}
+  /* goal bar */
+  .goal-bar{height:10px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border-soft);overflow:hidden;}
+  .goal-fill{height:100%;width:0%;background:var(--accent);box-shadow:var(--glow);transition:width 0.3s ease;}
+  .goal-fill.over{background:var(--danger);}
+  .goal-text{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-top:5px;}
+  /* chips */
+  .chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{background:var(--bg-input);border:1px solid var(--border);border-radius:14px;padding:5px 11px;font-size:0.74rem;color:var(--text);cursor:pointer;}
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  /* steppers */
+  .stepper{display:flex;align-items:stretch;flex:1;}
+  .stepper input{border-radius:0;text-align:center;-moz-appearance:textfield;}
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .stepper .stp{width:34px;flex:0 0 auto;background:var(--bg-input);border:1px solid var(--border);color:var(--accent);font-size:1.05rem;line-height:1;}
+  .stepper .stp.minus{border-radius:8px 0 0 8px;border-right:none;}
+  .stepper .stp.plus{border-radius:0 8px 8px 0;border-left:none;}
+  .stepper input{border-left:none;border-right:none;}
+  .ex-hint{font-size:0.72rem;color:var(--accent);font-family:var(--font-mono);margin-top:6px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;}
+  .ex-hint .use-last{color:var(--accent2);cursor:pointer;text-decoration:underline;white-space:nowrap;}
+  /* calculator results: hero tile + macro pills (readability) */
+  .calc-hero{border:1px solid var(--accent);border-radius:9px;background:var(--bg-input);box-shadow:var(--glow);padding:16px;text-align:center;margin-bottom:12px;}
+  .calc-hero .st-label{font-family:var(--font-mono);font-size:0.64rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  .calc-hero-num{font-family:var(--font-mono);font-size:2rem;color:var(--accent);text-shadow:var(--glow);}
+  .calc-hero-unit{font-size:0.8rem;color:var(--text-dim);text-shadow:none;}
+  .macro-pills{display:flex;gap:8px;flex-wrap:wrap;}
+  .macro-pill{border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-family:var(--font-mono);font-size:0.76rem;color:var(--text-dim);background:var(--bg-input);}
+  .macro-pill b{color:var(--text);font-weight:600;margin-left:4px;}
+  .macro-pill.p{border-color:rgba(34,197,94,0.5);} .macro-pill.p b{color:#22c55e;}
+  .macro-pill.f{border-color:rgba(245,158,11,0.5);} .macro-pill.f b{color:#f59e0b;}
+  .macro-pill.c{border-color:var(--border);} .macro-pill.c b{color:var(--accent2);}
+  .calc-note{font-size:0.68rem;color:var(--text-dim);margin-top:14px;line-height:1.5;opacity:0.85;}
+  /* meal list: grouped bordered categories, zebra rows, clear separators */
+  .meal-cat-group{border:1px solid var(--border-soft);border-radius:9px;background:var(--bg-input);margin-bottom:12px;overflow:hidden;}
+  .meal-cat-group:last-child{margin-bottom:0;}
+  .meal-cat-head{font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent2);margin:0;padding:9px 12px;background:color-mix(in srgb,var(--accent2) 9%,transparent);border-bottom:1px solid var(--border-soft);}
+  .meal-edit-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .meal-edit-row input{width:auto;flex:1;min-width:70px;}
+  .meal-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border-soft);}
+  .meal-cat-group .meal-item{padding:11px 12px;}
+  .meal-cat-group .meal-item:nth-of-type(even){background:color-mix(in srgb,var(--text) 5%,transparent);}
+  .meal-cat-group .meal-item:last-child{border-bottom:none;}
+  .meal-item:last-child{border-bottom:none;}
+  .meal-name{font-size:0.9rem;color:var(--text);}
+  .meal-macro{font-size:0.72rem;color:var(--text-dim);margin-top:2px;font-family:var(--font-mono);}
+  .meal-kcal{font-family:var(--font-mono);color:var(--accent2);font-size:0.85rem;white-space:nowrap;}
+  .meal-day-history{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border-soft);}
+  .meal-day-history:last-child{border:none;margin:0;padding:0;}
+  .meal-day-history .mh-date{font-family:var(--font-mono);font-weight:700;font-size:0.88rem;color:var(--accent);display:flex;justify-content:space-between;}
+  .meal-day-history .mh-total{color:var(--accent2);}
+
+  /* Journal */
+  .journal-entry{padding:14px 0;border-bottom:1px solid var(--border-soft);}
+  .journal-entry:last-child{border-bottom:none;}
+  .journal-entry .je-date{font-family:var(--font-mono);font-size:0.76rem;color:var(--accent);display:flex;justify-content:space-between;align-items:center;}
+  .journal-entry .je-text{font-size:0.9rem;margin-top:6px;white-space:pre-wrap;line-height:1.5;}
+
+  /* Settings gear + panel */
+  .gear-btn{
+    position:fixed;right:18px;bottom:18px;z-index:120;width:52px;height:52px;border-radius:50%;
+    background:var(--bg-panel);border:1px solid var(--border);color:var(--accent);font-size:1.4rem;
+    box-shadow:var(--glow);display:flex;align-items:center;justify-content:center;
+  }
+  .gear-btn:hover{transform:rotate(30deg);}
+  .overlay{
+    position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);
+    display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
+  }
+  .overlay.active{display:flex;}
+  .modal{
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--glow);
+    width:100%;max-width:520px;padding:22px;margin:auto;
+  }
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-head h2{font-family:var(--font-mono);font-size:1.1rem;margin:0;color:var(--text);}
+  .modal-close{background:none;border:none;color:var(--text-dim);font-size:1.4rem;line-height:1;}
+  .modal-close:hover{color:var(--danger);}
+  .set-section{border-top:1px solid var(--border-soft);padding:14px 0;}
+  .set-section:first-of-type{border-top:none;padding-top:0;}
+  .set-section h4{font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent2);margin:0 0 10px;}
+  .theme-opts{display:flex;gap:8px;flex-wrap:wrap;}
+  .theme-chip{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.78rem;color:var(--text-dim);background:transparent;}
+  .theme-chip.active{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow);}
+  .order-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-soft);}
+  .order-row:last-child{border-bottom:none;}
+  .order-row .or-name{flex:1;font-size:0.86rem;}
+  .order-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);}
+  .order-row .or-arrows{display:flex;gap:4px;}
+  .toggle-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:0.85rem;}
+  .lang-opts,.header-mode-opts{display:flex;gap:8px;}
+
+  /* Footer */
+  footer.app-footer{
+    max-width:1040px;margin:24px auto 0;padding:16px 18px 8px;text-align:center;
+    font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);border-top:1px solid var(--border-soft);
+  }
+  footer.app-footer a{cursor:pointer;text-decoration:underline;}
+  .about-block{margin:14px 0;font-family:var(--font-sans);font-size:0.85rem;line-height:1.6;color:var(--text);}
+  .about-block strong{color:var(--accent);}
+
+  @media (max-width:520px){
+    .header-info{margin-left:0;max-width:100%;}
+    .clock-main{font-size:1.4rem;}
+  }
+
+  /* ===== APPEARANCE: font-size scale (applied on <html>) ===== */
+  html.fs-small{font-size:14.5px;}
+  html.fs-default{font-size:16px;}
+  html.fs-large{font-size:18px;}
+
+  /* ===== APPEARANCE: layout density (applied on <body>) ===== */
+  body.den-compact .card{padding:12px;margin-bottom:10px;}
+  body.den-compact .set-section{padding:10px 0;}
+  body.den-compact .task-item{padding:8px 0;}
+  body.den-compact .meal-item,body.den-compact .event-item{padding:7px 0;}
+  body.den-compact .meal-cat-group .meal-item{padding:7px 12px;}
+  body.den-spacious .card{padding:24px;margin-bottom:20px;}
+  body.den-spacious .set-section{padding:20px 0;}
+  body.den-spacious .task-item{padding:16px 0;}
+  body.den-spacious .meal-item,body.den-spacious .event-item{padding:14px 0;}
+  body.den-spacious .meal-cat-group .meal-item{padding:14px 12px;}
+
+  /* clickable site name */
+  .site-name{cursor:pointer;}
+
+  /* ===== SHARED DATABASE GRID (matches settings aesthetic) ===== */
+  .db-section{border-top:1px solid var(--border-soft);padding:14px 0;}
+  .db-section:first-of-type{border-top:none;padding-top:0;}
+  .db-section h4{font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent2);margin:0 0 10px;}
+  .db-toolbar{margin-bottom:12px;}
+  .db-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .db-tab{background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.76rem;color:var(--text-dim);font-family:var(--font-mono);}
+  .db-tab.active{color:var(--accent);border-color:var(--accent);box-shadow:var(--glow);}
+  .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .db-item{border:1px solid var(--border);border-radius:9px;padding:11px 12px;background:var(--bg-input);display:flex;flex-direction:column;gap:4px;text-align:left;color:var(--text);transition:border-color 0.15s,box-shadow 0.15s,transform 0.12s;}
+  .db-item:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px);}
+  .db-item .db-name{font-size:0.86rem;font-weight:600;color:var(--text);}
+  .db-item .db-meta{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);line-height:1.4;}
+  .db-item .db-tag{font-size:0.62rem;color:var(--accent2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.04em;}
+  /* collapsible database body */
+  .db-head{display:flex;justify-content:space-between;align-items:center;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left;}
+  .db-head h4{margin:0;}
+  .db-arrow{color:var(--accent);font-size:0.8rem;transition:transform 0.3s ease;display:inline-block;}
+  .db-head[aria-expanded="true"] .db-arrow{transform:rotate(180deg);}
+  .db-collapse{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;margin-top:0;}
+  .db-collapse.open{max-height:2400px;opacity:1;margin-top:12px;}
+  .db-empty{color:var(--text-dim);font-size:0.82rem;font-style:italic;}
+
+  /* ===== CURRENCY PERSONALIZATION (settings) ===== */
+  .currency-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .cur-opt{display:flex;align-items:center;gap:8px;border:1px solid var(--border-soft);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:var(--font-mono);color:var(--text);cursor:pointer;}
+  .cur-opt input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;}
+  .cur-opt.disabled{opacity:0.4;cursor:not-allowed;}
+  .cur-note{font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;}
+
+  /* ===== DAILY TASKS (home) ===== */
+  .daily-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--glow);padding:16px 18px;margin-bottom:18px;position:relative;}
+  .daily-card h3{font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--accent2);margin:0 0 10px;padding-right:34px;}
+  .daily-pen{position:absolute;top:12px;right:12px;background:transparent;border:1px solid var(--border);border-radius:7px;width:30px;height:30px;color:var(--accent);font-size:0.9rem;display:flex;align-items:center;justify-content:center;}
+  .daily-pen:hover{border-color:var(--accent);box-shadow:var(--glow);}
+  .daily-pen.active{color:var(--accent2);border-color:var(--accent2);box-shadow:var(--glow2);}
+  .daily-list{display:flex;flex-direction:column;}
+  .daily-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);overflow:hidden;transition:opacity 0.35s ease,max-height 0.35s ease,transform 0.35s ease,padding 0.35s ease;max-height:60px;}
+  .daily-item:last-child{border-bottom:none;}
+  .daily-item.removing{opacity:0;max-height:0;transform:translateY(-8px);padding-top:0;padding-bottom:0;}
+  .daily-item input[type=checkbox]{width:19px;height:19px;accent-color:var(--accent);flex-shrink:0;}
+  .daily-item .di-name{flex:1;font-size:0.9rem;color:var(--text);min-width:0;}
+  .daily-item .di-del{background:none;border:none;color:var(--text-dim);font-size:0.85rem;padding:4px 6px;font-family:var(--font-mono);}
+  .daily-item .di-del:hover{color:var(--danger);}
+  .daily-item input[type=text].di-edit{flex:1;padding:7px 9px;}
+  .daily-add-row{display:flex;gap:8px;margin-top:10px;}
+  .daily-add-row input{flex:1;}
+  .daily-empty{color:var(--text-dim);font-size:0.82rem;font-style:italic;}
+  .daily-done-note{color:var(--accent);font-size:0.82rem;font-family:var(--font-mono);}
+
+  /* ===== BUDGET VIEW ===== */
+  .bud-section{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-panel);padding:16px 18px;margin-bottom:14px;}
+  .bud-section h3{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--accent2);margin:0 0 12px;}
+  .bud-add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
+  .bud-add-row>div{flex:1;min-width:110px;}
+  .bud-add-row label{margin-top:0;}
+  .bud-add-row .btn-primary{margin-top:0;flex:0 0 auto;}
+  .bud-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+  .bud-line:last-child{border-bottom:none;}
+  .bud-line .bl-main{min-width:0;flex:1;}
+  .bud-line .bl-name{font-size:0.9rem;color:var(--text);}
+  .bud-line .bl-sub{font-size:0.72rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px;}
+  .bud-line .bl-amt{font-family:var(--font-mono);font-size:0.92rem;white-space:nowrap;}
+  .bud-line .bl-amt.pos{color:#22c55e;}
+  .bud-line .bl-amt.neg{color:var(--danger);}
+  .bud-line .bl-amt.inv{color:var(--accent2);}
+  .bud-carry{font-size:0.76rem;color:var(--accent);font-family:var(--font-mono);margin-bottom:8px;}
+  .bud-subtotal{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:0.82rem;color:var(--text-dim);margin-top:10px;padding-top:8px;border-top:1px dashed var(--border-soft);}
+  .bud-subtotal .st-val{color:var(--text);}
+  .bud-summary{border:1px solid var(--accent);border-radius:var(--radius);background:var(--bg-input);box-shadow:var(--glow);padding:18px;margin-bottom:14px;}
+  .bud-summary .bs-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-mono);font-size:0.84rem;color:var(--text-dim);margin-bottom:8px;}
+  .bud-summary .bs-row span:last-child{color:var(--text);}
+  .bud-summary .bs-final{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+  .bud-summary .bs-final .bf-label{font-family:var(--font-mono);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent2);}
+  .bud-summary .bs-final .bf-val{font-family:var(--font-mono);font-size:1.5rem;color:var(--accent);text-shadow:var(--glow);}
+  .bud-summary .bs-final .bf-val.neg{color:var(--danger);text-shadow:none;}
+  /* piggy bank (savings goal) */
+  .piggy-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+  .piggy-goal-name{font-size:0.9rem;color:var(--text);font-weight:600;}
+  .piggy-amounts{font-family:var(--font-mono);font-size:0.85rem;color:var(--accent);}
+  .piggy-pct{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-top:6px;}
+  .piggy-empty{font-size:0.8rem;color:var(--text-dim);font-style:italic;margin-top:8px;}
+  #piggyAddRow{margin-top:12px;}
+  /* budget history */
+  .hist-nav{display:flex;gap:8px;align-items:center;margin-bottom:14px;}
+  .hist-nav select{flex:1;min-width:0;}
+  .hist-nav .btn-small{flex:0 0 auto;font-size:1rem;padding:6px 12px;}
+  .hist-summary .bs-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-mono);font-size:0.84rem;color:var(--text-dim);margin-bottom:8px;}
+  .hist-summary .pos{color:#22c55e;}
+  .hist-summary .neg{color:var(--danger);}
+  .hist-summary .inv{color:var(--accent2);}
+  .hist-summary .bs-final{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+  .hist-summary .bs-final .bf-label{font-family:var(--font-mono);font-size:0.74rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent2);}
+  .hist-summary .bs-final .bf-val{font-family:var(--font-mono);font-size:1.15rem;color:var(--accent);}
+  .hist-summary .bs-final .bf-val.neg{color:var(--danger);}
+
+  /* ===== READABILITY: workout & meal history cards (point 5) ===== */
+  .workout-entry{border:1px solid var(--border-soft);border-radius:9px;background:var(--bg-input);padding:12px 14px;margin-bottom:12px;}
+  .workout-entry:last-child{border:1px solid var(--border-soft);border-radius:9px;padding:12px 14px;margin:0 0 0 0;}
+  .workout-entry .w-date{font-size:0.95rem;}
+  .workout-entry .w-exercise-block{margin-top:10px;}
+  .meal-day-history{border:1px solid var(--border-soft);border-radius:9px;background:var(--bg-input);padding:12px 14px;margin-bottom:12px;}
+  .meal-day-history:last-child{border:1px solid var(--border-soft);border-radius:9px;padding:12px 14px;margin:0;}
+  .meal-day-history .mh-date{font-size:0.92rem;margin-bottom:6px;}
+
+  /* ===== AI config: get-token link ===== */
+  .ai-link{color:var(--accent);text-decoration:underline;cursor:pointer;}
+
+  /* ===== MOBILE RESPONSIVENESS (usability, ≤600px) ===== */
+  @media (max-width:600px){
+    header.topbar{padding:12px 12px 4px;gap:10px;}
+    .site-name{font-size:1.15rem;}
+    /* horizontally scrollable ticker, thumb-friendly */
+    .ticker{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;padding-bottom:4px;order:3;}
+    .tick{min-width:104px;flex:0 0 auto;padding:8px 11px;}
+    .header-info{margin-left:0;max-width:100%;order:2;}
+    main{padding:10px 12px 20px;}
+    /* full-width scrollable modals */
+    .overlay{padding:0;align-items:stretch;}
+    .modal{max-width:100%;min-height:100%;border-radius:0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));margin:0;}
+    /* single-column grids */
+    .tile-grid{grid-template-columns:1fr;}
+    .subbar{grid-template-columns:1fr;}
+    .db-grid{grid-template-columns:1fr;}
+    .currency-grid{grid-template-columns:1fr;}
+    .row{flex-direction:column;gap:0;}
+    .bud-add-row{flex-direction:column;align-items:stretch;}
+    .bud-add-row>div{min-width:0;}
+    .bud-add-row .btn-primary{width:100%;}
+    /* thumb-friendly touch targets (min 44px) */
+    input[type=text],input[type=email],input[type=date],input[type=time],input[type=number],
+    input[type=password],select,textarea{min-height:44px;font-size:16px;}
+    .btn-primary,.btn-ghost,.tab-btn,.seg-btn,.db-tab,.back-btn{min-height:44px;}
+    .btn-small,.del-btn{min-height:36px;}
+    .tile{min-height:96px;padding:16px 16px;}
+    .tile-grid{gap:12px;}
+    .stepper .stp{width:44px;}
+    .cal-nav button,.day-nav button{width:40px;height:40px;}
+    .cal-day{font-size:0.66rem;}
+    .tabs{flex-wrap:wrap;}
+    .daily-item input[type=checkbox]{width:22px;height:22px;}
+    .gear-btn{width:48px;height:48px;right:12px;bottom:12px;}
+  }
+  @media (max-width:360px){
+    .tick{min-width:96px;}
+    .site-name{font-size:1.05rem;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="site-name">FUTURE<span>APP</span></div>
+  <div class="ticker" id="ticker"></div>
+  <div class="header-info">
+    <span class="hi-label" id="hiLabel">Cytat dnia</span>
+    <span class="hi-text" id="hiText"></span>
+    <span class="hi-ref" id="hiRef"></span>
+  </div>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section id="view-home" class="view active">
+    <div class="subbar">
+      <div class="subcard">
+        <h3 data-i18n="clock_title">Zegar i data</h3>
+        <div class="clock-main" id="clockMain">--:--:--</div>
+        <div class="clock-date" id="clockDate"></div>
+        <div class="clock-zone" id="clockZone"></div>
+        <div class="clock-second" id="clockSecondWrap" style="display:none;">
+          <div class="cs-time" id="clockSecond">--:--:--</div>
+          <div class="cs-zone" id="clockSecondZone"></div>
+        </div>
+      </div>
+      <div class="subcard upcoming-big">
+        <h3 data-i18n="upcoming_title">Nadchodzące wydarzenie</h3>
+        <div id="upcomingBig"></div>
+      </div>
+    </div>
+
+    <!-- DAILY TASKS -->
+    <div class="daily-card">
+      <button class="daily-pen" id="dailyPen" title="Edytuj">&#9998;</button>
+      <h3 data-i18n="daily_title">Codzienne zadania</h3>
+      <div class="daily-list" id="dailyList"></div>
+      <div class="daily-add-row" id="dailyAddRow" style="display:none;">
+        <input type="text" id="dailyAddInput" data-i18n-ph="daily_add_ph" placeholder="Nowe zadanie...">
+        <button class="btn-small" id="dailyAddBtn" data-i18n="daily_add">Dodaj</button>
+      </div>
+    </div>
+
+    <div id="notifBanner" class="subcard" style="display:none;margin-bottom:18px;align-items:center;">
+      <span data-i18n="notif_prompt" style="font-size:0.85rem;">Włącz powiadomienia, aby nie przegapić deadline'ów i wydarzeń.</span>
+      <button class="btn-small" id="enableNotifBtn" style="margin-top:8px;" data-i18n="notif_enable">Włącz powiadomienia</button>
+    </div>
+
+    <div class="tile-grid" id="tileGrid"></div>
+  </section>
+
+  <!-- TODO -->
+  <section id="view-todo" class="view">
+    <div class="view-header">
+      <button class="back-btn" data-home>&larr; <span data-i18n="back">Wstecz</span></button>
+      <h2 data-i18n="tile_todo">Do zrobienia</h2>
+    </div>
+    <div class="card">
+      <label for="taskName" data-i18n="task_name">Nazwa zadania</label>
+      <input type="text" id="taskName" data-i18n-ph="task_name_ph" placeholder="np. Wysłać raport">
+      <div class="row">
+        <div><label for="taskDate" data-i18n="date">Data</label><input type="date" id="taskDate"></div>
+        <div><label for="taskTime" data-i18n="time">Godzina</label><input type="time" id="taskTime"></div>
+      </div>
+      <button class="btn-primary" id="addTaskBtn" data-i18n="add_task">Dodaj zadanie</button>
+    </div>
+    <div class="card"><div id="taskList"></div></div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="view-calendar" class="view">
+    <div class="view-header">
+      <button class="back-btn" data-home>&larr; <span data-i18n="back">Wstecz</span></button>
+      <h2 data-i18n="tile_calendar">Kalendarz</h2>
+    </div>
+    <div class="card">
+      <div class="cal-nav">
+        <button id="prevMonth">&#8249;</button>
+        <span class="cal-title" id="calTitle"></span>
+        <button id="nextMonth">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="card" id="dayDetailCard" style="display:none;">
+      <div class="view-header" style="margin:0 0 10px;"><h2 id="dayDetailTitle" style="font-size:1rem;"></h2></div>
+      <label for="evName" data-i18n="event_name">Nazwa wydarzenia</label>
+      <input type="text" id="evName" data-i18n-ph="event_name_ph" placeholder="np. Spotkanie z klientem">
+      <div class="row"><div><label for="evTime" data-i18n="time">Godzina</label><input type="time" id="evTime"></div></div>
+      <label for="evDesc" data-i18n="desc_opt">Opis (opcjonalnie)</label>
+      <textarea id="evDesc"></textarea>
+      <button class="btn-primary" id="addEventBtn" data-i18n="add_event">Dodaj wydarzenie</button>
+      <div class="day-events-list" id="dayEventsList"></div>
+    </div>
+  </section>
+
+  <!-- FITNESS -->
+  <section id="view-fitness" class="view">
+    <div class="view-header">
+      <button class="back-btn" data-home>&larr; <span data-i18n="back">Wstecz</span></button>
+      <h2 data-i18n="tile_fitness">Fitness</h2>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="training" data-i18n="tab_training">Trening</button>
+      <button class="tab-btn" data-tab="calories" data-i18n="tab_calories">Kalorie</button>
+      <button class="tab-btn" data-tab="calc" data-i18n="tab_calc">Zapotrzebowanie</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-training">
+      <div class="card">
+        <div class="row" style="align-items:flex-end;">
+          <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
+          <button class="btn-ghost" id="repeatLastBtn" style="white-space:nowrap;" data-i18n="repeat_last">↻ Powtórz ostatni</button>
+        </div>
+        <div id="exercisesContainer"></div>
+        <button class="btn-ghost" id="addExerciseBtn" style="margin-top:12px;" data-i18n="add_exercise">+ Dodaj ćwiczenie</button>
+        <button class="btn-primary" id="addWorkoutBtn" data-i18n="save_workout">Zapisz trening</button>
+      </div>
+      <datalist id="exerciseNames"></datalist>
+
+      <div class="card">
+        <div class="db-section">
+          <button class="db-head" id="exerciseDbToggle" type="button" aria-expanded="false" aria-controls="exerciseDbBody">
+            <h4 data-i18n="db_exercises_title">Baza ćwiczeń</h4>
+            <span class="db-arrow" aria-hidden="true">&#9660;</span>
+          </button>
+          <div class="db-collapse" id="exerciseDbBody">
+            <div class="db-tabs" id="exerciseDbTabs">
+              <button class="db-tab active" data-exc="upper" data-i18n="exc_upper">Góra ciała</button>
+              <button class="db-tab" data-exc="lower" data-i18n="exc_lower">Dół ciała</button>
+              <button class="db-tab" data-exc="core" data-i18n="exc_core">Brzuch / core</button>
+              <button class="db-tab" data-exc="power" data-i18n="exc_power">Ćwiczenia na moc</button>
+              <button class="db-tab" data-exc="dynamic" data-i18n="exc_dynamic">Ćwiczenia na dynamikę</button>
+            </div>
+          <div class="db-grid" id="exerciseDbGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card"><div id="workoutHistory"></div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-calories">
+      <div class="card">
+        <div class="day-nav">
+          <button id="prevMealDay">&#8249;</button>
+          <span class="day-title" id="mealDayTitle"></span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="btn-small" id="todayMealBtn" data-i18n="today">Dziś</button>
+            <button id="nextMealDay">&#8250;</button>
+          </div>
+        </div>
+
+        <div class="stat-tiles">
+          <div class="stat kcal"><div class="st-label" data-i18n="kcal_sum">Suma kalorii</div><div class="st-num" id="dayKcalTotal">0</div></div>
+          <div class="stat p"><div class="st-label" data-i18n="protein_short">Białko</div><div class="st-num" id="dayProtTotal">0 g</div></div>
+          <div class="stat c"><div class="st-label" data-i18n="carbs_short">Węglowodany</div><div class="st-num" id="dayCarbTotal">0 g</div></div>
+          <div class="stat f"><div class="st-label" data-i18n="fat_short">Tłuszcze</div><div class="st-num" id="dayFatTotal">0 g</div></div>
+        </div>
+        <div id="goalWrap" style="display:none;margin-bottom:14px;">
+          <div class="goal-bar"><div class="goal-fill" id="goalFill"></div></div>
+          <div class="goal-text" id="goalText"></div>
+        </div>
+
+        <div class="db-section">
+          <h4 data-i18n="meals_add_title">Dodaj posiłek</h4>
+          <div class="seg" id="mealCatSeg">
+            <button class="seg-btn active" data-cat="breakfast" data-i18n="cat_breakfast">Śniadanie</button>
+            <button class="seg-btn" data-cat="lunch" data-i18n="cat_lunch">Obiad</button>
+            <button class="seg-btn" data-cat="dinner" data-i18n="cat_dinner">Kolacja</button>
+            <button class="seg-btn" data-cat="snack" data-i18n="cat_snack">Przekąska</button>
+          </div>
+
+          <div class="subtabs">
+            <button class="subtab-btn active" data-msub="db" data-i18n="from_base">Z bazy produktów</button>
+            <button class="subtab-btn" data-msub="manual" data-i18n="manual_entry">Ręcznie</button>
+          </div>
+
+          <div class="msub-panel active" id="msub-db">
+            <label for="foodSearch" data-i18n="food_search">Wybierz produkt</label>
+            <input type="text" id="foodSearch" list="foodList" data-i18n-ph="food_search_ph" placeholder="np. Ryż, jajko, kurczak...">
+            <datalist id="foodList"></datalist>
+            <div class="row">
+              <div><label for="foodGrams" data-i18n="grams">Ilość (g)</label><input type="number" id="foodGrams" min="0" step="1" value="100"></div>
+              <div><label data-i18n="calc_result">Wyliczono</label><div class="calc-out" id="foodCalcOut">—</div></div>
+            </div>
+            <button class="btn-primary" id="addFoodDbBtn" data-i18n="add_meal">Dodaj posiłek</button>
+          </div>
+
+          <div class="msub-panel" id="msub-manual">
+            <label for="mealName" data-i18n="meal_name">Nazwa posiłku</label>
+            <input type="text" id="mealName" data-i18n-ph="meal_name_ph" placeholder="np. Owsianka z owocami">
+            <label for="mealKcal" data-i18n="kcal">Kalorie (kcal)</label>
+            <input type="number" id="mealKcal" min="0" step="1" placeholder="np. 350">
+            <div class="row">
+              <div><label for="mealProtein" data-i18n="protein">Białko (g)</label><input type="number" id="mealProtein" min="0" step="0.1"></div>
+              <div><label for="mealCarbs" data-i18n="carbs">Węglow. (g)</label><input type="number" id="mealCarbs" min="0" step="0.1"></div>
+              <div><label for="mealFat" data-i18n="fat">Tłuszcze (g)</label><input type="number" id="mealFat" min="0" step="0.1"></div>
+            </div>
+            <button class="btn-primary" id="addMealBtn" data-i18n="add_meal">Dodaj posiłek</button>
+          </div>
+
+          <div id="recentWrap" style="margin-top:14px;display:none;">
+            <div class="mini-label" data-i18n="recent_products">Ostatnie produkty</div>
+            <div class="chips" id="recentChips"></div>
+          </div>
+        </div>
+
+        <div class="db-section">
+          <h4 data-i18n="meals_day_title">Posiłki dnia</h4>
+          <div id="mealListForDay"></div>
+        </div>
+      </div>
+
+      <div class="card"><div id="mealHistory"></div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-calc">
+      <div class="card">
+        <div class="db-section">
+          <h4 data-i18n="calc_data">Twoje dane</h4>
+          <div class="mini-label" data-i18n="calc_goal">Cel</div>
+          <div class="seg" id="calcGoalSeg">
+            <button class="seg-btn" data-goal="bulk" data-i18n="goal_bulk">Masa</button>
+            <button class="seg-btn active" data-goal="maintain" data-i18n="goal_maintain">Utrzymanie</button>
+            <button class="seg-btn" data-goal="cut" data-i18n="goal_cut">Redukcja</button>
+          </div>
+          <div class="mini-label" style="margin-top:14px;" data-i18n="sex">Płeć</div>
+          <div class="seg" id="calcSexSeg">
+            <button class="seg-btn active" data-sex="male" data-i18n="sex_male">Mężczyzna</button>
+            <button class="seg-btn" data-sex="female" data-i18n="sex_female">Kobieta</button>
+          </div>
+          <div class="row">
+            <div><label for="calcAge" data-i18n="age">Wiek (lata)</label><input type="number" id="calcAge" min="10" max="100" step="1" placeholder="30"></div>
+            <div><label for="calcHeight" data-i18n="height">Wzrost (cm)</label><input type="number" id="calcHeight" min="120" max="230" step="1" placeholder="178"></div>
+            <div><label for="calcWeight" data-i18n="weight_kg">Waga (kg)</label><input type="number" id="calcWeight" min="30" max="250" step="0.1" placeholder="75"></div>
+          </div>
+          <label for="calcActivity" data-i18n="activity">Poziom aktywności</label>
+          <select id="calcActivity">
+            <option value="1.2" data-i18n="act_sedentary">Siedzący (brak/minimalny ruch)</option>
+            <option value="1.375" data-i18n="act_light">Lekki (1–3 treningi/tydz.)</option>
+            <option value="1.55" selected data-i18n="act_moderate">Umiarkowany (3–5 treningów/tydz.)</option>
+            <option value="1.725" data-i18n="act_active">Aktywny (6–7 treningów/tydz.)</option>
+            <option value="1.9" data-i18n="act_very">Bardzo aktywny (praca fiz. / 2× dziennie)</option>
+          </select>
+          <button class="btn-primary" id="calcRunBtn" data-i18n="calc_run">Oblicz zapotrzebowanie</button>
+        </div>
+
+        <div class="db-section" id="calcResult" style="display:none;">
+          <h4 data-i18n="calc_results">Wyniki</h4>
+          <div class="calc-hero">
+            <div class="st-label" data-i18n="calc_target_label">Dzienne zapotrzebowanie</div>
+            <div class="calc-hero-num"><span id="calcTarget">0</span> <span class="calc-hero-unit" data-i18n="kcal_day">kcal / dzień</span></div>
+          </div>
+          <div class="stat-tiles">
+            <div class="stat bmr"><div class="st-label" data-i18n="bmr_label">BMR</div><div class="st-num" id="calcBmr">0</div></div>
+            <div class="stat tdee"><div class="st-label" data-i18n="tdee_label">TDEE</div><div class="st-num" id="calcTdee">0</div></div>
+          </div>
+          <div class="mini-label" data-i18n="calc_macros_label">Sugerowane makroskładniki</div>
+          <div class="macro-pills">
+            <span class="macro-pill p"><span data-i18n="protein_short">Białko</span> <b id="calcMacroP">0 g</b></span>
+            <span class="macro-pill f"><span data-i18n="fat_short">Tłuszcze</span> <b id="calcMacroF">0 g</b></span>
+            <span class="macro-pill c"><span data-i18n="carbs_short">Węglowodany</span> <b id="calcMacroC">0 g</b></span>
+          </div>
+          <button class="btn-ghost" id="setGoalBtn" style="margin-top:14px;" data-i18n="set_as_goal">Ustaw jako dzienny cel kalorii</button>
+        </div>
+        <div class="calc-note" data-i18n="calc_formula_note">Obliczenia wg wzoru Mifflina-St Jeora (BMR × współczynnik aktywności). Wyniki są orientacyjne i nie zastępują porady dietetyka.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="view-journal" class="view">
+    <div class="view-header">
+      <button class="back-btn" data-home>&larr; <span data-i18n="back">Wstecz</span></button>
+      <h2 data-i18n="tile_journal">Dziennik</h2>
+    </div>
+    <div class="card">
+      <label for="journalText" data-i18n="journal_prompt">Twój wpis</label>
+      <textarea id="journalText" style="min-height:120px;" data-i18n-ph="journal_ph" placeholder="Przemyślenia, pomysły..."></textarea>
+      <button class="btn-primary" id="addJournalBtn" data-i18n="save_entry">Zapisz wpis</button>
+    </div>
+    <div class="card"><div id="journalList"></div></div>
+  </section>
+
+  <!-- BUDGET -->
+  <section id="view-budget" class="view">
+    <div class="view-header">
+      <button class="back-btn" data-home>&larr; <span data-i18n="back">Wstecz</span></button>
+      <h2 data-i18n="tile_budget">Zarządzanie budżetem</h2>
+    </div>
+
+    <!-- Period -->
+    <div class="bud-section">
+      <h3 data-i18n="budget_period">Okres rozliczeniowy</h3>
+      <div class="row">
+        <div><label for="budFrom" data-i18n="budget_from">Od</label><input type="date" id="budFrom"></div>
+        <div><label for="budTo" data-i18n="budget_to">Do</label><input type="date" id="budTo"></div>
+      </div>
+      <button class="btn-primary" id="budSavePeriodBtn" data-i18n="budget_save_period">Zapisz okres</button>
+      <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="budget_period_note">Po upływie daty końcowej budżet zresetuje się automatycznie, a nadwyżka przejdzie do nowego okresu.</div>
+    </div>
+
+    <!-- Income -->
+    <div class="bud-section">
+      <h3 data-i18n="budget_income">Źródła dochodu</h3>
+      <div class="bud-carry" id="budCarryLine" style="display:none;"></div>
+      <div id="budIncomeList"></div>
+      <div class="bud-add-row">
+        <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budIncName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
+        <div><label data-i18n="budget_amount_ph">Kwota</label><input type="number" id="budIncAmt" min="0" step="0.01" data-i18n-ph="budget_amount_ph" placeholder="Kwota"></div>
+        <button class="btn-primary" id="budIncAdd" data-i18n="budget_add">+ Dodaj</button>
+      </div>
+      <div class="bud-subtotal"><span data-i18n="budget_income_total">Łączny dochód</span><span class="st-val" id="budIncTotal">0</span></div>
+    </div>
+
+    <!-- Monthly expenses -->
+    <div class="bud-section">
+      <h3 data-i18n="budget_monthly">Wydatki miesięczne (cykliczne)</h3>
+      <div id="budMonthlyList"></div>
+      <div class="bud-add-row">
+        <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budMonName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
+        <div><label data-i18n="budget_amount_ph">Kwota</label><input type="number" id="budMonAmt" min="0" step="0.01" data-i18n-ph="budget_amount_ph" placeholder="Kwota"></div>
+        <div><label data-i18n="budget_cat_ph">Kategoria</label><input type="text" id="budMonCat" data-i18n-ph="budget_cat_ph" placeholder="Kategoria (opcjonalnie)"></div>
+        <button class="btn-primary" id="budMonAdd" data-i18n="budget_add">+ Dodaj</button>
+      </div>
+      <div class="bud-subtotal"><span data-i18n="budget_monthly">Wydatki miesięczne</span><span class="st-val" id="budMonTotal">0</span></div>
+    </div>
+
+    <!-- One-time expenses -->
+    <div class="bud-section">
+      <h3 data-i18n="budget_onetime">Wydatki jednorazowe</h3>
+      <div id="budOnceList"></div>
+      <div class="bud-add-row">
+        <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budOnceName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
+        <div><label data-i18n="budget_amount_ph">Kwota</label><input type="number" id="budOnceAmt" min="0" step="0.01" data-i18n-ph="budget_amount_ph" placeholder="Kwota"></div>
+        <div><label data-i18n="date">Data</label><input type="date" id="budOnceDate"></div>
+        <div><label data-i18n="budget_cat_ph">Kategoria</label><input type="text" id="budOnceCat" data-i18n-ph="budget_cat_ph" placeholder="Kategoria (opcjonalnie)"></div>
+        <button class="btn-primary" id="budOnceAdd" data-i18n="budget_add">+ Dodaj</button>
+      </div>
+      <div class="bud-subtotal"><span data-i18n="budget_onetime">Wydatki jednorazowe</span><span class="st-val" id="budOnceTotal">0</span></div>
+    </div>
+
+    <!-- Investments -->
+    <div class="bud-section">
+      <h3 data-i18n="budget_invest">Inwestycje</h3>
+      <div id="budInvestList"></div>
+      <div class="bud-add-row">
+        <div><label data-i18n="budget_name_ph">Nazwa</label><input type="text" id="budInvName" data-i18n-ph="budget_name_ph" placeholder="Nazwa"></div>
+        <div><label data-i18n="budget_amount_ph">Kwota</label><input type="number" id="budInvAmt" min="0" step="0.01" data-i18n-ph="budget_amount_ph" placeholder="Kwota"></div>
+        <button class="btn-primary" id="budInvAdd" data-i18n="budget_add">+ Dodaj</button>
+      </div>
+      <div class="bud-subtotal"><span data-i18n="budget_invest">Inwestycje</span><span class="st-val" id="budInvTotal">0</span></div>
+    </div>
+
+    <!-- Piggy bank (savings goal) -->
+    <div class="bud-section">
+      <h3 data-i18n="piggy_title">Skarbonka</h3>
+      <div class="row">
+        <div><label for="piggyName" data-i18n="piggy_name">Nazwa celu</label><input type="text" id="piggyName" data-i18n-ph="piggy_name" placeholder="Nazwa celu"></div>
+        <div><label for="piggyTarget" data-i18n="piggy_target">Kwota docelowa</label><input type="number" id="piggyTarget" min="0" step="0.01" data-i18n-ph="piggy_target" placeholder="Kwota docelowa"></div>
+      </div>
+      <button class="btn-primary" id="piggySaveGoalBtn" data-i18n="piggy_save_goal">Zapisz cel</button>
+
+      <div id="piggyEmpty" class="piggy-empty" data-i18n="piggy_none" style="display:none;">Ustaw cel oszczędnościowy, aby zacząć.</div>
+
+      <div id="piggyProgressWrap" style="display:none;margin-top:14px;">
+        <div class="piggy-head">
+          <span class="piggy-goal-name" id="piggyGoalName"></span>
+          <span class="piggy-amounts" id="piggyAmounts"></span>
+        </div>
+        <div class="goal-bar"><div class="goal-fill" id="piggyFill"></div></div>
+        <div class="piggy-pct" id="piggyPct"></div>
+      </div>
+
+      <div class="bud-add-row" id="piggyAddRow" style="display:none;">
+        <div><label for="piggyAddAmt" data-i18n="piggy_contribution">Wpłata</label><input type="number" id="piggyAddAmt" min="0" step="0.01" data-i18n-ph="budget_amount_ph" placeholder="Kwota"></div>
+        <button class="btn-primary" id="piggyAddBtn" data-i18n="piggy_add">+ Wpłać</button>
+        <button class="btn-small" id="piggyWithdrawBtn" data-i18n="piggy_withdraw">− Wypłać</button>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="bud-summary">
+      <div class="bs-row"><span data-i18n="budget_income_total">Łączny dochód</span><span id="sumIncome">0</span></div>
+      <div class="bs-row"><span data-i18n="budget_monthly">Wydatki miesięczne</span><span id="sumMonthly">0</span></div>
+      <div class="bs-row"><span data-i18n="budget_onetime">Wydatki jednorazowe</span><span id="sumOnce">0</span></div>
+      <div class="bs-row"><span data-i18n="budget_invest">Inwestycje</span><span id="sumInvest">0</span></div>
+      <div class="bs-final"><span class="bf-label" data-i18n="budget_available">Pozostała kwota dostępna</span><span class="bf-val" id="sumAvailable">0</span></div>
+    </div>
+
+    <!-- History (previous periods) -->
+    <div class="bud-section" id="budHistorySection">
+      <h3 data-i18n="budget_history">Historia budżetu</h3>
+      <div id="budHistoryEmpty" class="db-empty" data-i18n="budget_history_none">Brak zapisanych okresów.</div>
+      <div id="budHistoryViewer" style="display:none;">
+        <div class="hist-nav">
+          <button class="btn-small" id="budHistPrev" aria-label="prev">&lsaquo;</button>
+          <select id="budHistSelect"></select>
+          <button class="btn-small" id="budHistNext" aria-label="next">&rsaquo;</button>
+        </div>
+        <div class="hist-summary">
+          <div class="bs-row"><span data-i18n="budget_income_total">Łączny dochód</span><span class="pos" id="histIncome">0</span></div>
+          <div class="bs-row"><span data-i18n="budget_monthly">Wydatki miesięczne</span><span class="neg" id="histMonthly">0</span></div>
+          <div class="bs-row"><span data-i18n="budget_onetime">Wydatki jednorazowe</span><span class="neg" id="histOnce">0</span></div>
+          <div class="bs-row"><span data-i18n="budget_invest">Inwestycje</span><span class="inv" id="histInvest">0</span></div>
+          <div class="bs-final"><span class="bf-label" data-i18n="budget_available">Pozostała kwota dostępna</span><span class="bf-val" id="histAvailable">0</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <a id="aboutLink" data-i18n="about_link">Informacje / O nas</a>
+  &nbsp;·&nbsp; <span data-i18n="rights">Wszystkie prawa zastrzeżone</span> &copy; SKB
+</footer>
+
+<button class="gear-btn" id="gearBtn" title="Ustawienia">&#9881;</button>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 data-i18n="settings">Ustawienia</h2>
+      <button class="modal-close" data-close-settings>&times;</button>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_theme">Wygląd strony</h4>
+      <div class="theme-opts" id="themeOpts">
+        <button class="theme-chip" data-theme-opt="cyber" data-i18n="theme_cyber">Cyberpunk</button>
+        <button class="theme-chip" data-theme-opt="synth" data-i18n="theme_synth">Synthwave</button>
+        <button class="theme-chip" data-theme-opt="light" data-i18n="theme_light">Jasny</button>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_appearance2">Wygląd i układ interfejsu</h4>
+      <div class="mini-label" data-i18n="set_fontsize">Rozmiar czcionki</div>
+      <div class="theme-opts" id="fontSizeOpts">
+        <button class="theme-chip" data-fs-opt="small" data-i18n="fs_small">Mała</button>
+        <button class="theme-chip" data-fs-opt="default" data-i18n="fs_default">Domyślna</button>
+        <button class="theme-chip" data-fs-opt="large" data-i18n="fs_large">Duża</button>
+      </div>
+      <div class="mini-label" style="margin-top:12px;" data-i18n="set_density">Gęstość układu</div>
+      <div class="theme-opts" id="densityOpts">
+        <button class="theme-chip" data-den-opt="compact" data-i18n="den_compact">Kompaktowy</button>
+        <button class="theme-chip" data-den-opt="standard" data-i18n="den_standard">Standardowy</button>
+        <button class="theme-chip" data-den-opt="spacious" data-i18n="den_spacious">Przestronny</button>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_tiles">Kafelki: kolejność i widoczność</h4>
+      <div id="tileConfigList"></div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_currency">Personalizacja kursów walut</h4>
+      <div class="currency-grid" id="currencyGrid"></div>
+      <div class="cur-note" data-i18n="currency_note">Zaznacz maksymalnie 5 par. Wybór pojawi się w pasku w nagłówku.</div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_timefmt">Format godziny</h4>
+      <div class="theme-opts" id="timeFmtOpts">
+        <button class="theme-chip" data-tf-opt="24" data-i18n="tf_24">24-godzinny</button>
+        <button class="theme-chip" data-tf-opt="12" data-i18n="tf_12">12-godzinny</button>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_lang">Język strony</h4>
+      <div class="lang-opts" id="langOpts">
+        <button class="theme-chip" data-lang-opt="pl">Polski</button>
+        <button class="theme-chip" data-lang-opt="en">English</button>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_clock">Strefa czasowa zegara</h4>
+      <label data-i18n="tz_primary">Strefa główna</label>
+      <select id="tzPrimary"></select>
+      <div class="toggle-line" style="margin-top:12px;">
+        <span data-i18n="tz_second_enable">Drugi zegar</span>
+        <input type="checkbox" id="tzSecondEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+      </div>
+      <select id="tzSecondary"></select>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_header">Pole informacyjne (nagłówek)</h4>
+      <div class="header-mode-opts" id="headerModeOpts">
+        <button class="theme-chip" data-header-opt="quote" data-i18n="header_quote">Cytat z NT</button>
+        <button class="theme-chip" data-header-opt="fact" data-i18n="header_fact">Ciekawostka</button>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <h4 data-i18n="set_pin">Zabezpieczenie PIN</h4>
+      <div class="toggle-line">
+        <span data-i18n="pin_journal">Chroń Dziennik</span>
+        <input type="checkbox" id="pinJournalEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+      </div>
+      <input type="password" id="pinJournalInput" inputmode="numeric" maxlength="4" data-i18n-ph="pin_set_ph" placeholder="Ustaw 4-cyfrowy PIN">
+      <div class="toggle-line" style="margin-top:12px;">
+        <span data-i18n="pin_calendar">Chroń Kalendarz</span>
+        <input type="checkbox" id="pinCalendarEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+      </div>
+      <input type="password" id="pinCalendarInput" inputmode="numeric" maxlength="4" data-i18n-ph="pin_set_ph" placeholder="Ustaw 4-cyfrowy PIN">
+      <button class="btn-primary" id="savePinBtn" data-i18n="save_pin">Zapisz ustawienia PIN</button>
+      <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="pin_note">
+        PIN jest przechowywany lokalnie w formie zaciemnionej (hash), nie jako zwykły tekst. To zabezpieczenie ekranowe, nie kryptograficzna ochrona danych.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN UNLOCK MODAL -->
+<div class="overlay" id="pinOverlay">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-head">
+      <h2 data-i18n="pin_enter">Podaj PIN</h2>
+      <button class="modal-close" data-close-pin>&times;</button>
+    </div>
+    <input type="password" id="pinUnlockInput" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:0.5em;font-size:1.4rem;">
+    <div id="pinError" style="color:var(--danger);font-size:0.78rem;margin-top:8px;display:none;" data-i18n="pin_wrong">Nieprawidłowy PIN.</div>
+    <button class="btn-primary" id="pinUnlockBtn" style="width:100%;" data-i18n="unlock">Odblokuj</button>
+  </div>
+</div>
+
+<!-- ABOUT MODAL -->
+<div class="overlay" id="aboutOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 data-i18n="about_link">Informacje / O nas</h2>
+      <button class="modal-close" data-close-about>&times;</button>
+    </div>
+    <div class="about-block" data-i18n="about_privacy">Dla nas najważniejsza jest prywatność oraz efektywna praca.</div>
+    <div class="about-block">
+      <span data-i18n="about_support">Jeśli chcesz nas wesprzeć, możesz postawić nam kawę</span>:
+      <a href="https://buycoffee.to" target="_blank" rel="noopener">BuyCoffee</a>
+    </div>
+    <div class="about-block">
+      <span data-i18n="about_ebook">Darmowy e-book</span>:
+      <a href="https://patrykskibinski.gumroad.com/l/the_quiet_upgrade" target="_blank" rel="noopener"><strong>THE Quiet UPGRADE</strong></a>
+    </div>
+    <div class="set-section">
+      <h4 data-i18n="contact_form">Formularz kontaktowy</h4>
+      <label for="cName" data-i18n="c_name">Imię</label>
+      <input type="text" id="cName">
+      <label for="cEmail" data-i18n="c_email">E-mail</label>
+      <input type="email" id="cEmail">
+      <label for="cMsg" data-i18n="c_msg">Wiadomość</label>
+      <textarea id="cMsg"></textarea>
+      <button class="btn-primary" id="contactSendBtn" data-i18n="c_send">Wyślij</button>
+      <div id="contactResult" style="font-size:0.8rem;color:var(--accent);margin-top:8px;display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= UTIL ================= */
+  function $(id){ return document.getElementById(id); }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+  function pad(n){ return n<10?"0"+n:""+n; }
+  function loadJSON(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ return f; } }
+  function saveJSON(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+  function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
+  function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function shiftISO(iso,delta){ var p=iso.split("-"); var d=new Date(p[0],p[1]-1,p[2]); d.setDate(d.getDate()+delta); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+
+  /* ================= I18N ================= */
+  var I18N = {
+    pl:{
+      clock_title:"Zegar i data", upcoming_title:"Nadchodzące wydarzenie",
+      notif_prompt:"Włącz powiadomienia, aby nie przegapić deadline'ów i wydarzeń.", notif_enable:"Włącz powiadomienia",
+      back:"Wstecz",
+      tile_todo:"Do zrobienia", tile_todo_sub:"Zadania i deadline'y",
+      tile_calendar:"Kalendarz", tile_calendar_sub:"Wydarzenia i spotkania",
+      tile_fitness:"Fitness", tile_fitness_sub:"Trening i kalorie",
+      tile_journal:"Dziennik", tile_journal_sub:"Przemyślenia i pomysły",
+      tile_ai:"Agent AI", tile_ai_sub:"Asystent AI",
+      task_name:"Nazwa zadania", task_name_ph:"np. Wysłać raport", date:"Data", time:"Godzina", add_task:"Dodaj zadanie",
+      event_name:"Nazwa wydarzenia", event_name_ph:"np. Spotkanie z klientem", desc_opt:"Opis (opcjonalnie)", add_event:"Dodaj wydarzenie",
+      tab_training:"Trening", tab_calories:"Kalorie", add_exercise:"+ Dodaj ćwiczenie", save_workout:"Zapisz trening",
+      exercise:"Ćwiczenie", ex_name:"Nazwa ćwiczenia", ex_name_ph:"np. Przysiad ze sztangą", sets:"Serie", add_set:"+ Dodaj serię",
+      rm_exercise:"Usuń ćwiczenie", note:"Notatka", weight_ph:"Ciężar (kg)", reps_ph:"Powtórzenia",
+      kcal_sum:"Suma kalorii", meal_name:"Nazwa posiłku", meal_name_ph:"np. Owsianka z owocami",
+      protein_short:"Białko", carbs_short:"Węglowodany", fat_short:"Tłuszcze",
+      meals_add_title:"Dodaj posiłek", meals_day_title:"Posiłki dnia",
+      calc_data:"Twoje dane", calc_results:"Wyniki", calc_target_label:"Dzienne zapotrzebowanie",
+      calc_macros_label:"Sugerowane makroskładniki",
+      kcal:"Kalorie (kcal)", protein:"Białko (g)", carbs:"Węglow. (g)", fat:"Tłuszcze (g)", add_meal:"Dodaj posiłek",
+      journal_prompt:"Twój wpis", journal_ph:"Przemyślenia, pomysły...", save_entry:"Zapisz wpis",
+      send:"Wyślij", ai_ph:"Napisz wiadomość...", ai_config:"Konfiguracja API", ai_clear:"Wyczyść czat",
+      about_link:"Informacje / O nas", rights:"Wszystkie prawa zastrzeżone",
+      settings:"Ustawienia", set_theme:"Wygląd strony", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Jasny",
+      set_tiles:"Kafelki: kolejność i widoczność", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
+      tz_primary:"Strefa główna", tz_second_enable:"Drugi zegar",
+      set_header:"Pole informacyjne (nagłówek)", header_quote:"Cytat z NT", header_fact:"Ciekawostka",
+      set_pin:"Zabezpieczenie PIN", pin_journal:"Chroń Dziennik", pin_calendar:"Chroń Kalendarz",
+      pin_set_ph:"Ustaw 4-cyfrowy PIN", save_pin:"Zapisz ustawienia PIN",
+      pin_note:"PIN jest przechowywany lokalnie w formie zaciemnionej (hash), nie jako zwykły tekst. To zabezpieczenie ekranowe, nie kryptograficzna ochrona danych.",
+      pin_enter:"Podaj PIN", pin_wrong:"Nieprawidłowy PIN.", unlock:"Odblokuj",
+      about_privacy:"Dla nas najważniejsza jest prywatność oraz efektywna praca.",
+      about_support:"Jeśli chcesz nas wesprzeć, możesz postawić nam kawę", about_ebook:"Darmowy e-book",
+      contact_form:"Formularz kontaktowy", c_name:"Imię", c_email:"E-mail", c_msg:"Wiadomość", c_send:"Wyślij",
+      ai_config_note:"Agent AI łączy się bezpośrednio z API Anthropic z Twojej przeglądarki. Wklej własny klucz API (przechowywany tylko lokalnie w tej przeglądarce). Klucz nie jest nigdzie wysyłany poza oficjalne API Anthropic.",
+      ai_key:"Klucz API Anthropic", ai_model:"Model", save:"Zapisz",
+      hi_quote:"Cytat dnia", hi_fact:"Ciekawostka",
+      quote_label:"Cytat · Nowy Testament", fact_label:"Ciekawostka",
+       delete:"Usuń", edit:"Edytuj", cancel:"Anuluj", empty_tasks:"Brak zadań. Dodaj pierwsze powyżej.",
+      empty_events:"Brak wydarzeń tego dnia.", empty_workouts:"Brak zapisanych treningów.",
+      empty_meals:"Brak posiłków zapisanych na ten dzień.", empty_meal_hist:"Brak historii dziennika żywienia.",
+      empty_journal:"Brak wpisów w dzienniku.", empty_upcoming:"Brak nadchodzących wydarzeń.",
+      fill_task:"Uzupełnij nazwę, datę i godzinę zadania.", fill_event:"Uzupełnij nazwę i godzinę wydarzenia.",
+      fill_workout:"Uzupełnij datę oraz przynajmniej jedno ćwiczenie z serią.", fill_meal:"Uzupełnij nazwę posiłku i liczbę kalorii.",
+      fill_journal:"Wpis nie może być pusty.", fill_pin:"PIN musi mieć dokładnie 4 cyfry.",
+      contact_thanks:"Dziękujemy! Wiadomość zapisana lokalnie.", ai_need_key:"Najpierw ustaw klucz API w konfiguracji.",
+      ai_thinking:"Asystent myśli...", ai_error:"Błąd połączenia z API. Sprawdź klucz i połączenie.",
+      notif_task:"Zbliżający się termin zadania", notif_event:"Zbliżające się wydarzenie",
+      saved:"Zapisano.", min_one_ex:"Sesja musi zawierać przynajmniej jedno ćwiczenie.",
+      tab_calc:"Zapotrzebowanie", repeat_last:"↻ Powtórz ostatni", today:"Dziś",
+      from_base:"Z bazy produktów", manual_entry:"Ręcznie", food_search:"Wybierz produkt",
+      food_search_ph:"np. Ryż, jajko, kurczak...", grams:"Ilość (g)", calc_result:"Wyliczono",
+      recent_products:"Ostatnie produkty", cat_breakfast:"Śniadanie", cat_lunch:"Obiad",
+      cat_dinner:"Kolacja", cat_snack:"Przekąska",
+      calc_goal:"Cel", goal_bulk:"Masa", goal_maintain:"Utrzymanie", goal_cut:"Redukcja",
+      sex:"Płeć", sex_male:"Mężczyzna", sex_female:"Kobieta", age:"Wiek (lata)",
+      height:"Wzrost (cm)", weight_kg:"Waga (kg)", activity:"Poziom aktywności",
+      act_sedentary:"Siedzący (brak/minimalny ruch)", act_light:"Lekki (1–3 treningi/tydz.)",
+      act_moderate:"Umiarkowany (3–5 treningów/tydz.)", act_active:"Aktywny (6–7 treningów/tydz.)",
+      act_very:"Bardzo aktywny (praca fiz. / 2× dziennie)", calc_run:"Oblicz zapotrzebowanie",
+      kcal_day:"kcal / dzień", set_as_goal:"Ustaw jako dzienny cel kalorii",
+      calc_formula_note:"Obliczenia wg wzoru Mifflina-St Jeora (BMR × współczynnik aktywności). Wyniki są orientacyjne i nie zastępują porady dietetyka.",
+      fill_calc:"Uzupełnij wiek, wzrost i wagę.", goal_set_done:"Ustawiono dzienny cel kalorii.",
+      bmr_label:"BMR (spoczynkowe)", tdee_label:"TDEE (utrzymanie)",
+      of_goal:"z celu", over_goal:"ponad cel!", no_last_workout:"Brak wcześniejszego treningu do powtórzenia.",
+      last_time:"Ostatnio", use_last:"użyj", per100:"na 100 g", empty_recent:"",
+      /* --- new keys --- */
+      tile_budget:"Zarządzanie budżetem", tile_budget_sub:"Dochody, wydatki, inwestycje",
+      set_currency:"Personalizacja kursów walut", currency_note:"Zaznacz maksymalnie 5 par. Wybór pojawi się w pasku w nagłówku.",
+      set_appearance2:"Wygląd i układ interfejsu", set_fontsize:"Rozmiar czcionki",
+      fs_small:"Mała", fs_default:"Domyślna", fs_large:"Duża",
+      set_density:"Gęstość układu", den_compact:"Kompaktowy", den_standard:"Standardowy", den_spacious:"Przestronny",
+      set_timefmt:"Format godziny", tf_24:"24-godzinny", tf_12:"12-godzinny",
+      db_products_title:"Baza produktów (na 100 g)", db_exercises_title:"Baza ćwiczeń",
+      db_search_ph:"Szukaj...", db_use:"Użyj",
+      exc_upper:"Góra ciała", exc_lower:"Dół ciała", exc_core:"Brzuch / core",
+      exc_power:"Ćwiczenia na moc", exc_dynamic:"Ćwiczenia na dynamikę",
+      daily_title:"Codzienne zadania", daily_empty:"Brak codziennych zadań. Kliknij ✎, aby dodać.",
+      daily_add_ph:"Nowe zadanie...", daily_add:"Dodaj", daily_done_all:"Wszystko zrobione na dziś! 🎉",
+      daily_edit_hint:"Tryb edycji — dodawaj, zmieniaj lub usuwaj zadania.",
+      budget_period:"Okres rozliczeniowy", budget_from:"Od", budget_to:"Do", budget_save_period:"Zapisz okres",
+      budget_income:"Źródła dochodu", budget_income_total:"Łączny dochód",
+      budget_monthly:"Wydatki miesięczne (cykliczne)", budget_onetime:"Wydatki jednorazowe",
+      budget_invest:"Inwestycje", budget_summary:"Podsumowanie", budget_available:"Pozostała kwota dostępna",
+      budget_carry:"Pozostało z poprzedniego miesiąca", budget_name_ph:"Nazwa", budget_amount_ph:"Kwota",
+      budget_cat_ph:"Kategoria (opcjonalnie)", budget_add:"+ Dodaj", budget_none:"Brak pozycji.",
+      budget_period_note:"Po upływie daty końcowej budżet zresetuje się automatycznie, a nadwyżka przejdzie do nowego okresu.",
+      piggy_title:"Skarbonka", piggy_name:"Nazwa celu", piggy_target:"Kwota docelowa", piggy_save_goal:"Zapisz cel",
+      piggy_contribution:"Wpłata", piggy_add:"+ Wpłać", piggy_withdraw:"− Wypłać",
+      piggy_none:"Ustaw cel oszczędnościowy, aby zacząć.", piggy_of_goal:"celu", piggy_over_goal:"ponad cel",
+      budget_history:"Historia budżetu", budget_history_none:"Brak zapisanych okresów.",
+      ai_hf_note:"Agent AI korzysta z darmowego API Hugging Face (router). Wklej swój bezpłatny token (huggingface.co → Settings → Access Tokens) — przechowywany tylko lokalnie w tej przeglądarce.",
+      ai_hf_token:"Token Hugging Face", ai_hf_get:"Pobierz darmowy token", ai_need_token:"Najpierw ustaw darmowy token Hugging Face w konfiguracji.",
+      ai_model_hint:"Model (repozytorium HF, np. openai/gpt-oss-120b)"
+    },
+    en:{
+      clock_title:"Clock & date", upcoming_title:"Upcoming event",
+      notif_prompt:"Enable notifications so you don't miss deadlines and events.", notif_enable:"Enable notifications",
+      back:"Back",
+      tile_todo:"To-do", tile_todo_sub:"Tasks & deadlines",
+      tile_calendar:"Calendar", tile_calendar_sub:"Events & meetings",
+      tile_fitness:"Fitness", tile_fitness_sub:"Training & calories",
+      tile_journal:"Journal", tile_journal_sub:"Thoughts & ideas",
+      tile_ai:"AI Agent", tile_ai_sub:"AI assistant",
+      task_name:"Task name", task_name_ph:"e.g. Send the report", date:"Date", time:"Time", add_task:"Add task",
+      event_name:"Event name", event_name_ph:"e.g. Client meeting", desc_opt:"Description (optional)", add_event:"Add event",
+      tab_training:"Training", tab_calories:"Calories", add_exercise:"+ Add exercise", save_workout:"Save workout",
+      exercise:"Exercise", ex_name:"Exercise name", ex_name_ph:"e.g. Barbell squat", sets:"Sets", add_set:"+ Add set",
+      rm_exercise:"Remove exercise", note:"Note", weight_ph:"Weight (kg)", reps_ph:"Reps",
+      kcal_sum:"Total calories", meal_name:"Meal name", meal_name_ph:"e.g. Oatmeal with fruit",
+      protein_short:"Protein", carbs_short:"Carbs", fat_short:"Fat",
+      meals_add_title:"Add a meal", meals_day_title:"Meals of the day",
+      calc_data:"Your details", calc_results:"Results", calc_target_label:"Daily requirement",
+      calc_macros_label:"Suggested macros",
+      kcal:"Calories (kcal)", protein:"Protein (g)", carbs:"Carbs (g)", fat:"Fat (g)", add_meal:"Add meal",
+      journal_prompt:"Your entry", journal_ph:"Thoughts, ideas...", save_entry:"Save entry",
+      send:"Send", ai_ph:"Type a message...", ai_config:"API config", ai_clear:"Clear chat",
+      about_link:"Info / About us", rights:"All rights reserved",
+      settings:"Settings", set_theme:"Appearance", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Light",
+      set_tiles:"Tiles: order & visibility", set_lang:"Language", set_clock:"Clock time zone",
+      tz_primary:"Primary zone", tz_second_enable:"Second clock",
+      set_header:"Header info box", header_quote:"NT quote", header_fact:"Fun fact",
+      set_pin:"PIN protection", pin_journal:"Protect Journal", pin_calendar:"Protect Calendar",
+      pin_set_ph:"Set a 4-digit PIN", save_pin:"Save PIN settings",
+      pin_note:"The PIN is stored locally in an obfuscated (hashed) form, not as plain text. This is a screen lock, not cryptographic data protection.",
+      pin_enter:"Enter PIN", pin_wrong:"Wrong PIN.", unlock:"Unlock",
+      about_privacy:"For us, privacy and effective work come first.",
+      about_support:"If you'd like to support us, you can buy us a coffee", about_ebook:"Free e-book",
+      contact_form:"Contact form", c_name:"Name", c_email:"E-mail", c_msg:"Message", c_send:"Send",
+      ai_config_note:"The AI Agent connects directly to the Anthropic API from your browser. Paste your own API key (stored only locally in this browser). The key is never sent anywhere except the official Anthropic API.",
+      ai_key:"Anthropic API key", ai_model:"Model", save:"Save",
+      hi_quote:"Quote of the day", hi_fact:"Fun fact",
+      quote_label:"Quote · New Testament", fact_label:"Fun fact",
+      delete:"Delete", edit:"Edit", cancel:"Cancel", empty_tasks:"No tasks yet. Add one above.",
+      empty_events:"No events on this day.", empty_workouts:"No workouts saved.",
+      empty_meals:"No meals logged for this day.", empty_meal_hist:"No food-log history.",
+      empty_journal:"No journal entries.", empty_upcoming:"No upcoming events.",
+      fill_task:"Fill in task name, date and time.", fill_event:"Fill in event name and time.",
+      fill_workout:"Fill in date and at least one exercise with a set.", fill_meal:"Fill in meal name and calories.",
+      fill_journal:"Entry cannot be empty.", fill_pin:"PIN must be exactly 4 digits.",
+      contact_thanks:"Thank you! Message saved locally.", ai_need_key:"Set your API key in config first.",
+      ai_thinking:"Assistant is thinking...", ai_error:"API connection error. Check your key and connection.",
+      notif_task:"Upcoming task deadline", notif_event:"Upcoming event",
+      saved:"Saved.", min_one_ex:"A session must contain at least one exercise.",
+      tab_calc:"Needs", repeat_last:"↻ Repeat last", today:"Today",
+      from_base:"From food base", manual_entry:"Manual", food_search:"Choose product",
+      food_search_ph:"e.g. Rice, egg, chicken...", grams:"Amount (g)", calc_result:"Calculated",
+      recent_products:"Recent products", cat_breakfast:"Breakfast", cat_lunch:"Lunch",
+      cat_dinner:"Dinner", cat_snack:"Snack",
+      calc_goal:"Goal", goal_bulk:"Bulk", goal_maintain:"Maintain", goal_cut:"Cut",
+      sex:"Sex", sex_male:"Male", sex_female:"Female", age:"Age (years)",
+      height:"Height (cm)", weight_kg:"Weight (kg)", activity:"Activity level",
+      act_sedentary:"Sedentary (little/no exercise)", act_light:"Light (1–3 workouts/week)",
+      act_moderate:"Moderate (3–5 workouts/week)", act_active:"Active (6–7 workouts/week)",
+      act_very:"Very active (physical job / 2×/day)", calc_run:"Calculate needs",
+      kcal_day:"kcal / day", set_as_goal:"Set as daily calorie goal",
+      calc_formula_note:"Calculated with the Mifflin-St Jeor equation (BMR × activity factor). Results are estimates and don't replace a dietitian's advice.",
+      fill_calc:"Fill in age, height and weight.", goal_set_done:"Daily calorie goal set.",
+      bmr_label:"BMR (resting)", tdee_label:"TDEE (maintenance)",
+      of_goal:"of goal", over_goal:"over goal!", no_last_workout:"No previous workout to repeat.",
+      last_time:"Last time", use_last:"use", per100:"per 100 g", empty_recent:"",
+      /* --- new keys --- */
+      tile_budget:"Budget management", tile_budget_sub:"Income, expenses, investments",
+      set_currency:"Currency ticker personalization", currency_note:"Pick up to 5 pairs. Your choice appears in the header ticker.",
+      set_appearance2:"Interface appearance & layout", set_fontsize:"Font size",
+      fs_small:"Small", fs_default:"Default", fs_large:"Large",
+      set_density:"Layout density", den_compact:"Compact", den_standard:"Standard", den_spacious:"Spacious",
+      set_timefmt:"Time format", tf_24:"24-hour", tf_12:"12-hour",
+      db_products_title:"Food database (per 100 g)", db_exercises_title:"Exercise database",
+      db_search_ph:"Search...", db_use:"Use",
+      exc_upper:"Upper body", exc_lower:"Lower body", exc_core:"Abs / core",
+      exc_power:"Power / strength", exc_dynamic:"Dynamic / explosive",
+      daily_title:"Daily tasks", daily_empty:"No daily tasks. Click ✎ to add.",
+      daily_add_ph:"New task...", daily_add:"Add", daily_done_all:"All done for today! 🎉",
+      daily_edit_hint:"Edit mode — add, change or remove tasks.",
+      budget_period:"Billing period", budget_from:"From", budget_to:"To", budget_save_period:"Save period",
+      budget_income:"Income sources", budget_income_total:"Total income",
+      budget_monthly:"Monthly expenses (recurring)", budget_onetime:"One-time expenses",
+      budget_invest:"Investments", budget_summary:"Summary", budget_available:"Available balance",
+      budget_carry:"Left from previous period", budget_name_ph:"Name", budget_amount_ph:"Amount",
+      budget_cat_ph:"Category (optional)", budget_add:"+ Add", budget_none:"No entries.",
+      budget_period_note:"When the end date passes, the budget resets automatically and any surplus carries into the new period.",
+      piggy_title:"Piggy bank", piggy_name:"Goal name", piggy_target:"Target amount", piggy_save_goal:"Save goal",
+      piggy_contribution:"Contribution", piggy_add:"+ Deposit", piggy_withdraw:"− Withdraw",
+      piggy_none:"Set a savings goal to begin.", piggy_of_goal:"of goal", piggy_over_goal:"over goal",
+      budget_history:"Budget history", budget_history_none:"No saved periods yet.",
+      ai_hf_note:"The AI Agent uses the free Hugging Face API (router). Paste your free token (huggingface.co → Settings → Access Tokens) — stored only locally in this browser.",
+      ai_hf_token:"Hugging Face token", ai_hf_get:"Get a free token", ai_need_token:"Set your free Hugging Face token in config first.",
+      ai_model_hint:"Model (HF repo, e.g. openai/gpt-oss-120b)"
+    }
+  };
+  function t(k){ var d=I18N[state.lang]||I18N.pl; return d[k]!==undefined?d[k]:(I18N.pl[k]!==undefined?I18N.pl[k]:k); }
+
+  function applyI18n(){
+    document.documentElement.lang = state.lang;
+    document.querySelectorAll("[data-i18n]").forEach(function(el){
+      el.textContent = t(el.getAttribute("data-i18n"));
+    });
+    document.querySelectorAll("[data-i18n-ph]").forEach(function(el){
+      el.setAttribute("placeholder", t(el.getAttribute("data-i18n-ph")));
+    });
+  }
+
+  /* ================= STATE / SETTINGS ================= */
+  var DEFAULT_ORDER = ["todo","calendar","fitness","budget","journal"];
+  var DEFAULT_PAIRS = ["USDPLN","EURPLN","BTCUSD"];
+  var settings = loadJSON("settings", {});
+  var state = {
+    theme: settings.theme || "cyber",
+    lang: settings.lang || "pl",
+    order: settings.order || DEFAULT_ORDER.slice(),
+    hidden: settings.hidden || {},
+    tzPrimary: settings.tzPrimary || "Europe/Warsaw",
+    tzSecondEnabled: !!settings.tzSecondEnabled,
+    tzSecondary: settings.tzSecondary || "America/New_York",
+    headerMode: settings.headerMode || "quote",
+    pinJournalEnabled: !!settings.pinJournalEnabled,
+    pinCalendarEnabled: !!settings.pinCalendarEnabled,
+    pinJournalHash: settings.pinJournalHash || "",
+    pinCalendarHash: settings.pinCalendarHash || "",
+    tickerPairs: (settings.tickerPairs && settings.tickerPairs.length) ? settings.tickerPairs.slice(0,5) : DEFAULT_PAIRS.slice(),
+    fontSize: settings.fontSize || "default",   // small | default | large
+    density: settings.density || "standard",    // compact | standard | spacious
+    timeFormat: settings.timeFormat || "24"     // 24 | 12
+  };
+  // ensure order integrity (in case of new tiles)
+  DEFAULT_ORDER.forEach(function(id){ if(state.order.indexOf(id)===-1) state.order.push(id); });
+  state.order = state.order.filter(function(id){ return DEFAULT_ORDER.indexOf(id)!==-1; });
+
+  function persistSettings(){
+    saveJSON("settings", {
+      theme:state.theme, lang:state.lang, order:state.order, hidden:state.hidden,
+      tzPrimary:state.tzPrimary, tzSecondEnabled:state.tzSecondEnabled, tzSecondary:state.tzSecondary,
+      headerMode:state.headerMode, pinJournalEnabled:state.pinJournalEnabled,
+      pinCalendarEnabled:state.pinCalendarEnabled, pinJournalHash:state.pinJournalHash, pinCalendarHash:state.pinCalendarHash,
+      tickerPairs:state.tickerPairs, fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat
+    });
+  }
+
+  function applyTheme(){ document.documentElement.setAttribute("data-theme", state.theme); }
+  function applyAppearance(){
+    var h=document.documentElement, b=document.body;
+    h.classList.remove("fs-small","fs-default","fs-large");
+    h.classList.add("fs-"+(state.fontSize||"default"));
+    b.classList.remove("den-compact","den-standard","den-spacious");
+    b.classList.add("den-"+(state.density||"standard"));
+  }
+  /* time-format aware formatter for DISPLAYED times ("HH:MM" 24h stored -> shown per pref) */
+  function fmtTime(hhmm){
+    if(!hhmm) return "";
+    var p=(""+hhmm).split(":"); if(p.length<2) return hhmm;
+    var h=parseInt(p[0],10), m=p[1];
+    if(isNaN(h)) return hhmm;
+    if(state.timeFormat==="12"){
+      var ap=h<12?"AM":"PM"; var h12=h%12; if(h12===0) h12=12;
+      return h12+":"+m+" "+ap;
+    }
+    return pad(h)+":"+m;
+  }
+
+  /* simple obfuscation hash (not cryptographic; screen-lock only) */
+  function hashPin(pin){
+    var s="futureapp::"+pin;
+    var h=0, h2=0, i;
+    for(i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0; }
+    for(i=s.length-1;i>=0;i--){ h2=(h2*131+s.charCodeAt(i))|0; }
+    return (h>>>0).toString(16)+"-"+(h2>>>0).toString(16);
+  }
+
+  /* ================= DATE HELPERS ================= */
+  var dowPL=["niedziela","poniedziałek","wtorek","środa","czwartek","piątek","sobota"];
+  var dowEN=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var monPL=["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+  var monEN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  function formatDateReadable(iso){
+    var p=iso.split("-"); var d=new Date(p[0],p[1]-1,p[2]);
+    if(state.lang==="en") return dowEN[d.getDay()]+", "+monEN[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();
+    return dowPL[d.getDay()]+", "+d.getDate()+" "+monPL[d.getMonth()]+" "+d.getFullYear();
+  }
+  var calMonPL=["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+  var dowShortPL=["Pon","Wt","Śr","Czw","Pt","Sob","Nd"];
+  var dowShortEN=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  /* ================= NAVIGATION + PIN ================= */
+  var views = document.querySelectorAll(".view");
+  var unlocked = {};
+  function reallyShow(name){
+    views.forEach(function(v){ v.classList.remove("active"); });
+    var target=$("view-"+name); if(target) target.classList.add("active");
+    window.scrollTo(0,0);
+  }
+  function showView(name){
+    var needsPin = (name==="journal" && state.pinJournalEnabled && state.pinJournalHash) ||
+                   (name==="calendar" && state.pinCalendarEnabled && state.pinCalendarHash);
+    if(needsPin && !unlocked[name]){
+      openPinPrompt(name);
+      return;
+    }
+    reallyShow(name);
+    if(name==="home"){ renderUpcomingBig(); renderDaily(); }
+    if(name==="budget"){ renderBudget(); }
+    if(name==="todo"){ var td=$("taskDate"); if(td) td.value=todayISO(); } // default to today, editable
+  }
+  document.querySelectorAll("[data-home]").forEach(function(b){
+    b.addEventListener("click", function(){ showView("home"); });
+  });
+  // clicking the site name returns to the home view (SPA routing)
+  (function(){
+    var sn=document.querySelector(".site-name");
+    if(sn){ sn.setAttribute("role","button"); sn.setAttribute("tabindex","0");
+      sn.addEventListener("click", function(){ showView("home"); });
+      sn.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); showView("home"); } });
+    }
+  })();
+
+  var pinTargetView=null;
+  function openPinPrompt(name){
+    pinTargetView=name;
+    $("pinUnlockInput").value="";
+    $("pinError").style.display="none";
+    $("pinOverlay").classList.add("active");
+    setTimeout(function(){ $("pinUnlockInput").focus(); },50);
+  }
+  $("pinUnlockBtn").addEventListener("click", function(){
+    var pin=$("pinUnlockInput").value.trim();
+    var hash = pinTargetView==="journal"?state.pinJournalHash:state.pinCalendarHash;
+    if(hashPin(pin)===hash){
+      unlocked[pinTargetView]=true;
+      $("pinOverlay").classList.remove("active");
+      reallyShow(pinTargetView);
+    } else {
+      $("pinError").style.display="block";
+    }
+  });
+  document.querySelector("[data-close-pin]").addEventListener("click", function(){ $("pinOverlay").classList.remove("active"); });
+
+  /* ================= TILES ================= */
+  var TILE_DEFS = {
+    todo:{icon:"\u2630", titleKey:"tile_todo", subKey:"tile_todo_sub"},
+    calendar:{icon:"\uD83D\uDCC5", titleKey:"tile_calendar", subKey:"tile_calendar_sub", pin:"calendar"},
+    fitness:{icon:"\uD83D\uDCAA", titleKey:"tile_fitness", subKey:"tile_fitness_sub"},
+    budget:{icon:"\uD83D\uDCB0", titleKey:"tile_budget", subKey:"tile_budget_sub"},
+    journal:{icon:"\uD83D\uDCD3", titleKey:"tile_journal", subKey:"tile_journal_sub", pin:"journal"}
+  };
+  function renderTiles(){
+    var grid=$("tileGrid"); grid.innerHTML="";
+    state.order.forEach(function(id){
+      if(state.hidden[id]) return;
+      var def=TILE_DEFS[id]; if(!def) return;
+      var locked = (def.pin==="journal" && state.pinJournalEnabled && state.pinJournalHash) ||
+                   (def.pin==="calendar" && state.pinCalendarEnabled && state.pinCalendarHash);
+      var btn=document.createElement("button");
+      btn.className="tile";
+      btn.innerHTML='<span class="tile-icon">'+def.icon+'</span>'+
+        '<span class="tile-title"></span>'+
+        '<span class="tile-sub"></span>'+
+        (locked?'<span class="tile-lock">\uD83D\uDD12 PIN</span>':'');
+      btn.querySelector(".tile-title").textContent=t(def.titleKey);
+      btn.querySelector(".tile-sub").textContent=t(def.subKey);
+      btn.addEventListener("click", function(){ showView(id); });
+      grid.appendChild(btn);
+    });
+  }
+
+  /* ================= TODO ================= */
+  var tasks=loadJSON("tasks",[]);
+  function saveTasks(){ saveJSON("tasks",tasks); }
+  function renderTasks(){
+    var list=$("taskList"); list.innerHTML="";
+    if(tasks.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_tasks")+'</div>'; return; }
+    var sorted=tasks.slice().sort(function(a,b){ return new Date(a.date+"T"+a.time)-new Date(b.date+"T"+b.time); });
+    sorted.forEach(function(tk){
+      var item=document.createElement("div");
+      item.className="task-item"+(tk.done?" done":"");
+      var overdue=(!tk.done)&&new Date(tk.date+"T"+tk.time)<new Date();
+      item.innerHTML=
+        '<div class="task-row">'+
+          '<input type="checkbox" '+(tk.done?"checked":"")+' data-id="'+tk.id+'" class="task-check">'+
+          '<div class="task-main"><div class="task-name"></div><div class="task-meta'+(overdue?" overdue":"")+'"></div></div>'+
+          '<div class="task-actions"><button class="btn-small edit-btn" data-id="'+tk.id+'">'+t("edit")+'</button>'+
+          '<button class="del-btn" data-id="'+tk.id+'">'+t("delete")+'</button></div>'+
+        '</div>'+
+        '<div class="task-edit-row" style="display:none;" data-edit-for="'+tk.id+'">'+
+          '<input type="date" class="edit-date" value="'+tk.date+'">'+
+          '<input type="time" class="edit-time" value="'+tk.time+'">'+
+          '<button class="btn-small save-edit-btn" data-id="'+tk.id+'">'+t("save")+'</button>'+
+          '<button class="btn-small cancel-edit-btn" data-id="'+tk.id+'">'+t("cancel")+'</button>'+
+        '</div>';
+      item.querySelector(".task-name").textContent=tk.name;
+      item.querySelector(".task-meta").textContent=formatDateReadable(tk.date)+", "+fmtTime(tk.time);
+      list.appendChild(item);
+    });
+    list.querySelectorAll(".task-check").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var id=cb.getAttribute("data-id");
+        tasks.forEach(function(tk){ if(tk.id===id) tk.done=cb.checked; });
+        saveTasks(); renderTasks();
+      });
+    });
+    list.querySelectorAll(".del-btn").forEach(function(b){
+      b.addEventListener("click", function(){ var id=b.getAttribute("data-id"); tasks=tasks.filter(function(tk){return tk.id!==id;}); saveTasks(); renderTasks(); renderUpcomingBig(); });
+    });
+    list.querySelectorAll(".edit-btn").forEach(function(b){
+      b.addEventListener("click", function(){ var r=list.querySelector('.task-edit-row[data-edit-for="'+b.getAttribute("data-id")+'"]'); if(r) r.style.display="flex"; });
+    });
+    list.querySelectorAll(".cancel-edit-btn").forEach(function(b){
+      b.addEventListener("click", function(){ var r=list.querySelector('.task-edit-row[data-edit-for="'+b.getAttribute("data-id")+'"]'); if(r) r.style.display="none"; });
+    });
+    list.querySelectorAll(".save-edit-btn").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id=b.getAttribute("data-id");
+        var r=list.querySelector('.task-edit-row[data-edit-for="'+id+'"]');
+        var nd=r.querySelector(".edit-date").value, nt=r.querySelector(".edit-time").value;
+        if(!nd||!nt){ alert(t("fill_task")); return; }
+        tasks.forEach(function(tk){ if(tk.id===id){ tk.date=nd; tk.time=nt; delete notifiedIds["task_"+tk.id]; } });
+        saveJSON("notifiedIds",notifiedIds); saveTasks(); renderTasks(); renderUpcomingBig();
+      });
+    });
+  }
+  $("addTaskBtn").addEventListener("click", function(){
+    var name=$("taskName").value.trim(), date=$("taskDate").value, time=$("taskTime").value;
+    if(!name||!date||!time){ alert(t("fill_task")); return; }
+    tasks.push({id:uid(),name:name,date:date,time:time,done:false}); saveTasks();
+    $("taskName").value=""; $("taskDate").value=todayISO(); $("taskTime").value="";
+    renderTasks(); renderUpcomingBig();
+  });
+
+  /* ================= CALENDAR ================= */
+  var events=loadJSON("events",[]);
+  function saveEvents(){ saveJSON("events",events); }
+  var calCursor=new Date(); calCursor.setDate(1);
+  var selectedDay=null;
+  function renderCalendar(){
+    var mn = state.lang==="en"?monEN:calMonPL;
+    $("calTitle").textContent=mn[calCursor.getMonth()]+" "+calCursor.getFullYear();
+    var grid=$("calGrid"); grid.innerHTML="";
+    var dows = state.lang==="en"?dowShortEN:dowShortPL;
+    dows.forEach(function(d){ var e=document.createElement("div"); e.className="cal-dow"; e.textContent=d; grid.appendChild(e); });
+    var y=calCursor.getFullYear(), m=calCursor.getMonth();
+    var firstDow=(new Date(y,m,1).getDay()+6)%7;
+    var days=new Date(y,m+1,0).getDate();
+    var todayStr=todayISO();
+    for(var i=0;i<firstDow;i++){ var em=document.createElement("div"); em.className="cal-day empty"; grid.appendChild(em); }
+    for(var day=1;day<=days;day++){
+      var iso=y+"-"+pad(m+1)+"-"+pad(day);
+      var cell=document.createElement("div");
+      cell.className="cal-day"+(iso===todayStr?" today":"");
+      var de=events.filter(function(e){return e.date===iso;});
+      var dots=""; de.slice(0,4).forEach(function(){ dots+='<span class="dot"></span>'; });
+      cell.innerHTML='<span class="num">'+day+'</span><span class="dot-wrap">'+dots+'</span>';
+      cell.addEventListener("click",(function(iso){return function(){ openDayDetail(iso); };})(iso));
+      grid.appendChild(cell);
+    }
+  }
+  function openDayDetail(iso){
+    selectedDay=iso; var c=$("dayDetailCard"); c.style.display="block";
+    $("dayDetailTitle").textContent=formatDateReadable(iso);
+    renderDayEvents(); c.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  function renderDayEvents(){
+    var list=$("dayEventsList"); list.innerHTML="";
+    var de=events.filter(function(e){return e.date===selectedDay;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    if(de.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_events")+'</div>'; return; }
+    de.forEach(function(e){
+      var item=document.createElement("div"); item.className="event-item";
+      item.innerHTML='<div><div class="event-time"></div><div class="event-name"></div>'+(e.desc?'<div class="event-desc"></div>':'')+'</div>'+
+        '<button class="del-btn" data-id="'+e.id+'">'+t("delete")+'</button>';
+      item.querySelector(".event-time").textContent=fmtTime(e.time);
+      item.querySelector(".event-name").textContent=e.name;
+      if(e.desc) item.querySelector(".event-desc").textContent=e.desc;
+      list.appendChild(item);
+    });
+    list.querySelectorAll(".del-btn").forEach(function(b){
+      b.addEventListener("click", function(){ events=events.filter(function(e){return e.id!==b.getAttribute("data-id");}); saveEvents(); renderDayEvents(); renderCalendar(); renderUpcomingBig(); });
+    });
+  }
+  $("addEventBtn").addEventListener("click", function(){
+    var name=$("evName").value.trim(), time=$("evTime").value, desc=$("evDesc").value.trim();
+    if(!name||!time||!selectedDay){ alert(t("fill_event")); return; }
+    events.push({id:uid(),date:selectedDay,time:time,name:name,desc:desc}); saveEvents();
+    $("evName").value=""; $("evTime").value=""; $("evDesc").value="";
+    renderDayEvents(); renderCalendar(); renderUpcomingBig();
+  });
+  $("prevMonth").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); });
+  $("nextMonth").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); });
+
+  /* ================= FITNESS TABS ================= */
+  document.querySelectorAll(".tab-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".tab-btn").forEach(function(x){x.classList.remove("active");});
+      document.querySelectorAll(".tab-panel").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active");
+      $("tab-"+b.getAttribute("data-tab")).classList.add("active");
+    });
+  });
+
+  /* ---- Workout ---- */
+  var workouts=loadJSON("workouts",[]);
+  function saveWorkouts(){ saveJSON("workouts",workouts); }
+
+  // build a map of last-used sets per exercise name (most recent workout)
+  function lastSetsFor(name){
+    var key=name.trim().toLowerCase();
+    var sorted=workouts.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+    for(var i=0;i<sorted.length;i++){
+      var ex=(sorted[i].exercises||[]).filter(function(e){return e.name.trim().toLowerCase()===key;});
+      if(ex.length) return ex[ex.length-1].sets;
+    }
+    return null;
+  }
+  function refreshExerciseDatalist(){
+    var names={}; workouts.forEach(function(w){ (w.exercises||[]).forEach(function(e){ names[e.name]=true; }); });
+    var dl=$("exerciseNames"); dl.innerHTML="";
+    Object.keys(names).sort().forEach(function(n){ var o=document.createElement("option"); o.value=n; dl.appendChild(o); });
+  }
+
+  function makeStepper(cls,ph,step,val){
+    return '<div class="stepper">'+
+      '<button type="button" class="stp minus" data-step="'+cls+'">−</button>'+
+      '<input type="number" class="'+cls+'" placeholder="'+ph+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==""?val:"")+'">'+
+      '<button type="button" class="stp plus" data-step="'+cls+'">+</button>'+
+    '</div>';
+  }
+  function addSetRow(container,w,r){
+    var row=document.createElement("div"); row.className="set-row";
+    row.innerHTML=makeStepper("set-weight",t("weight_ph"),"2.5",w)+
+      makeStepper("set-reps",t("reps_ph"),"1",r)+
+      '<button type="button" class="rm-set">&times;</button>';
+    row.querySelector(".rm-set").addEventListener("click", function(){ row.remove(); });
+    row.querySelectorAll(".stp").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var inp=row.querySelector("."+btn.getAttribute("data-step"));
+        var stepv=parseFloat(inp.step)||1;
+        var cur=parseFloat(inp.value)||0;
+        cur += btn.classList.contains("plus")?stepv:-stepv;
+        if(cur<0) cur=0;
+        inp.value = (stepv%1===0)?String(cur):String(Math.round(cur*100)/100);
+      });
+    });
+    container.appendChild(row);
+  }
+  function addExerciseBlock(prefill){
+    var container=$("exercisesContainer");
+    var block=document.createElement("div"); block.className="exercise-block";
+    block.innerHTML='<div class="exercise-block-header"><span>'+t("exercise")+'</span>'+
+      '<button type="button" class="btn-small rm-exercise">'+t("rm_exercise")+'</button></div>'+
+      '<label>'+t("ex_name")+'</label><input type="text" class="ex-name" list="exerciseNames" placeholder="'+t("ex_name_ph")+'">'+
+      '<div class="ex-hint" style="display:none;"></div>'+
+      '<label>'+t("sets")+'</label><div class="sets-container"></div>'+
+      '<button type="button" class="btn-ghost add-set-btn" style="margin-top:8px;">'+t("add_set")+'</button>'+
+      '<label>'+t("note")+'</label><textarea class="ex-note"></textarea>';
+    block.querySelector(".rm-exercise").addEventListener("click", function(){
+      if(container.querySelectorAll(".exercise-block").length>1) block.remove(); else alert(t("min_one_ex"));
+    });
+    var sc=block.querySelector(".sets-container");
+    var nameInp=block.querySelector(".ex-name");
+    var hint=block.querySelector(".ex-hint");
+    block.querySelector(".add-set-btn").addEventListener("click", function(){ addSetRow(sc); });
+
+    function showHint(){
+      var last=lastSetsFor(nameInp.value);
+      if(last && last.length){
+        var txt=last.map(function(s){return s.weight+"kg×"+s.reps;}).join(", ");
+        hint.innerHTML='<span>'+t("last_time")+": "+txt+'</span><span class="use-last">'+t("use_last")+'</span>';
+        hint.style.display="flex";
+        hint.querySelector(".use-last").addEventListener("click", function(){
+          sc.innerHTML=""; last.forEach(function(s){ addSetRow(sc,s.weight,s.reps); });
+        });
+      } else { hint.style.display="none"; hint.innerHTML=""; }
+    }
+    nameInp.addEventListener("change", showHint);
+    nameInp.addEventListener("blur", showHint);
+
+    if(prefill){
+      nameInp.value=prefill.name||"";
+      (prefill.sets&&prefill.sets.length?prefill.sets:[null]).forEach(function(s){ addSetRow(sc, s?s.weight:undefined, s?s.reps:undefined); });
+      if(prefill.note) block.querySelector(".ex-note").value=prefill.note;
+      showHint();
+    } else {
+      addSetRow(sc);
+    }
+    container.appendChild(block);
+  }
+  $("addExerciseBtn").addEventListener("click", function(){ addExerciseBlock(); });
+  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); }
+
+  $("repeatLastBtn").addEventListener("click", function(){
+    if(workouts.length===0){ alert(t("no_last_workout")); return; }
+    var last=workouts.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0];
+    $("exercisesContainer").innerHTML="";
+    (last.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note}); });
+    if((last.exercises||[]).length===0) addExerciseBlock();
+    $("wDate").value=todayISO();
+    editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
+  });
+
+  var editingWorkoutId=null;
+  $("addWorkoutBtn").addEventListener("click", function(){
+    var date=$("wDate").value;
+    var exercises=[];
+    document.querySelectorAll("#exercisesContainer .exercise-block").forEach(function(block){
+      var name=block.querySelector(".ex-name").value.trim();
+      var note=block.querySelector(".ex-note").value.trim();
+      var sets=[];
+      block.querySelectorAll(".set-row").forEach(function(row){
+        var w=row.querySelector(".set-weight").value, r=row.querySelector(".set-reps").value;
+        if(w!==""||r!=="") sets.push({weight:w||"0",reps:r||"0"});
+      });
+      if(name&&sets.length>0) exercises.push({name:name,sets:sets,note:note});
+    });
+    if(!date||exercises.length===0){ alert(t("fill_workout")); return; }
+    if(editingWorkoutId){
+      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; } });
+    } else {
+      workouts.push({id:uid(),date:date,exercises:exercises});
+    }
+    saveWorkouts(); refreshExerciseDatalist();
+    resetWorkoutForm(); renderWorkouts();
+  });
+  function renderWorkouts(){
+    var c=$("workoutHistory"); c.innerHTML="";
+    if(workouts.length===0){ c.innerHTML='<div class="empty-note">'+t("empty_workouts")+'</div>'; return; }
+    workouts.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).forEach(function(w){
+      var entry=document.createElement("div"); entry.className="workout-entry";
+      var head=document.createElement("div");
+      head.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:8px;";
+      head.innerHTML='<div class="w-date"></div><div style="display:flex;gap:6px;">'+
+        '<button class="btn-small w-edit" data-id="'+w.id+'">'+t("edit")+'</button>'+
+        '<button class="del-btn w-del" data-id="'+w.id+'">'+t("delete")+'</button></div>';
+      head.querySelector(".w-date").textContent=formatDateReadable(w.date);
+      entry.appendChild(head);
+      (w.exercises||[]).forEach(function(ex){
+        var b=document.createElement("div"); b.className="w-exercise-block";
+        var st=ex.sets.map(function(s){return s.weight+"kg × "+s.reps;}).join(", ");
+        b.innerHTML='<div class="w-exercise-name"></div><div class="w-sets"></div>'+(ex.note?'<div class="w-note"></div>':'');
+        b.querySelector(".w-exercise-name").textContent=ex.name;
+        b.querySelector(".w-sets").textContent=t("sets")+": "+st;
+        if(ex.note) b.querySelector(".w-note").textContent=ex.note;
+        entry.appendChild(b);
+      });
+      c.appendChild(entry);
+    });
+    c.querySelectorAll(".w-del").forEach(function(b){
+      b.addEventListener("click", function(){ workouts=workouts.filter(function(w){return w.id!==b.getAttribute("data-id");}); saveWorkouts(); refreshExerciseDatalist(); renderWorkouts(); });
+    });
+    c.querySelectorAll(".w-edit").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id=b.getAttribute("data-id");
+        var w=workouts.filter(function(x){return x.id===id;})[0]; if(!w) return;
+        editingWorkoutId=id;
+        $("wDate").value=w.date;
+        $("exercisesContainer").innerHTML="";
+        (w.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note}); });
+        if((w.exercises||[]).length===0) addExerciseBlock();
+        $("addWorkoutBtn").textContent=t("save");
+        document.querySelector('.tab-btn[data-tab="training"]').click();
+        $("view-fitness").scrollIntoView({behavior:"smooth",block:"start"});
+      });
+    });
+  }
+
+  /* ---- Food database (per 100 g) ---- */
+  var FOOD_DB=[
+    {pl:"Pierś z kurczaka",en:"Chicken breast",kcal:165,p:31,c:0,f:3.6},
+    {pl:"Udo z kurczaka",en:"Chicken thigh",kcal:209,p:26,c:0,f:11},
+    {pl:"Wołowina chuda",en:"Lean beef",kcal:187,p:26,c:0,f:9},
+    {pl:"Łosoś",en:"Salmon",kcal:208,p:20,c:0,f:13},
+    {pl:"Tuńczyk (w wodzie)",en:"Tuna (in water)",kcal:116,p:26,c:0,f:1},
+    {pl:"Jajko",en:"Egg",kcal:143,p:13,c:1.1,f:9.5},
+    {pl:"Białko jaja",en:"Egg white",kcal:52,p:11,c:0.7,f:0.2},
+    {pl:"Ryż biały (suchy)",en:"White rice (dry)",kcal:360,p:7,c:79,f:0.9},
+    {pl:"Ryż brązowy (suchy)",en:"Brown rice (dry)",kcal:362,p:7.5,c:76,f:2.7},
+    {pl:"Makaron (suchy)",en:"Pasta (dry)",kcal:371,p:13,c:75,f:1.5},
+    {pl:"Kasza gryczana (sucha)",en:"Buckwheat (dry)",kcal:343,p:13,c:72,f:3.4},
+    {pl:"Ziemniaki",en:"Potatoes",kcal:77,p:2,c:17,f:0.1},
+    {pl:"Batat",en:"Sweet potato",kcal:86,p:1.6,c:20,f:0.1},
+    {pl:"Owsianka (płatki owsiane)",en:"Oats",kcal:379,p:13,c:67,f:6.5},
+    {pl:"Chleb pełnoziarnisty",en:"Wholegrain bread",kcal:247,p:9,c:41,f:3.4},
+    {pl:"Banan",en:"Banana",kcal:89,p:1.1,c:23,f:0.3},
+    {pl:"Jabłko",en:"Apple",kcal:52,p:0.3,c:14,f:0.2},
+    {pl:"Pomarańcza",en:"Orange",kcal:47,p:0.9,c:12,f:0.1},
+    {pl:"Borówki",en:"Blueberries",kcal:57,p:0.7,c:14,f:0.3},
+    {pl:"Brokuł",en:"Broccoli",kcal:34,p:2.8,c:7,f:0.4},
+    {pl:"Pomidor",en:"Tomato",kcal:18,p:0.9,c:3.9,f:0.2},
+    {pl:"Ogórek",en:"Cucumber",kcal:15,p:0.7,c:3.6,f:0.1},
+    {pl:"Marchew",en:"Carrot",kcal:41,p:0.9,c:10,f:0.2},
+    {pl:"Twaróg chudy",en:"Low-fat cottage cheese",kcal:98,p:18,c:3.5,f:1},
+    {pl:"Jogurt naturalny",en:"Plain yogurt",kcal:61,p:3.5,c:4.7,f:3.3},
+    {pl:"Skyr",en:"Skyr",kcal:63,p:11,c:4,f:0.2},
+    {pl:"Mleko 2%",en:"Milk 2%",kcal:50,p:3.4,c:4.8,f:2},
+    {pl:"Ser żółty",en:"Cheese (yellow)",kcal:402,p:25,c:1.3,f:33},
+    {pl:"Masło orzechowe",en:"Peanut butter",kcal:588,p:25,c:20,f:50},
+    {pl:"Migdały",en:"Almonds",kcal:579,p:21,c:22,f:49},
+    {pl:"Orzechy włoskie",en:"Walnuts",kcal:654,p:15,c:14,f:65},
+    {pl:"Oliwa z oliwek",en:"Olive oil",kcal:884,p:0,c:0,f:100},
+    {pl:"Masło",en:"Butter",kcal:717,p:0.9,c:0.1,f:81},
+    {pl:"Miód",en:"Honey",kcal:304,p:0.3,c:82,f:0},
+    {pl:"Cukier",en:"Sugar",kcal:387,p:0,c:100,f:0},
+    {pl:"Fasola czerwona (gotowana)",en:"Kidney beans (cooked)",kcal:127,p:8.7,c:23,f:0.5},
+    {pl:"Ciecierzyca (gotowana)",en:"Chickpeas (cooked)",kcal:164,p:9,c:27,f:2.6},
+    {pl:"Tofu",en:"Tofu",kcal:76,p:8,c:1.9,f:4.8},
+    {pl:"Ryż basmati (gotowany)",en:"Basmati rice (cooked)",kcal:130,p:2.7,c:28,f:0.3},
+    {pl:"Whey (odżywka białkowa)",en:"Whey protein",kcal:400,p:80,c:8,f:6}
+  ];
+  function foodName(f){ return state.lang==="en"?f.en:f.pl; }
+  function refreshFoodList(){
+    var dl=$("foodList"); dl.innerHTML="";
+    FOOD_DB.slice().sort(function(a,b){return foodName(a).localeCompare(foodName(b));}).forEach(function(f){
+      var o=document.createElement("option"); o.value=foodName(f); dl.appendChild(o);
+    });
+  }
+  function findFood(name){
+    var key=name.trim().toLowerCase();
+    return FOOD_DB.filter(function(f){ return f.pl.toLowerCase()===key||f.en.toLowerCase()===key; })[0]||null;
+  }
+  function computeFood(){
+    var f=findFood($("foodSearch").value); var g=num($("foodGrams").value);
+    if(!f||g<=0){ $("foodCalcOut").textContent="—"; return null; }
+    var factor=g/100;
+    var res={kcal:f.kcal*factor,p:f.p*factor,c:f.c*factor,f:f.f*factor};
+    $("foodCalcOut").textContent=Math.round(res.kcal)+" kcal · B"+res.p.toFixed(1)+" W"+res.c.toFixed(1)+" T"+res.f.toFixed(1);
+    return {food:f,grams:g,res:res};
+  }
+  $("foodSearch").addEventListener("input", computeFood);
+  $("foodSearch").addEventListener("change", computeFood);
+  $("foodGrams").addEventListener("input", computeFood);
+  $("addFoodDbBtn").addEventListener("click", function(){
+    var d=computeFood();
+    if(!d){ alert(t("fill_meal")); return; }
+    var nm=foodName(d.food)+" ("+d.grams+" g)";
+    pushMeal(nm, d.res.kcal, d.res.p, d.res.c, d.res.f);
+    $("foodSearch").value=""; $("foodGrams").value="100"; $("foodCalcOut").textContent="—";
+  });
+
+  /* ---- Exercise database (categorized) ---- */
+  var EXERCISE_DB = {
+    upper:[
+      {pl:"Wyciskanie sztangi na ławce płaskiej",en:"Barbell bench press",mus:{pl:"Klatka",en:"Chest"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Wyciskanie hantli skos góra",en:"Incline dumbbell press",mus:{pl:"Klatka",en:"Chest"},eq:{pl:"Hantle",en:"Dumbbells"}},
+      {pl:"Rozpiętki na bramie",en:"Cable fly",mus:{pl:"Klatka",en:"Chest"},eq:{pl:"Wyciąg",en:"Cable"}},
+      {pl:"Podciąganie na drążku",en:"Pull-up",mus:{pl:"Plecy",en:"Back"},eq:{pl:"Drążek",en:"Bar"}},
+      {pl:"Wiosłowanie sztangą",en:"Barbell row",mus:{pl:"Plecy",en:"Back"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Ściąganie drążka wyciągu",en:"Lat pulldown",mus:{pl:"Plecy",en:"Back"},eq:{pl:"Wyciąg",en:"Cable"}},
+      {pl:"Wyciskanie żołnierskie (OHP)",en:"Overhead press",mus:{pl:"Barki",en:"Shoulders"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Wznosy bokiem hantlami",en:"Lateral raise",mus:{pl:"Barki",en:"Shoulders"},eq:{pl:"Hantle",en:"Dumbbells"}},
+      {pl:"Uginanie ramion ze sztangą",en:"Barbell curl",mus:{pl:"Biceps",en:"Biceps"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Uginanie hantli (młotkowe)",en:"Hammer curl",mus:{pl:"Biceps",en:"Biceps"},eq:{pl:"Hantle",en:"Dumbbells"}},
+      {pl:"Prostowanie ramion na wyciągu",en:"Triceps pushdown",mus:{pl:"Triceps",en:"Triceps"},eq:{pl:"Wyciąg",en:"Cable"}},
+      {pl:"Pompki na poręczach (dips)",en:"Dips",mus:{pl:"Triceps",en:"Triceps"},eq:{pl:"Poręcze",en:"Parallel bars"}}
+    ],
+    lower:[
+      {pl:"Przysiad ze sztangą",en:"Barbell back squat",mus:{pl:"Nogi",en:"Legs"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Przysiad przedni",en:"Front squat",mus:{pl:"Nogi",en:"Legs"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Wykroki z hantlami",en:"Dumbbell lunges",mus:{pl:"Nogi",en:"Legs"},eq:{pl:"Hantle",en:"Dumbbells"}},
+      {pl:"Prostowanie nóg na maszynie",en:"Leg extension",mus:{pl:"Uda przód",en:"Quads"},eq:{pl:"Maszyna",en:"Machine"}},
+      {pl:"Uginanie nóg leżąc",en:"Lying leg curl",mus:{pl:"Dwugłowe uda",en:"Hamstrings"},eq:{pl:"Maszyna",en:"Machine"}},
+      {pl:"Martwy ciąg rumuński",en:"Romanian deadlift",mus:{pl:"Pośladki/uda",en:"Glutes/hams"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Hip thrust ze sztangą",en:"Barbell hip thrust",mus:{pl:"Pośladki",en:"Glutes"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Wspięcia łydek stojąc",en:"Standing calf raise",mus:{pl:"Łydki",en:"Calves"},eq:{pl:"Maszyna",en:"Machine"}},
+      {pl:"Wspięcia łydek siedząc",en:"Seated calf raise",mus:{pl:"Łydki",en:"Calves"},eq:{pl:"Maszyna",en:"Machine"}}
+    ],
+    core:[
+      {pl:"Plank (deska)",en:"Plank",mus:{pl:"Core",en:"Core"},eq:{pl:"Masa ciała",en:"Bodyweight"}},
+      {pl:"Unoszenie nóg w zwisie",en:"Hanging leg raise",mus:{pl:"Brzuch dolny",en:"Lower abs"},eq:{pl:"Drążek",en:"Bar"}},
+      {pl:"Spięcia brzucha (crunch)",en:"Crunch",mus:{pl:"Brzuch",en:"Abs"},eq:{pl:"Masa ciała",en:"Bodyweight"}},
+      {pl:"Russian twist",en:"Russian twist",mus:{pl:"Skośne",en:"Obliques"},eq:{pl:"Ciężarek",en:"Weight"}},
+      {pl:"Allahy na kolanach (wyciąg)",en:"Cable crunch",mus:{pl:"Brzuch",en:"Abs"},eq:{pl:"Wyciąg",en:"Cable"}},
+      {pl:"Dead bug",en:"Dead bug",mus:{pl:"Core stabilizacja",en:"Core stability"},eq:{pl:"Masa ciała",en:"Bodyweight"}}
+    ],
+    power:[
+      {pl:"Martwy ciąg klasyczny",en:"Conventional deadlift",mus:{pl:"Całe ciało",en:"Full body"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Przysiad ze sztangą (siłowy)",en:"Heavy back squat",mus:{pl:"Nogi",en:"Legs"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Wyciskanie leżąc (siłowe)",en:"Heavy bench press",mus:{pl:"Klatka",en:"Chest"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Podrzut sztangi (clean & jerk)",en:"Clean & jerk",mus:{pl:"Całe ciało",en:"Full body"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Rwanie sztangi (snatch)",en:"Snatch",mus:{pl:"Całe ciało",en:"Full body"},eq:{pl:"Sztanga",en:"Barbell"}},
+      {pl:"Zarzut na klatkę (power clean)",en:"Power clean",mus:{pl:"Całe ciało",en:"Full body"},eq:{pl:"Sztanga",en:"Barbell"}}
+    ],
+    dynamic:[
+      {pl:"Wskoki na skrzynię (box jump)",en:"Box jump",mus:{pl:"Nogi/dynamika",en:"Legs/power"},eq:{pl:"Skrzynia",en:"Box"}},
+      {pl:"Wyrzut piłki lekarskiej",en:"Medicine ball slam",mus:{pl:"Całe ciało",en:"Full body"},eq:{pl:"Piłka",en:"Med ball"}},
+      {pl:"Przysiad z wyskokiem",en:"Jump squat",mus:{pl:"Nogi",en:"Legs"},eq:{pl:"Masa ciała",en:"Bodyweight"}},
+      {pl:"Burpees",en:"Burpees",mus:{pl:"Całe ciało",en:"Full body"},eq:{pl:"Masa ciała",en:"Bodyweight"}},
+      {pl:"Sprint / przyspieszenia",en:"Sprints",mus:{pl:"Nogi/wydolność",en:"Legs/cardio"},eq:{pl:"Brak",en:"None"}},
+      {pl:"Wymachy odważnikiem (kettlebell swing)",en:"Kettlebell swing",mus:{pl:"Pośladki/core",en:"Glutes/core"},eq:{pl:"Kettlebell",en:"Kettlebell"}}
+    ]
+  };
+  var currentExcCat="upper";
+  function excName(e){ return state.lang==="en"?e.en:e.pl; }
+  function renderExerciseDb(){
+    var grid=$("exerciseDbGrid"); if(!grid) return;
+    grid.innerHTML="";
+    (EXERCISE_DB[currentExcCat]||[]).forEach(function(e){
+      var item=document.createElement("button"); item.className="db-item"; item.type="button";
+      item.innerHTML='<span class="db-name"></span>'+
+        '<span class="db-meta"></span>'+
+        '<span class="db-tag">'+t("db_use")+'</span>';
+      item.querySelector(".db-name").textContent=excName(e);
+      item.querySelector(".db-meta").textContent=(state.lang==="en"?e.mus.en:e.mus.pl)+" · "+(state.lang==="en"?e.eq.en:e.eq.pl);
+      item.addEventListener("click", function(){
+        // prefill the workout form: fill first empty block, else add a new one
+        var blocks=document.querySelectorAll("#exercisesContainer .exercise-block");
+        var target=null;
+        blocks.forEach(function(b){ if(!target && !b.querySelector(".ex-name").value.trim()) target=b; });
+        if(target){ var inp=target.querySelector(".ex-name"); inp.value=excName(e); var ev=new Event("change"); inp.dispatchEvent(ev); }
+        else { addExerciseBlock({name:excName(e)}); }
+        document.querySelector('.tab-btn[data-tab="training"]').classList.add("active");
+        $("addExerciseBtn").scrollIntoView({behavior:"smooth",block:"center"});
+      });
+      grid.appendChild(item);
+    });
+  }
+  document.querySelectorAll("#exerciseDbTabs .db-tab").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#exerciseDbTabs .db-tab").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active"); currentExcCat=b.getAttribute("data-exc"); renderExerciseDb();
+    });
+  });
+  $("exerciseDbToggle").addEventListener("click", function(){
+    var body=$("exerciseDbBody");
+    var open=body.classList.toggle("open");
+    this.setAttribute("aria-expanded", open?"true":"false");
+  });
+
+  /* ---- Meal categories ---- */
+  var currentCat="breakfast";
+  var CAT_KEYS={breakfast:"cat_breakfast",lunch:"cat_lunch",dinner:"cat_dinner",snack:"cat_snack"};
+  var CAT_ORDER=["breakfast","lunch","dinner","snack"];
+  document.querySelectorAll("#mealCatSeg .seg-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#mealCatSeg .seg-btn").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active"); currentCat=b.getAttribute("data-cat");
+    });
+  });
+  document.querySelectorAll(".subtab-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".subtab-btn").forEach(function(x){x.classList.remove("active");});
+      document.querySelectorAll(".msub-panel").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active"); $("msub-"+b.getAttribute("data-msub")).classList.add("active");
+    });
+  });
+
+  /* ---- Calories core ---- */
+  var meals=loadJSON("meals",[]);
+  function saveMeals(){ saveJSON("meals",meals); }
+  var mealDayCursor=todayISO();
+  var recentProducts=loadJSON("recentProducts",[]);
+  function saveRecent(){ saveJSON("recentProducts",recentProducts); }
+
+  function pushMeal(name,kcal,p,c,f){
+    meals.push({id:uid(),date:mealDayCursor,cat:currentCat,name:name,kcal:num(kcal),protein:num(p),carbs:num(c),fat:num(f)});
+    saveMeals();
+    // update recents (dedupe by name, keep last 8)
+    recentProducts=recentProducts.filter(function(r){return r.name!==name;});
+    recentProducts.unshift({name:name,kcal:num(kcal),protein:num(p),carbs:num(c),fat:num(f)});
+    if(recentProducts.length>8) recentProducts=recentProducts.slice(0,8);
+    saveRecent();
+    renderMealDay(); renderMealHistory(); renderRecent();
+  }
+
+  function calorieGoal(){ return num(localStorage.getItem("calorieGoal")||0); }
+  function renderGoalBar(consumed){
+    var goal=calorieGoal();
+    if(goal<=0){ $("goalWrap").style.display="none"; return; }
+    $("goalWrap").style.display="block";
+    var pct=Math.min(100,Math.round(consumed/goal*100));
+    var fill=$("goalFill"); fill.style.width=pct+"%";
+    fill.classList.toggle("over", consumed>goal);
+    var over = consumed>goal;
+    $("goalText").textContent=Math.round(consumed)+" / "+goal+" kcal — "+
+      (over?("+"+Math.round(consumed-goal)+" "+t("over_goal")):(pct+"% "+t("of_goal")));
+  }
+
+  function renderMealDay(){
+    $("mealDayTitle").textContent=formatDateReadable(mealDayCursor);
+    var dm=meals.filter(function(m){return m.date===mealDayCursor;});
+    var tk=0,tp=0,tc=0,tf=0;
+    dm.forEach(function(m){ tk+=num(m.kcal); tp+=num(m.protein); tc+=num(m.carbs); tf+=num(m.fat); });
+    $("dayKcalTotal").textContent=Math.round(tk)+" kcal";
+    $("dayProtTotal").textContent=tp.toFixed(1)+" g";
+    $("dayCarbTotal").textContent=tc.toFixed(1)+" g";
+    $("dayFatTotal").textContent=tf.toFixed(1)+" g";
+    renderGoalBar(tk);
+    var list=$("mealListForDay"); list.innerHTML="";
+    if(dm.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_meals")+'</div>'; return; }
+    // group by category, each in its own bordered container (readable separators + zebra rows)
+    CAT_ORDER.forEach(function(cat){
+      var items=dm.filter(function(m){ return (m.cat||"snack")===cat; });
+      if(items.length===0) return;
+      var group=document.createElement("div"); group.className="meal-cat-group";
+      var head=document.createElement("div"); head.className="meal-cat-head"; head.textContent=t(CAT_KEYS[cat]); group.appendChild(head);
+      items.forEach(function(m){ group.appendChild(renderMealItem(m)); });
+      list.appendChild(group);
+    });
+    // any meals with unknown category
+    var others=dm.filter(function(m){ return CAT_ORDER.indexOf(m.cat||"snack")===-1; });
+    if(others.length){
+      var og=document.createElement("div"); og.className="meal-cat-group";
+      others.forEach(function(m){ og.appendChild(renderMealItem(m)); });
+      list.appendChild(og);
+    }
+  }
+  function renderMealItem(m){
+    var item=document.createElement("div"); item.className="meal-item";
+    item.innerHTML='<div style="flex:1;min-width:0;"><div class="meal-name"></div><div class="meal-macro"></div>'+
+      '<div class="meal-edit-row" style="display:none;">'+
+        '<input type="number" class="e-kcal" value="'+num(m.kcal)+'" min="0">'+
+        '<input type="number" class="e-p" value="'+num(m.protein)+'" min="0" step="0.1">'+
+        '<input type="number" class="e-c" value="'+num(m.carbs)+'" min="0" step="0.1">'+
+        '<input type="number" class="e-f" value="'+num(m.fat)+'" min="0" step="0.1">'+
+        '<button class="btn-small e-save">'+t("save")+'</button>'+
+      '</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;"><span class="meal-kcal"></span>'+
+      '<button class="btn-small m-edit">'+t("edit")+'</button>'+
+      '<button class="del-btn m-del">'+t("delete")+'</button></div>';
+    item.querySelector(".meal-name").textContent=m.name;
+    item.querySelector(".meal-macro").textContent="B: "+num(m.protein)+"g · W: "+num(m.carbs)+"g · T: "+num(m.fat)+"g";
+    item.querySelector(".meal-kcal").textContent=Math.round(num(m.kcal))+" kcal";
+    item.querySelector(".m-del").addEventListener("click", function(){ meals=meals.filter(function(x){return x.id!==m.id;}); saveMeals(); renderMealDay(); renderMealHistory(); });
+    var editRow=item.querySelector(".meal-edit-row");
+    item.querySelector(".m-edit").addEventListener("click", function(){ editRow.style.display=editRow.style.display==="none"?"flex":"none"; });
+    item.querySelector(".e-save").addEventListener("click", function(){
+      m.kcal=num(editRow.querySelector(".e-kcal").value);
+      m.protein=num(editRow.querySelector(".e-p").value);
+      m.carbs=num(editRow.querySelector(".e-c").value);
+      m.fat=num(editRow.querySelector(".e-f").value);
+      saveMeals(); renderMealDay(); renderMealHistory();
+    });
+    return item;
+  }
+  function renderRecent(){
+    var wrap=$("recentWrap"), box=$("recentChips");
+    if(recentProducts.length===0){ wrap.style.display="none"; return; }
+    wrap.style.display="block"; box.innerHTML="";
+    recentProducts.forEach(function(r){
+      var chip=document.createElement("button"); chip.className="chip";
+      chip.textContent=r.name+" ("+Math.round(r.kcal)+" kcal)";
+      chip.addEventListener("click", function(){ pushMeal(r.name,r.kcal,r.protein,r.carbs,r.fat); });
+      box.appendChild(chip);
+    });
+  }
+  function renderMealHistory(){
+    var c=$("mealHistory"); c.innerHTML="";
+    if(meals.length===0){ c.innerHTML='<div class="empty-note">'+t("empty_meal_hist")+'</div>'; return; }
+    var byDay={}; meals.forEach(function(m){ (byDay[m.date]=byDay[m.date]||[]).push(m); });
+    Object.keys(byDay).sort(function(a,b){return new Date(b)-new Date(a);}).forEach(function(day){
+      var dm=byDay[day]; var total=dm.reduce(function(s,m){return s+num(m.kcal);},0);
+      var block=document.createElement("div"); block.className="meal-day-history";
+      block.innerHTML='<div class="mh-date"><span></span><span class="mh-total"></span></div>';
+      block.querySelector(".mh-date span").textContent=formatDateReadable(day);
+      block.querySelector(".mh-total").textContent=Math.round(total)+" kcal";
+      dm.forEach(function(m){
+        var row=document.createElement("div"); row.className="meal-item";
+        row.innerHTML='<div class="meal-name"></div><span class="meal-kcal"></span>';
+        row.querySelector(".meal-name").textContent=m.name;
+        row.querySelector(".meal-kcal").textContent=Math.round(num(m.kcal))+" kcal";
+        block.appendChild(row);
+      });
+      c.appendChild(block);
+    });
+  }
+  $("addMealBtn").addEventListener("click", function(){
+    var name=$("mealName").value.trim(), kcal=$("mealKcal").value;
+    if(!name||kcal===""){ alert(t("fill_meal")); return; }
+    pushMeal(name, num(kcal),
+      $("mealProtein").value===""?0:num($("mealProtein").value),
+      $("mealCarbs").value===""?0:num($("mealCarbs").value),
+      $("mealFat").value===""?0:num($("mealFat").value));
+    $("mealName").value=""; $("mealKcal").value=""; $("mealProtein").value=""; $("mealCarbs").value=""; $("mealFat").value="";
+  });
+  $("prevMealDay").addEventListener("click", function(){ mealDayCursor=shiftISO(mealDayCursor,-1); renderMealDay(); });
+  $("nextMealDay").addEventListener("click", function(){ mealDayCursor=shiftISO(mealDayCursor,1); renderMealDay(); });
+  $("todayMealBtn").addEventListener("click", function(){ mealDayCursor=todayISO(); renderMealDay(); });
+
+  /* ---- Calorie needs calculator (Mifflin-St Jeor) ---- */
+  var calcGoal="maintain", calcSex="male";
+  document.querySelectorAll("#calcGoalSeg .seg-btn").forEach(function(b){
+    b.addEventListener("click", function(){ document.querySelectorAll("#calcGoalSeg .seg-btn").forEach(function(x){x.classList.remove("active");}); b.classList.add("active"); calcGoal=b.getAttribute("data-goal"); });
+  });
+  document.querySelectorAll("#calcSexSeg .seg-btn").forEach(function(b){
+    b.addEventListener("click", function(){ document.querySelectorAll("#calcSexSeg .seg-btn").forEach(function(x){x.classList.remove("active");}); b.classList.add("active"); calcSex=b.getAttribute("data-sex"); });
+  });
+  var lastCalcTarget=0;
+  $("calcRunBtn").addEventListener("click", function(){
+    var age=num($("calcAge").value), h=num($("calcHeight").value), w=num($("calcWeight").value);
+    var act=parseFloat($("calcActivity").value)||1.2;
+    if(age<=0||h<=0||w<=0){ alert(t("fill_calc")); return; }
+    // Mifflin-St Jeor
+    var bmr = 10*w + 6.25*h - 5*age + (calcSex==="male"?5:-161);
+    var tdee = bmr*act;
+    var target = tdee;
+    if(calcGoal==="cut") target = tdee*0.85;
+    else if(calcGoal==="bulk") target = tdee*1.10;
+    lastCalcTarget=Math.round(target);
+    $("calcTarget").textContent=lastCalcTarget;
+    $("calcBmr").textContent=Math.round(bmr)+" kcal";
+    $("calcTdee").textContent=Math.round(tdee)+" kcal";
+    // macro suggestion: protein 2g/kg, fat 25% kcal, rest carbs
+    var protein=Math.round(w*2);
+    var fatKcal=target*0.25; var fat=Math.round(fatKcal/9);
+    var carbs=Math.round((target - protein*4 - fat*9)/4);
+    if(carbs<0) carbs=0;
+    $("calcMacroP").textContent=protein+" g";
+    $("calcMacroF").textContent=fat+" g";
+    $("calcMacroC").textContent=carbs+" g";
+    $("calcResult").style.display="block";
+  });
+  $("setGoalBtn").addEventListener("click", function(){
+    if(lastCalcTarget>0){ localStorage.setItem("calorieGoal", lastCalcTarget); renderMealDay(); alert(t("goal_set_done")); }
+  });
+
+  /* ================= JOURNAL ================= */
+  var journal=loadJSON("journal",[]);
+  function saveJournal(){ saveJSON("journal",journal); }
+  function renderJournal(){
+    var list=$("journalList"); list.innerHTML="";
+    if(journal.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_journal")+'</div>'; return; }
+    journal.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(en){
+      var d=new Date(en.ts);
+      var stamp=formatDateReadable(d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()))+", "+fmtTime(pad(d.getHours())+":"+pad(d.getMinutes()));
+      var item=document.createElement("div"); item.className="journal-entry";
+      item.innerHTML='<div class="je-date"><span></span><button class="del-btn" data-id="'+en.id+'">'+t("delete")+'</button></div><div class="je-text"></div>';
+      item.querySelector(".je-date span").textContent=stamp;
+      item.querySelector(".je-text").textContent=en.text;
+      list.appendChild(item);
+    });
+    list.querySelectorAll(".del-btn").forEach(function(b){
+      b.addEventListener("click", function(){ journal=journal.filter(function(en){return en.id!==b.getAttribute("data-id");}); saveJournal(); renderJournal(); });
+    });
+  }
+  $("addJournalBtn").addEventListener("click", function(){
+    var text=$("journalText").value.trim();
+    if(!text){ alert(t("fill_journal")); return; }
+    journal.push({id:uid(),ts:Date.now(),text:text}); saveJournal();
+    $("journalText").value=""; renderJournal();
+  });
+
+  /* ================= UPCOMING (home) ================= */
+  function renderUpcomingBig(){
+    var box=$("upcomingBig"); var now=new Date();
+    var up=events.map(function(e){ return {when:new Date(e.date+"T"+e.time),name:e.name,desc:e.desc}; })
+      .filter(function(x){ return x.when>=now; })
+      .sort(function(a,b){ return a.when-b.when; });
+    if(up.length===0){ box.innerHTML='<div class="empty-note">'+t("empty_upcoming")+'</div>'; return; }
+    var e=up[0];
+    var whenStr=formatDateReadable(e.when.getFullYear()+"-"+pad(e.when.getMonth()+1)+"-"+pad(e.when.getDate()))+", "+fmtTime(pad(e.when.getHours())+":"+pad(e.when.getMinutes()));
+    box.innerHTML='<div class="ub-name"></div><div class="ub-when"></div>'+(e.desc?'<div class="ub-desc"></div>':'');
+    box.querySelector(".ub-name").textContent=e.name;
+    box.querySelector(".ub-when").textContent=whenStr;
+    if(e.desc) box.querySelector(".ub-desc").textContent=e.desc;
+  }
+
+  /* ================= DAILY TASKS (home, resets at 00:00 of primary clock) ================= */
+  function isoDateInZone(tz){
+    try{
+      var parts=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+      var m={}; parts.forEach(function(p){ m[p.type]=p.value; });
+      return m.year+"-"+m.month+"-"+m.day;
+    }catch(e){ return todayISO(); }
+  }
+  var dailyTasks=loadJSON("dailyTasks",[]);              // [{id,name}]
+  var dailyState=loadJSON("dailyState",{date:"",checked:{}}); // {date, checked:{id:true}}
+  var dailyEditing=false;
+  function saveDaily(){ saveJSON("dailyTasks",dailyTasks); saveJSON("dailyState",dailyState); }
+  function checkDailyReset(){
+    var today=isoDateInZone(state.tzPrimary);
+    if(dailyState.date!==today){
+      dailyState.date=today; dailyState.checked={}; saveDaily();
+      var homeActive=$("view-home") && $("view-home").classList.contains("active");
+      if(homeActive) renderDaily();
+      return true;
+    }
+    return false;
+  }
+  function renderDaily(){
+    var list=$("dailyList"); if(!list) return;
+    checkDailyReset();
+    list.innerHTML="";
+    if(dailyTasks.length===0){ list.innerHTML='<div class="daily-empty">'+t("daily_empty")+'</div>'; return; }
+    if(dailyEditing){
+      dailyTasks.forEach(function(d){
+        var row=document.createElement("div"); row.className="daily-item";
+        row.innerHTML='<input type="text" class="di-edit"><button class="di-del" title="'+t("delete")+'">&times;</button>';
+        var inp=row.querySelector(".di-edit"); inp.value=d.name;
+        inp.addEventListener("change", function(){ d.name=inp.value.trim()||d.name; inp.value=d.name; saveDaily(); });
+        row.querySelector(".di-del").addEventListener("click", function(){
+          dailyTasks=dailyTasks.filter(function(x){return x.id!==d.id;}); delete dailyState.checked[d.id]; saveDaily(); renderDaily();
+        });
+        list.appendChild(row);
+      });
+      return;
+    }
+    var pending=dailyTasks.filter(function(d){ return !dailyState.checked[d.id]; });
+    if(pending.length===0){ list.innerHTML='<div class="daily-done-note">'+t("daily_done_all")+'</div>'; return; }
+    pending.forEach(function(d){
+      var row=document.createElement("div"); row.className="daily-item"; row.setAttribute("data-id",d.id);
+      row.innerHTML='<input type="checkbox" class="di-check"><span class="di-name"></span>';
+      row.querySelector(".di-name").textContent=d.name;
+      row.querySelector(".di-check").addEventListener("change", function(){
+        dailyState.checked[d.id]=true; saveDaily();
+        row.classList.add("removing");
+        setTimeout(function(){ renderDaily(); }, 360); // fade-out + slide-up, then remaining slide up
+      });
+      list.appendChild(row);
+    });
+  }
+  (function initDaily(){
+    var pen=$("dailyPen"); if(!pen) return;
+    pen.addEventListener("click", function(){
+      dailyEditing=!dailyEditing;
+      pen.classList.toggle("active",dailyEditing);
+      $("dailyAddRow").style.display=dailyEditing?"flex":"none";
+      renderDaily();
+    });
+    $("dailyAddBtn").addEventListener("click", function(){
+      var v=$("dailyAddInput").value.trim(); if(!v) return;
+      dailyTasks.push({id:uid(),name:v}); saveDaily();
+      $("dailyAddInput").value=""; renderDaily();
+    });
+    $("dailyAddInput").addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); $("dailyAddBtn").click(); } });
+  })();
+
+  /* ================= CLOCK ================= */
+  function timeInZone(tz){
+    try{
+      var use12 = state.timeFormat==="12";
+      var parts=new Intl.DateTimeFormat("en-US",{timeZone:tz,hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:use12}).formatToParts(new Date());
+      var map={}; parts.forEach(function(p){ map[p.type]=p.value; });
+      var s=map.hour+":"+map.minute+":"+map.second;
+      if(use12 && map.dayPeriod) s+=" "+map.dayPeriod;
+      return s;
+    }catch(e){ var n=new Date(); return pad(n.getHours())+":"+pad(n.getMinutes())+":"+pad(n.getSeconds()); }
+  }
+  function tickClock(){
+    $("clockMain").textContent=timeInZone(state.tzPrimary);
+    $("clockZone").textContent=state.tzPrimary.replace("_"," ");
+    $("clockDate").textContent=formatDateReadable(todayISO());
+    if(state.tzSecondEnabled){
+      $("clockSecondWrap").style.display="block";
+      $("clockSecond").textContent=timeInZone(state.tzSecondary);
+      $("clockSecondZone").textContent=state.tzSecondary.replace("_"," ");
+    } else { $("clockSecondWrap").style.display="none"; }
+    checkDailyReset();
+  }
+
+  /* ================= CURRENCY TICKER (personalizable, keyless) ================= */
+  var PAIR_CATALOG = {
+    USDPLN:{label:"USD/PLN", type:"fiat", base:"USD", dec:4},
+    EURPLN:{label:"EUR/PLN", type:"fiat", base:"EUR", dec:4},
+    BTCUSD:{label:"BTC/USD", type:"crypto", id:"bitcoin", dec:0},
+    ETHUSD:{label:"ETH/USD", type:"crypto", id:"ethereum", dec:0},
+    BNBUSD:{label:"BNB/USD", type:"crypto", id:"binancecoin", dec:0},
+    SOLUSD:{label:"SOL/USD", type:"crypto", id:"solana", dec:2},
+    ADAUSD:{label:"ADA/USD", type:"crypto", id:"cardano", dec:4},
+    XRPUSD:{label:"XRP/USD", type:"crypto", id:"ripple", dec:4}
+  };
+  var PAIR_ORDER = ["USDPLN","EURPLN","BTCUSD","ETHUSD","BNBUSD","SOLUSD","ADAUSD","XRPUSD"];
+  var PAIR_LIMIT = 5;
+  function fmtMoney(v,dec){ return v.toLocaleString(state.lang==="en"?"en-US":"pl-PL",{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+  var lastRates={};
+  function activePairs(){ return PAIR_ORDER.filter(function(k){ return state.tickerPairs.indexOf(k)!==-1; }); }
+  function renderTicker(){
+    var box=$("ticker"); box.innerHTML="";
+    activePairs().forEach(function(k){
+      var def=PAIR_CATALOG[k];
+      var tick=document.createElement("div"); tick.className="tick";
+      tick.innerHTML='<span class="tk-pair">'+def.label+'</span><span class="tk-val" id="tk_'+k+'">—</span>';
+      box.appendChild(tick);
+    });
+  }
+  function setTick(key,val,dec){
+    var node=$("tk_"+key); if(!node) return;
+    var prev=lastRates[key];
+    node.textContent=fmtMoney(val,dec);
+    node.classList.remove("up","down");
+    if(prev!==undefined){ if(val>prev) node.classList.add("up"); else if(val<prev) node.classList.add("down"); }
+    lastRates[key]=val;
+  }
+  function fetchRates(){
+    var pairs=activePairs();
+    // Fiat: open.er-api.com (keyless), one call per selected base currency.
+    var fiatBases={};
+    pairs.forEach(function(k){ var d=PAIR_CATALOG[k]; if(d.type==="fiat") fiatBases[d.base]=k; });
+    Object.keys(fiatBases).forEach(function(base){
+      fetch("https://open.er-api.com/v6/latest/"+base).then(function(r){return r.json();}).then(function(d){
+        if(d&&d.rates&&d.rates.PLN) setTick(fiatBases[base],d.rates.PLN,PAIR_CATALOG[fiatBases[base]].dec);
+      }).catch(function(){});
+    });
+    // Crypto: CoinGecko (keyless), one combined call.
+    var ids=[], idToKey={};
+    pairs.forEach(function(k){ var d=PAIR_CATALOG[k]; if(d.type==="crypto"){ ids.push(d.id); idToKey[d.id]=k; } });
+    if(ids.length){
+      fetch("https://api.coingecko.com/api/v3/simple/price?ids="+ids.join(",")+"&vs_currencies=usd").then(function(r){return r.json();}).then(function(d){
+        if(!d) return;
+        ids.forEach(function(id){ if(d[id]&&typeof d[id].usd==="number"){ var k=idToKey[id]; setTick(k,d[id].usd,PAIR_CATALOG[k].dec); } });
+      }).catch(function(){});
+    }
+  }
+  /* settings: currency personalization grid with 5-pair limit */
+  function renderCurrencyGrid(){
+    var grid=$("currencyGrid"); if(!grid) return; grid.innerHTML="";
+    var atLimit = state.tickerPairs.length>=PAIR_LIMIT;
+    PAIR_ORDER.forEach(function(k){
+      var def=PAIR_CATALOG[k];
+      var checked=state.tickerPairs.indexOf(k)!==-1;
+      var disabled=!checked && atLimit;
+      var lbl=document.createElement("label"); lbl.className="cur-opt"+(disabled?" disabled":"");
+      lbl.innerHTML='<input type="checkbox" data-pair="'+k+'" '+(checked?"checked":"")+' '+(disabled?"disabled":"")+'><span>'+def.label+'</span>';
+      grid.appendChild(lbl);
+    });
+    grid.querySelectorAll("input[data-pair]").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var k=cb.getAttribute("data-pair");
+        if(cb.checked){
+          if(state.tickerPairs.length>=PAIR_LIMIT){ cb.checked=false; return; }
+          if(state.tickerPairs.indexOf(k)===-1) state.tickerPairs.push(k);
+        } else {
+          state.tickerPairs=state.tickerPairs.filter(function(x){return x!==k;});
+          if(state.tickerPairs.length===0){ state.tickerPairs.push(k); cb.checked=true; return; } // keep at least 1
+        }
+        persistSettings();
+        renderCurrencyGrid(); renderTicker(); lastRates={}; fetchRates();
+      });
+    });
+  }
+
+  /* ================= HEADER QUOTE / FACT ================= */
+  var quotes=[
+    {text:"Albowiem tak Bóg umiłował świat, że Syna swego jednorodzonego dał, aby każdy, kto weń wierzy, nie zginął, ale miał żywot wieczny.", ref:"Jan 3:16"},
+    {text:"Błogosławieni pokój czyniący, albowiem oni synami Bożymi nazwani będą.", ref:"Mt 5:9"},
+    {text:"Wszystko mogę w Tym, który mnie umacnia.", ref:"Flp 4:13"},
+    {text:"Pójdźcie do mnie wszyscy, którzy jesteście spracowani i obciążeni, a Ja wam sprawię odpocznienie.", ref:"Mt 11:28"},
+    {text:"A wiemy, że tym, którzy Boga miłują, wszystkie rzeczy dopomagają ku dobremu.", ref:"Rz 8:28"},
+    {text:"Jam jest droga, i prawda, i żywot.", ref:"Jan 14:6"},
+    {text:"Miłość jest cierpliwa, miłość jest łaskawa; nie zazdrości.", ref:"1 Kor 13:4"},
+    {text:"Owocem zaś Ducha jest miłość, wesele, pokój, cierpliwość, uprzejmość, dobrotliwość.", ref:"Gal 5:22"},
+    {text:"Albowiem łaską zbawieni jesteście przez wiarę, a to dar Boży jest.", ref:"Ef 2:8"},
+    {text:"Jeźli komu z was schodzi na mądrości, niech jej prosi u Boga.", ref:"Jak 1:5"},
+    {text:"Szukajcie najprzód królestwa Bożego, a to wszystko będzie wam przydane.", ref:"Mt 6:33"},
+    {text:"Przemieńcie się przez odnowienie umysłu waszego.", ref:"Rz 12:2"},
+    {text:"Jeźli kto jest w Chrystusie, nowem jest stworzeniem.", ref:"2 Kor 5:17"},
+    {text:"A wiara jest gruntem tych rzeczy, których się spodziewamy.", ref:"Hbr 11:1"},
+    {text:"Wszystko staranie wasze wrzuciwszy na niego, gdyż on ma pieczę o was.", ref:"1 P 5:7"},
+    {text:"A poznacie prawdę, a prawda was wyswobodzi.", ref:"Jan 8:32"},
+    {text:"Nauczajcie wszystkie narody, chrzcząc je w imię Ojca i Syna, i Ducha Świętego.", ref:"Mt 28:19"},
+    {text:"A jako chcecie, aby wam ludzie czynili, tak i wy czyńcie im.", ref:"Łk 6:31"},
+    {text:"Jeźli usty wyznasz Pana Jezusa i uwierzysz w sercu twojem, zbawiony będziesz.", ref:"Rz 10:9"},
+    {text:"My go miłujemy, iż on nas pierwej umiłował.", ref:"1 Jan 4:19"},
+    {text:"Nie troszczcie się o nic, ale we wszystkiem przez modlitwę żądności wasze niech będą znajome u Boga.", ref:"Flp 4:6"},
+    {text:"Wszystko, cokolwiek czynicie, z duszy czyńcie, jako Panu.", ref:"Kol 3:23"},
+    {text:"Nie dał nam Bóg Ducha bojaźni, ale mocy i miłości, i zdrowego zmysłu.", ref:"2 Tm 1:7"},
+    {text:"Większej miłości nad tę żaden nie ma, jaką kto duszę swoję kładzie za przyjacioły swoje.", ref:"Jan 15:13"},
+    {text:"Proście, a będzie wam dano; szukajcie, a znajdziecie.", ref:"Mt 7:7"},
+    {text:"Dobrze czyniąc, nie słabiejmy; albowiem czasu swojego żąć będziemy.", ref:"Gal 6:9"},
+    {text:"Bądźcie jedni ku drugim dobrotliwi, miłosierni, odpuszczając sobie.", ref:"Ef 4:32"},
+    {text:"Zawsze się radujcie. Bez przestanku się módlcie. Za wszystko dziękujcie.", ref:"1 Tes 5:16"},
+    {text:"Nie zaniecham cię, ani cię opuszczę.", ref:"Hbr 13:5"},
+    {text:"I otrze Bóg wszelką łzę z oczów ich, a śmierci więcej nie będzie.", ref:"Obj 21:4"},
+    {text:"Na początku było Słowo, a Słowo było u Boga, a Bogiem było Słowo.", ref:"Jan 1:1"},
+    {text:"Tak niechaj świeci światłość wasza przed ludźmi.", ref:"Mt 5:16"},
+    {text:"Gdy jeszcze byliśmy grzesznymi, Chrystus za nas umarł.", ref:"Rz 5:8"}
+  ];
+  var factsPL=[
+    "Miód nigdy się nie psuje – archeolodzy znaleźli jadalny miód sprzed 3000 lat.",
+    "Ośmiornice mają trzy serca i niebieską krew.",
+    "Ludzki mózg zużywa około 20% całej energii organizmu.",
+    "Wieża Eiffla może latem urosnąć nawet o 15 cm z powodu rozszerzalności cieplnej stali.",
+    "Banany są jagodami z botanicznego punktu widzenia, a truskawki nie.",
+    "Serce błękitnego wieloryba jest tak duże, że człowiek mógłby przez nie przepłynąć.",
+    "Woda może wrzeć i zamarzać jednocześnie w tzw. punkcie potrójnym.",
+    "Koty nie czują smaku słodkiego – brakuje im odpowiednich receptorów.",
+    "Na Wenus doba trwa dłużej niż rok tej planety.",
+    "Rekiny istnieją dłużej niż drzewa – pojawiły się ok. 400 mln lat temu.",
+    "Ślimaki mogą spać nawet przez trzy lata.",
+    "Ludzkie DNA w około 60% pokrywa się z DNA banana.",
+    "Błyskawica jest około pięć razy gorętsza od powierzchni Słońca.",
+    "Krewetka modliszkowa ma jeden z najbardziej złożonych układów wzroku w przyrodzie.",
+    "W kosmosie nie da się płakać normalnie – łzy nie spływają bez grawitacji.",
+    "Najkrótsza wojna w historii trwała około 38 minut (Wielka Brytania–Zanzibar, 1896).",
+    "Niektóre meduzy są praktycznie nieśmiertelne biologicznie.",
+    "Nos człowieka potrafi rozróżnić ponad bilion różnych zapachów.",
+    "Miód pszczeli jest jedynym pokarmem zawierającym wszystkie substancje potrzebne do życia.",
+    "Grupa flamingów nazywana jest po angielsku 'flamboyance'.",
+    "Ziemia nie jest idealną kulą – jest lekko spłaszczona na biegunach.",
+    "Pojedyncza chmura może ważyć setki ton.",
+    "Mrówki nie mają płuc – oddychają przez otworki w ciele.",
+    "Krokodyle nie potrafią wysuwać języka.",
+    "Kod Morse'a wciąż bywa używany w sytuacjach awaryjnych.",
+    "Najgłębszy punkt oceanu (Rów Mariański) jest głębszy niż Mount Everest jest wysoki.",
+    "Motyle czują smak stopami.",
+    "Ludzkie kości są, gram za gram, mocniejsze od stali w niektórych testach.",
+    "Kolibry to jedyne ptaki potrafiące latać do tyłu.",
+    "W jednej łyżeczce materii gwiazdy neutronowej mieści się masa liczona w miliardach ton."
+  ];
+  var factsEN=[
+    "Honey never spoils – archaeologists found edible honey over 3000 years old.",
+    "Octopuses have three hearts and blue blood.",
+    "The human brain uses about 20% of the body's total energy.",
+    "The Eiffel Tower can grow up to 15 cm taller in summer due to thermal expansion.",
+    "Bananas are berries, botanically, but strawberries are not.",
+    "A blue whale's heart is so large a human could swim through its arteries.",
+    "Water can boil and freeze at the same time at the triple point.",
+    "Cats can't taste sweetness – they lack the receptors for it.",
+    "On Venus, a day lasts longer than its year.",
+    "Sharks are older than trees, appearing around 400 million years ago.",
+    "Snails can sleep for up to three years.",
+    "Human DNA is about 60% identical to a banana's DNA.",
+    "A lightning bolt is roughly five times hotter than the Sun's surface.",
+    "The mantis shrimp has one of the most complex visual systems in nature.",
+    "You can't cry normally in space – tears don't fall without gravity.",
+    "The shortest war in history lasted about 38 minutes (Britain–Zanzibar, 1896).",
+    "Some jellyfish are considered biologically immortal.",
+    "The human nose can distinguish over a trillion different scents.",
+    "Honey is the only food containing all substances needed to sustain life.",
+    "A group of flamingos is called a 'flamboyance'.",
+    "Earth isn't a perfect sphere – it's slightly flattened at the poles.",
+    "A single cloud can weigh hundreds of tons.",
+    "Ants have no lungs – they breathe through tiny body openings.",
+    "Crocodiles can't stick out their tongues.",
+    "Morse code is still used in some emergency situations.",
+    "The ocean's deepest point is deeper than Mount Everest is tall.",
+    "Butterflies taste with their feet.",
+    "Human bones are, gram for gram, stronger than steel in some tests.",
+    "Hummingbirds are the only birds that can fly backwards.",
+    "A teaspoon of neutron star matter would weigh billions of tons."
+  ];
+  function dayOfYear(d){ var s=new Date(d.getFullYear(),0,0); return Math.floor((d-s)/86400000); }
+  function renderHeaderInfo(){
+    if(state.headerMode==="fact"){
+      var facts = state.lang==="en"?factsEN:factsPL;
+      var f = facts[Math.floor(Math.random()*facts.length)];
+      $("hiLabel").textContent=t("fact_label");
+      $("hiText").textContent=f;
+      $("hiRef").textContent="";
+    } else {
+      // quote refreshed each load (random pick)
+      var q = quotes[Math.floor(Math.random()*quotes.length)];
+      $("hiLabel").textContent=t("quote_label");
+      $("hiText").textContent=q.text;
+      $("hiRef").textContent="— "+q.ref;
+    }
+  }
+
+  /* ================= NOTIFICATIONS ================= */
+  var notifiedIds=loadJSON("notifiedIds",{});
+  function markNotified(id){ notifiedIds[id]=true; saveJSON("notifiedIds",notifiedIds); }
+  function refreshNotifBanner(){
+    if("Notification" in window && Notification.permission==="default") $("notifBanner").style.display="block";
+    else $("notifBanner").style.display="none";
+  }
+  $("enableNotifBtn").addEventListener("click", function(){ if("Notification" in window) Notification.requestPermission().then(refreshNotifBanner); });
+  function sendNotification(title,body){ if("Notification" in window && Notification.permission==="granted"){ try{ new Notification(title,{body:body}); }catch(e){} } }
+  function checkUpcoming(){
+    var now=new Date(), oneHour=3600000;
+    tasks.forEach(function(tk){
+      if(tk.done) return;
+      var diff=new Date(tk.date+"T"+tk.time)-now, key="task_"+tk.id;
+      if(diff>0&&diff<=oneHour&&!notifiedIds[key]){ sendNotification(t("notif_task"),tk.name+" — "+tk.time); markNotified(key); }
+    });
+    events.forEach(function(e){
+      var diff=new Date(e.date+"T"+e.time)-now, key="event_"+e.id;
+      if(diff>0&&diff<=oneHour&&!notifiedIds[key]){ sendNotification(t("notif_event"),e.name+" — "+e.time); markNotified(key); }
+    });
+  }
+
+  /* ================= SETTINGS PANEL ================= */
+  var TZ_LIST=["Europe/Warsaw","Europe/London","Europe/Berlin","Europe/Paris","Europe/Moscow","America/New_York","America/Chicago","America/Los_Angeles","America/Sao_Paulo","Asia/Tokyo","Asia/Shanghai","Asia/Kolkata","Asia/Dubai","Australia/Sydney","Pacific/Auckland","UTC"];
+  function fillTzSelects(){
+    ["tzPrimary","tzSecondary"].forEach(function(sel){
+      var el=$(sel); el.innerHTML="";
+      TZ_LIST.forEach(function(tz){ var o=document.createElement("option"); o.value=tz; o.textContent=tz.replace("_"," "); el.appendChild(o); });
+    });
+    $("tzPrimary").value=state.tzPrimary;
+    $("tzSecondary").value=state.tzSecondary;
+    $("tzSecondEnabled").checked=state.tzSecondEnabled;
+  }
+  function renderTileConfig(){
+    var c=$("tileConfigList"); c.innerHTML="";
+    state.order.forEach(function(id,idx){
+      var def=TILE_DEFS[id]; if(!def) return;
+      var row=document.createElement("div"); row.className="order-row";
+      row.innerHTML='<input type="checkbox" '+(state.hidden[id]?"":"checked")+' data-vis="'+id+'">'+
+        '<span class="or-name"></span>'+
+        '<div class="or-arrows"><button class="btn-small" data-up="'+id+'">▲</button><button class="btn-small" data-down="'+id+'">▼</button></div>';
+      row.querySelector(".or-name").textContent=t(def.titleKey);
+      c.appendChild(row);
+    });
+    c.querySelectorAll("[data-vis]").forEach(function(cb){
+      cb.addEventListener("change", function(){ var id=cb.getAttribute("data-vis"); if(cb.checked) delete state.hidden[id]; else state.hidden[id]=true; persistSettings(); renderTiles(); });
+    });
+    c.querySelectorAll("[data-up]").forEach(function(b){
+      b.addEventListener("click", function(){ var id=b.getAttribute("data-up"); var i=state.order.indexOf(id); if(i>0){ state.order.splice(i,1); state.order.splice(i-1,0,id); persistSettings(); renderTileConfig(); renderTiles(); } });
+    });
+    c.querySelectorAll("[data-down]").forEach(function(b){
+      b.addEventListener("click", function(){ var id=b.getAttribute("data-down"); var i=state.order.indexOf(id); if(i<state.order.length-1){ state.order.splice(i,1); state.order.splice(i+1,0,id); persistSettings(); renderTileConfig(); renderTiles(); } });
+    });
+  }
+  function syncSettingChips(){
+    document.querySelectorAll("[data-theme-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-theme-opt")===state.theme); });
+    document.querySelectorAll("[data-lang-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang-opt")===state.lang); });
+    document.querySelectorAll("[data-header-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-header-opt")===state.headerMode); });
+    document.querySelectorAll("[data-fs-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-fs-opt")===state.fontSize); });
+    document.querySelectorAll("[data-den-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-den-opt")===state.density); });
+    document.querySelectorAll("[data-tf-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-tf-opt")===state.timeFormat); });
+  }
+  function openSettings(){
+    fillTzSelects(); renderTileConfig(); syncSettingChips(); renderCurrencyGrid();
+    $("pinJournalEnabled").checked=state.pinJournalEnabled;
+    $("pinCalendarEnabled").checked=state.pinCalendarEnabled;
+    $("settingsOverlay").classList.add("active");
+  }
+  $("gearBtn").addEventListener("click", openSettings);
+  document.querySelector("[data-close-settings]").addEventListener("click", function(){ $("settingsOverlay").classList.remove("active"); });
+
+  document.querySelectorAll("[data-theme-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.theme=b.getAttribute("data-theme-opt"); applyTheme(); persistSettings(); syncSettingChips(); });
+  });
+  document.querySelectorAll("[data-lang-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.lang=b.getAttribute("data-lang-opt"); persistSettings(); applyI18n(); renderAll(); syncSettingChips(); });
+  });
+  document.querySelectorAll("[data-header-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.headerMode=b.getAttribute("data-header-opt"); persistSettings(); renderHeaderInfo(); syncSettingChips(); });
+  });
+  document.querySelectorAll("[data-fs-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.fontSize=b.getAttribute("data-fs-opt"); persistSettings(); applyAppearance(); syncSettingChips(); });
+  });
+  document.querySelectorAll("[data-den-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.density=b.getAttribute("data-den-opt"); persistSettings(); applyAppearance(); syncSettingChips(); });
+  });
+  document.querySelectorAll("[data-tf-opt]").forEach(function(b){
+    b.addEventListener("click", function(){ state.timeFormat=b.getAttribute("data-tf-opt"); persistSettings(); syncSettingChips(); tickClock(); renderTasks(); renderDayEvents(); renderUpcomingBig(); renderJournal(); });
+  });
+  $("tzPrimary").addEventListener("change", function(){ state.tzPrimary=$("tzPrimary").value; persistSettings(); tickClock(); });
+  $("tzSecondary").addEventListener("change", function(){ state.tzSecondary=$("tzSecondary").value; persistSettings(); tickClock(); });
+  $("tzSecondEnabled").addEventListener("change", function(){ state.tzSecondEnabled=$("tzSecondEnabled").checked; persistSettings(); tickClock(); });
+
+  $("savePinBtn").addEventListener("click", function(){
+    var je=$("pinJournalEnabled").checked, ce=$("pinCalendarEnabled").checked;
+    var jp=$("pinJournalInput").value.trim(), cp=$("pinCalendarInput").value.trim();
+    if(je && jp){ if(!/^\d{4}$/.test(jp)){ alert(t("fill_pin")); return; } state.pinJournalHash=hashPin(jp); }
+    if(ce && cp){ if(!/^\d{4}$/.test(cp)){ alert(t("fill_pin")); return; } state.pinCalendarHash=hashPin(cp); }
+    state.pinJournalEnabled=je; state.pinCalendarEnabled=ce;
+    if(!je) unlocked.journal=false;
+    if(!ce) unlocked.calendar=false;
+    persistSettings();
+    $("pinJournalInput").value=""; $("pinCalendarInput").value="";
+    renderTiles();
+    alert(t("saved"));
+  });
+
+  /* ================= ABOUT / CONTACT ================= */
+  $("aboutLink").addEventListener("click", function(){ $("aboutOverlay").classList.add("active"); });
+  document.querySelector("[data-close-about]").addEventListener("click", function(){ $("aboutOverlay").classList.remove("active"); });
+  $("contactSendBtn").addEventListener("click", function(){
+    var sub={name:$("cName").value.trim(),email:$("cEmail").value.trim(),msg:$("cMsg").value.trim(),ts:Date.now()};
+    var subs=loadJSON("contactSubmissions",[]); subs.push(sub); saveJSON("contactSubmissions",subs);
+    $("cName").value=""; $("cEmail").value=""; $("cMsg").value="";
+    var r=$("contactResult"); r.textContent=t("contact_thanks"); r.style.display="block";
+    setTimeout(function(){ r.style.display="none"; },4000);
+  });
+
+  // close overlays on backdrop click
+  document.querySelectorAll(".overlay").forEach(function(ov){
+    ov.addEventListener("click", function(e){ if(e.target===ov) ov.classList.remove("active"); });
+  });
+
+  /* ================= BUDGET MANAGEMENT ================= */
+  var budget=loadJSON("budget",{period:{from:"",to:""},income:[],monthly:[],once:[],invest:[],carry:0,history:[],piggy:{name:"",target:0,saved:0}});
+  ["income","monthly","once","invest","history"].forEach(function(k){ if(!Array.isArray(budget[k])) budget[k]=[]; });
+  if(!budget.period) budget.period={from:"",to:""};
+  if(typeof budget.carry!=="number") budget.carry=0;
+  if(!budget.piggy||typeof budget.piggy!=="object") budget.piggy={name:"",target:0,saved:0};
+  if(typeof budget.piggy.target!=="number") budget.piggy.target=num(budget.piggy.target);
+  if(typeof budget.piggy.saved!=="number") budget.piggy.saved=num(budget.piggy.saved);
+  var histIndex=budget.history.length-1;
+  function saveBudget(){ saveJSON("budget",budget); }
+  function budgetFmt(v){ return fmtMoney(v,2); }
+  function sumList(arr){ return arr.reduce(function(s,x){ return s+num(x.amount); },0); }
+  function daysBetweenISO(a,b){ var pa=a.split("-"),pb=b.split("-"); var da=new Date(pa[0],pa[1]-1,pa[2]),db=new Date(pb[0],pb[1]-1,pb[2]); return Math.round((db-da)/86400000); }
+
+  function budgetTotals(){
+    var income=sumList(budget.income)+num(budget.carry);
+    var monthly=sumList(budget.monthly);
+    var once=sumList(budget.once);
+    var invest=sumList(budget.invest);
+    return {income:income, monthly:monthly, once:once, invest:invest, available:income-monthly-once-invest};
+  }
+  function resetBudgetIfNeeded(){
+    var p=budget.period; if(!p.from||!p.to) return false;
+    var today=isoDateInZone(state.tzPrimary), changed=false, guard=0;
+    while(today>p.to && guard<120){
+      guard++;
+      var tot=budgetTotals();
+      // snapshot the period being closed into history
+      budget.history.push({
+        from:p.from, to:p.to,
+        income:tot.income, monthly:tot.monthly, once:tot.once, invest:tot.invest, available:tot.available
+      });
+      if(budget.history.length>240) budget.history.shift();
+      budget.carry=tot.available;      // remaining rolls into next period as a separate income position
+      budget.once=[];                  // one-time expenses are period-specific
+      var span=daysBetweenISO(p.from,p.to); if(span<0) span=30;
+      var newFrom=shiftISO(p.to,1);
+      var newTo=shiftISO(newFrom,span);
+      budget.period={from:newFrom,to:newTo};
+      p=budget.period; changed=true;
+    }
+    if(changed){ histIndex=budget.history.length-1; saveBudget(); }
+    return changed;
+  }
+
+  function budgetLine(item,listKey,opts){
+    opts=opts||{};
+    var row=document.createElement("div"); row.className="bud-line";
+    var sub="";
+    if(opts.date && item.date) sub+=formatDateReadable(item.date);
+    if(item.cat){ sub+=(sub?" · ":"")+item.cat; }
+    row.innerHTML='<div class="bl-main"><div class="bl-name"></div>'+(sub?'<div class="bl-sub"></div>':'')+'</div>'+
+      '<span class="bl-amt '+(opts.cls||"")+'"></span>'+
+      '<button class="del-btn" title="'+t("delete")+'">'+t("delete")+'</button>';
+    row.querySelector(".bl-name").textContent=item.name;
+    if(sub) row.querySelector(".bl-sub").textContent=sub;
+    row.querySelector(".bl-amt").textContent=(opts.sign||"")+budgetFmt(num(item.amount));
+    row.querySelector(".del-btn").addEventListener("click", function(){
+      budget[listKey]=budget[listKey].filter(function(x){return x.id!==item.id;}); saveBudget(); renderBudget();
+    });
+    return row;
+  }
+
+  function renderBudget(){
+    resetBudgetIfNeeded();
+    // period inputs
+    if(document.activeElement!==$("budFrom")) $("budFrom").value=budget.period.from||"";
+    if(document.activeElement!==$("budTo")) $("budTo").value=budget.period.to||"";
+    // carry line
+    var carryEl=$("budCarryLine");
+    if(num(budget.carry)!==0){ carryEl.style.display="block"; carryEl.textContent=t("budget_carry")+": "+budgetFmt(num(budget.carry)); }
+    else carryEl.style.display="none";
+    // income
+    var il=$("budIncomeList"); il.innerHTML="";
+    if(budget.income.length===0 && num(budget.carry)===0) il.innerHTML='<div class="db-empty">'+t("budget_none")+'</div>';
+    budget.income.forEach(function(x){ il.appendChild(budgetLine(x,"income",{cls:"pos",sign:"+"})); });
+    // monthly
+    var ml=$("budMonthlyList"); ml.innerHTML="";
+    if(budget.monthly.length===0) ml.innerHTML='<div class="db-empty">'+t("budget_none")+'</div>';
+    budget.monthly.forEach(function(x){ ml.appendChild(budgetLine(x,"monthly",{cls:"neg",sign:"−"})); });
+    // once
+    var ol=$("budOnceList"); ol.innerHTML="";
+    if(budget.once.length===0) ol.innerHTML='<div class="db-empty">'+t("budget_none")+'</div>';
+    budget.once.forEach(function(x){ ol.appendChild(budgetLine(x,"once",{cls:"neg",sign:"−",date:true})); });
+    // invest
+    var vl=$("budInvestList"); vl.innerHTML="";
+    if(budget.invest.length===0) vl.innerHTML='<div class="db-empty">'+t("budget_none")+'</div>';
+    budget.invest.forEach(function(x){ vl.appendChild(budgetLine(x,"invest",{cls:"inv"})); });
+    // totals
+    var tot=budgetTotals();
+    $("budIncTotal").textContent=budgetFmt(tot.income);
+    $("budMonTotal").textContent=budgetFmt(tot.monthly);
+    $("budOnceTotal").textContent=budgetFmt(tot.once);
+    $("budInvTotal").textContent=budgetFmt(tot.invest);
+    // summary
+    $("sumIncome").textContent=budgetFmt(tot.income);
+    $("sumMonthly").textContent="−"+budgetFmt(tot.monthly);
+    $("sumOnce").textContent="−"+budgetFmt(tot.once);
+    $("sumInvest").textContent="−"+budgetFmt(tot.invest);
+    var av=$("sumAvailable"); av.textContent=budgetFmt(tot.available);
+    av.classList.toggle("neg", tot.available<0);
+    renderPiggy();
+    renderBudgetHistory();
+  }
+
+  /* ---- Piggy bank (savings goal, reuses .goal-bar/.goal-fill from Fitness) ---- */
+  function renderPiggy(){
+    var pg=budget.piggy;
+    // config inputs (don't clobber while user is typing)
+    if(document.activeElement!==$("piggyName")) $("piggyName").value=pg.name||"";
+    if(document.activeElement!==$("piggyTarget")) $("piggyTarget").value=pg.target>0?pg.target:"";
+    var wrap=$("piggyProgressWrap"), addRow=$("piggyAddRow"), empty=$("piggyEmpty");
+    if(!(pg.target>0)){
+      wrap.style.display="none"; addRow.style.display="none"; empty.style.display="block";
+      return;
+    }
+    empty.style.display="none"; wrap.style.display="block"; addRow.style.display="flex";
+    var saved=num(pg.saved), target=num(pg.target);
+    $("piggyGoalName").textContent=pg.name||t("piggy_title");
+    $("piggyAmounts").textContent=budgetFmt(saved)+" / "+budgetFmt(target);
+    var pct=Math.min(100,Math.round(saved/target*100));
+    var fill=$("piggyFill"); fill.style.width=pct+"%";
+    var over=saved>target;
+    fill.classList.toggle("over", over);
+    $("piggyPct").textContent = over
+      ? ("+"+budgetFmt(saved-target)+" "+t("piggy_over_goal"))
+      : (pct+"% "+t("piggy_of_goal"));
+  }
+
+  /* ---- Budget history (previous periods) ---- */
+  function histLabel(e){ return formatDateReadable(e.from)+" – "+formatDateReadable(e.to); }
+  function renderBudgetHistory(){
+    var h=budget.history, empty=$("budHistoryEmpty"), viewer=$("budHistoryViewer");
+    if(h.length===0){ empty.style.display="block"; viewer.style.display="none"; return; }
+    empty.style.display="none"; viewer.style.display="block";
+    if(histIndex<0||histIndex>=h.length) histIndex=h.length-1;
+    var sel=$("budHistSelect"); sel.innerHTML="";
+    h.forEach(function(e,i){ var o=document.createElement("option"); o.value=i; o.textContent=histLabel(e); sel.appendChild(o); });
+    sel.value=histIndex;
+    var e=h[histIndex];
+    $("histIncome").textContent="+"+budgetFmt(num(e.income));
+    $("histMonthly").textContent="−"+budgetFmt(num(e.monthly));
+    $("histOnce").textContent="−"+budgetFmt(num(e.once));
+    $("histInvest").textContent=budgetFmt(num(e.invest));
+    var av=$("histAvailable"); av.textContent=budgetFmt(num(e.available));
+    av.classList.toggle("neg", num(e.available)<0);
+  }
+
+  function bindBudgetAdd(nameId,amtId,listKey,extraFn){
+    return function(){
+      var name=$(nameId).value.trim(), amt=$(amtId).value;
+      if(!name||amt===""){ return; }
+      var item={id:uid(),name:name,amount:num(amt)};
+      if(extraFn) extraFn(item);
+      budget[listKey].push(item); saveBudget();
+      $(nameId).value=""; $(amtId).value="";
+      renderBudget();
+    };
+  }
+  $("budIncAdd").addEventListener("click", bindBudgetAdd("budIncName","budIncAmt","income"));
+  $("budMonAdd").addEventListener("click", bindBudgetAdd("budMonName","budMonAmt","monthly",function(it){ var c=$("budMonCat").value.trim(); if(c) it.cat=c; $("budMonCat").value=""; }));
+  $("budOnceAdd").addEventListener("click", bindBudgetAdd("budOnceName","budOnceAmt","once",function(it){ var c=$("budOnceCat").value.trim(); if(c) it.cat=c; var d=$("budOnceDate").value; if(d) it.date=d; $("budOnceCat").value=""; $("budOnceDate").value=""; }));
+  $("budInvAdd").addEventListener("click", bindBudgetAdd("budInvName","budInvAmt","invest"));
+  $("budSavePeriodBtn").addEventListener("click", function(){
+    budget.period={from:$("budFrom").value||"", to:$("budTo").value||""}; saveBudget(); renderBudget(); alert(t("saved"));
+  });
+
+  // piggy bank
+  $("piggySaveGoalBtn").addEventListener("click", function(){
+    budget.piggy.name=$("piggyName").value.trim();
+    budget.piggy.target=num($("piggyTarget").value);
+    saveBudget(); renderPiggy();
+  });
+  $("piggyAddBtn").addEventListener("click", function(){
+    var v=num($("piggyAddAmt").value); if(!v) return;
+    budget.piggy.saved=num(budget.piggy.saved)+v;
+    $("piggyAddAmt").value=""; saveBudget(); renderPiggy();
+  });
+  $("piggyWithdrawBtn").addEventListener("click", function(){
+    var v=num($("piggyAddAmt").value); if(!v) return;
+    budget.piggy.saved=Math.max(0, num(budget.piggy.saved)-v);
+    $("piggyAddAmt").value=""; saveBudget(); renderPiggy();
+  });
+
+  // budget history navigation
+  $("budHistSelect").addEventListener("change", function(){ histIndex=parseInt(this.value,10)||0; renderBudgetHistory(); });
+  $("budHistPrev").addEventListener("click", function(){ if(histIndex>0){ histIndex--; renderBudgetHistory(); } });
+  $("budHistNext").addEventListener("click", function(){ if(histIndex<budget.history.length-1){ histIndex++; renderBudgetHistory(); } });
+
+  /* ================= RENDER ALL / INIT ================= */
+  function renderAll(){
+    renderTiles(); renderTasks(); renderCalendar(); renderWorkouts();
+    renderMealDay(); renderMealHistory(); renderJournal();
+    renderUpcomingBig(); renderHeaderInfo(); tickClock();
+    refreshExerciseDatalist(); refreshFoodList(); renderRecent();
+    renderDaily(); renderBudget(); renderExerciseDb();
+    renderTicker(); renderCurrencyGrid();
+  }
+
+  applyTheme();
+  applyAppearance();
+  applyI18n();
+  $("wDate").value=todayISO();
+  var _td=$("taskDate"); if(_td) _td.value=todayISO();
+  addExerciseBlock();
+  renderAll();
+  fetchRates();
+  setInterval(fetchRates, 60000);
+  tickClock();
+  setInterval(tickClock, 1000);
+  refreshNotifBanner();
+  if("Notification" in window && Notification.permission==="default"){ try{ Notification.requestPermission().then(refreshNotifBanner); }catch(e){} }
+  checkUpcoming();
+  setInterval(checkUpcoming, 60000);
+
+})();
+</script>
+
+<script>
+  /* ===== Service Worker: offline cache-first for the page ===== */
+  if("serviceWorker" in navigator){
+    var swSource=[
+      "const CACHE_NAME='futureapp-cache-v5';",
+      "self.addEventListener('install',function(event){",
+      "  self.skipWaiting();",
+      "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
+      "    return fetch(self.registration.scope).then(function(resp){ return cache.put(self.registration.scope,resp); }).catch(function(){});",
+      "  }));",
+      "});",
+      "self.addEventListener('activate',function(event){ event.waitUntil(self.clients.claim()); });",
+      "self.addEventListener('fetch',function(event){",
+      "  if(event.request.method!=='GET') return;",
+      "  if(event.request.mode!=='navigate') return;",
+      "  event.respondWith(caches.open(CACHE_NAME).then(function(cache){",
+      "    return cache.match(event.request).then(function(cached){",
+      "      if(cached) return cached;",
+      "      return fetch(event.request).then(function(resp){ if(resp&&resp.ok) cache.put(event.request,resp.clone()); return resp; })",
+      "        .catch(function(){ return cache.match(self.registration.scope); });",
+      "    });",
+      "  }));",
+      "});"
+    ].join("\n");
+    var swBlob=new Blob([swSource],{type:"application/javascript"});
+    var swUrl=URL.createObjectURL(swBlob);
+    window.addEventListener("load", function(){ navigator.serviceWorker.register(swUrl).catch(function(){}); });
+  }
+</script>
+
+</body>
+</html>
