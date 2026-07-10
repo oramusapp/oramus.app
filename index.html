@@ -193,6 +193,18 @@
     text-align:center;min-height:1.2em;margin:0;
   }
   .row{display:flex;gap:10px;}.row>div{flex:1;min-width:0;}
+  /* Wiersze z większym oddechem (np. Dystans/Czas w bieganiu, ustawienia rund) */
+  .row.spaced{gap:20px;}
+  .row.spaced label{margin:14px 0 6px;}
+  /* Timer rund — sporty walki */
+  .cbt-timer{margin-top:14px;padding:18px 14px;text-align:center;background:var(--bg-input);border:1px solid var(--accent2);border-radius:var(--radius);box-shadow:var(--glow2);}
+  .cbt-timer.rest{border-color:var(--accent);box-shadow:var(--glow);}
+  .cbt-phase{font-family:var(--font-mono);font-size:0.78rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--accent2);margin-bottom:6px;}
+  .cbt-timer.rest .cbt-phase{color:var(--accent);}
+  .cbt-count{font-family:var(--font-mono);font-weight:700;line-height:1;font-size:clamp(2.6rem,13vw,4.2rem);color:var(--accent2);text-shadow:var(--glow2);letter-spacing:0.04em;}
+  .cbt-timer.rest .cbt-count{color:var(--accent);text-shadow:var(--glow);}
+  .cbt-progress{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-top:8px;letter-spacing:0.06em;}
+  .cbt-timer .cbt-stop{margin-top:12px;width:100%;}
   .wk-daterow{align-items:flex-end;}
 
   .btn-primary{
@@ -650,6 +662,11 @@
     .db-grid{grid-template-columns:1fr;}
     .currency-grid{grid-template-columns:1fr;}
     .row{flex-direction:column;gap:0;}
+    /* Na telefonie bloki układają się w kolumnę — zachowaj wyraźny odstęp */
+    .row.spaced{gap:0;}
+    .row.spaced>div+div{margin-top:6px;}
+    .row.spaced label{margin:16px 0 6px;}
+    .cbt-timer{padding:16px 10px;}
     .bud-add-row{flex-direction:column;align-items:stretch;}
     .bud-add-row>div{min-width:0;}
     .bud-add-row .btn-primary{width:100%;}
@@ -810,9 +827,9 @@
     <div class="tab-panel active" id="tab-training">
       <!-- Sub-module picker: choose a training type -->
       <div class="trn-picker" id="trnPicker">
-        <button class="trn-tile" data-trn="strength"><span class="trn-ico">\uD83C\uDFCB\uFE0F</span><span class="trn-name" data-i18n="trn_strength">Trening siłowy</span><span class="trn-sub" data-i18n="trn_strength_sub">Serie, ciężary, rekordy</span></button>
-        <button class="trn-tile" data-trn="running"><span class="trn-ico">\uD83C\uDFC3</span><span class="trn-name" data-i18n="trn_running">Bieganie</span><span class="trn-sub" data-i18n="trn_running_sub">Dystans, czas, tempo</span></button>
-        <button class="trn-tile" data-trn="combat"><span class="trn-ico">\uD83E\uDD4A</span><span class="trn-name" data-i18n="trn_combat">Sporty walki</span><span class="trn-sub" data-i18n="trn_combat_sub">Dyscyplina, rundy, sparing</span></button>
+        <button class="trn-tile" data-trn="strength"><span class="trn-ico">🏋️</span><span class="trn-name" data-i18n="trn_strength">Trening siłowy</span><span class="trn-sub" data-i18n="trn_strength_sub">Serie, ciężary, rekordy</span></button>
+        <button class="trn-tile" data-trn="running"><span class="trn-ico">🏃</span><span class="trn-name" data-i18n="trn_running">Bieganie</span><span class="trn-sub" data-i18n="trn_running_sub">Dystans, czas, tempo</span></button>
+        <button class="trn-tile" data-trn="combat"><span class="trn-ico">🥊</span><span class="trn-name" data-i18n="trn_combat">Sporty walki</span><span class="trn-sub" data-i18n="trn_combat_sub">Dyscyplina, rundy, sparing</span></button>
       </div>
 
       <!-- Trening siłowy (existing module) -->
@@ -889,7 +906,7 @@
           <div class="row wk-daterow">
             <div><label for="runDate" data-i18n="date">Data</label><input type="date" id="runDate"></div>
           </div>
-          <div class="row">
+          <div class="row spaced">
             <div><label for="runDist" data-i18n="run_distance">Dystans (km)</label><input type="number" id="runDist" min="0" step="0.01" placeholder="np. 5.2"></div>
             <div><label for="runTime" data-i18n="run_time">Czas (mm:ss)</label><input type="text" id="runTime" inputmode="numeric" data-i18n-ph="run_time_ph" placeholder="np. 28:30"></div>
           </div>
@@ -943,6 +960,17 @@
           <div class="row">
             <div><label for="cbtRounds" data-i18n="cbt_rounds">Rundy</label><input type="number" id="cbtRounds" min="0" step="1" placeholder="np. 6"></div>
             <div><label for="cbtMinutes" data-i18n="cbt_minutes">Czas (min)</label><input type="number" id="cbtMinutes" min="0" step="1" placeholder="np. 60"></div>
+          </div>
+          <div class="row spaced">
+            <div><label for="cbtRoundLen" data-i18n="cbt_round_len">Długość rundy (mm:ss)</label><input type="text" id="cbtRoundLen" inputmode="numeric" data-i18n-ph="cbt_round_len_ph" placeholder="np. 3:00"></div>
+            <div><label for="cbtRestLen" data-i18n="cbt_rest_len">Przerwa między rundami (mm:ss)</label><input type="text" id="cbtRestLen" inputmode="numeric" data-i18n-ph="cbt_rest_len_ph" placeholder="np. 1:00"></div>
+          </div>
+          <button class="btn-primary" id="cbtTimerStartBtn" data-i18n="cbt_timer_start">▶ Start rund</button>
+          <div class="cbt-timer" id="cbtTimerBox" style="display:none;">
+            <div class="cbt-phase" id="cbtPhase">RUNDA 1</div>
+            <div class="cbt-count" id="cbtCountdown">0:00</div>
+            <div class="cbt-progress" id="cbtProgress"></div>
+            <button class="btn-ghost cbt-stop" id="cbtTimerStopBtn" data-i18n="cbt_timer_stop">■ Zatrzymaj</button>
           </div>
           <label for="cbtNote" data-i18n="cbt_note">Notatka (opcjonalnie)</label>
           <input type="text" id="cbtNote" data-i18n-ph="cbt_note_ph" placeholder="np. Praca nad obroną...">
@@ -1609,6 +1637,8 @@
       trn_strength:"Trening siłowy", trn_strength_sub:"Serie, ciężary, rekordy", trn_running:"Bieganie", trn_running_sub:"Dystans, czas, tempo", trn_combat:"Sporty walki", trn_combat_sub:"Dyscyplina, rundy, sparing", trn_back:"Wróć do wyboru",
       run_add_title:"Dodaj bieg", run_distance:"Dystans (km)", run_time:"Czas", run_time_ph:"np. 28:30", run_note:"Notatka (opcjonalnie)", run_note_ph:"np. Las, interwały...", run_save:"Zapisz bieg", run_pace:"Tempo", run_history:"Historia biegów", run_empty:"Brak zapisanych biegów.", run_fill:"Podaj datę i dystans biegu.", run_total_dist:"Łączny dystans", run_count:"Liczba biegów", run_best:"Najdłuższy bieg", run_record:"Nowy rekord biegu!",
       cbt_add_title:"Dodaj sesję", cbt_discipline:"Dyscyplina", cbt_boxing:"Boks", cbt_kickboxing:"Kickboxing", cbt_muaythai:"Muay Thai", cbt_mma:"MMA", cbt_bjj:"BJJ", cbt_judo:"Judo", cbt_wrestling:"Zapasy", cbt_karate:"Karate", cbt_other:"Inne", cbt_type:"Rodzaj treningu", cbt_technique:"Technika", cbt_sparring:"Sparing", cbt_bag:"Worek / tarcze", cbt_conditioning:"Kondycja", cbt_rounds:"Rundy", cbt_rounds_short:"rund", cbt_minutes:"Czas (min)", cbt_note:"Notatka (opcjonalnie)", cbt_note_ph:"np. Praca nad obroną...", cbt_save:"Zapisz sesję", cbt_history:"Historia sesji", cbt_empty:"Brak zapisanych sesji.", cbt_fill:"Podaj datę sesji.", cbt_sessions:"Liczba sesji", cbt_total_min:"Łączny czas", cbt_total_rounds:"Łącznie rund",
+      cbt_round_len:"Długość rundy (mm:ss)", cbt_round_len_ph:"np. 3:00", cbt_rest_len:"Przerwa między rundami (mm:ss)", cbt_rest_len_ph:"np. 1:00", cbt_timer_start:"▶ Start rund", cbt_timer_stop:"■ Zatrzymaj", cbt_round_word:"Runda", cbt_break_word:"Przerwa", cbt_done:"Koniec! Dobra robota 🥊", cbt_timer_fill:"Podaj liczbę rund i długość rundy (np. 3:00).",
+      ms_next:"Następne ćwiczenie", ms_none:"Wszystkie ćwiczenia ukończone",
       calc_data:"Twoje dane", calc_results:"Wyniki", calc_target_label:"Dzienne zapotrzebowanie",
       calc_macros_label:"Sugerowane makroskładniki",
       kcal:"Kalorie (kcal)", protein:"Białko (g)", carbs:"Węglow. (g)", fat:"Tłuszcze (g)", add_meal:"Dodaj posiłek",
@@ -1733,6 +1763,8 @@
       trn_strength:"Strength training", trn_strength_sub:"Sets, weights, records", trn_running:"Running", trn_running_sub:"Distance, time, pace", trn_combat:"Combat sports", trn_combat_sub:"Discipline, rounds, sparring", trn_back:"Back to selection",
       run_add_title:"Add a run", run_distance:"Distance (km)", run_time:"Time", run_time_ph:"e.g. 28:30", run_note:"Note (optional)", run_note_ph:"e.g. Forest, intervals...", run_save:"Save run", run_pace:"Pace", run_history:"Run history", run_empty:"No runs saved yet.", run_fill:"Enter the run date and distance.", run_total_dist:"Total distance", run_count:"Runs", run_best:"Longest run", run_record:"New running record!",
       cbt_add_title:"Add a session", cbt_discipline:"Discipline", cbt_boxing:"Boxing", cbt_kickboxing:"Kickboxing", cbt_muaythai:"Muay Thai", cbt_mma:"MMA", cbt_bjj:"BJJ", cbt_judo:"Judo", cbt_wrestling:"Wrestling", cbt_karate:"Karate", cbt_other:"Other", cbt_type:"Session type", cbt_technique:"Technique", cbt_sparring:"Sparring", cbt_bag:"Bag / pads", cbt_conditioning:"Conditioning", cbt_rounds:"Rounds", cbt_rounds_short:"rounds", cbt_minutes:"Time (min)", cbt_note:"Note (optional)", cbt_note_ph:"e.g. Working on defense...", cbt_save:"Save session", cbt_history:"Session history", cbt_empty:"No sessions saved yet.", cbt_fill:"Enter the session date.", cbt_sessions:"Sessions", cbt_total_min:"Total time", cbt_total_rounds:"Total rounds",
+      cbt_round_len:"Round length (mm:ss)", cbt_round_len_ph:"e.g. 3:00", cbt_rest_len:"Rest between rounds (mm:ss)", cbt_rest_len_ph:"e.g. 1:00", cbt_timer_start:"▶ Start rounds", cbt_timer_stop:"■ Stop", cbt_round_word:"Round", cbt_break_word:"Rest", cbt_done:"Done! Great work 🥊", cbt_timer_fill:"Enter the number of rounds and round length (e.g. 3:00).",
+      ms_next:"Next exercise", ms_none:"All exercises completed",
       calc_data:"Your details", calc_results:"Results", calc_target_label:"Daily requirement",
       calc_macros_label:"Suggested macros",
       kcal:"Calories (kcal)", protein:"Protein (g)", carbs:"Carbs (g)", fat:"Fat (g)", add_meal:"Add meal",
@@ -2353,13 +2385,80 @@
   function fmtHMS(sec){ var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return pad(h)+":"+pad(m)+":"+pad(s); }
   function fmtMS(sec){ var m=Math.floor(sec/60), s=sec%60; return pad(m)+":"+pad(s); }
   var wkTimerStart=0, wkTimerInt=null, restStart=0, restInt=null;
-  function tickWkTimer(){ if(wkTimerStart) $("wkTotalTimer").textContent=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000))); }
+
+  /* ---- Ekran blokady (Media Session API): czas treningu, przerwa, następne ćwiczenie ----
+     Przeglądarka pokazuje metadane "odtwarzacza" na ekranie blokady tylko wtedy,
+     gdy strona odtwarza dźwięk — dlatego w tle gra zapętlona, niesłyszalna ścieżka. */
+  var msAudio=null;
+  function makeSilentWav(){
+    // 1 s niemal ciszy (amplituda 1/32767) jako WAV w data-URI — bez zewnętrznych plików
+    var rate=8000, n=rate, header=44, buf=new ArrayBuffer(header+n*2), v=new DataView(buf);
+    function wstr(o,s){ for(var i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); }
+    wstr(0,"RIFF"); v.setUint32(4,36+n*2,true); wstr(8,"WAVE"); wstr(12,"fmt ");
+    v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+    v.setUint32(24,rate,true); v.setUint32(28,rate*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+    wstr(36,"data"); v.setUint32(40,n*2,true);
+    for(var i=0;i<n;i++) v.setInt16(header+i*2, (i%2?1:-1), true);
+    var b=new Uint8Array(buf), s=""; for(var j=0;j<b.length;j++) s+=String.fromCharCode(b[j]);
+    return "data:audio/wav;base64,"+btoa(s);
+  }
+  function nextExerciseName(){
+    var blocks=document.querySelectorAll("#exercisesContainer .exercise-block");
+    for(var i=0;i<blocks.length;i++){
+      var name=(blocks[i].querySelector(".ex-name")||{}).value||"";
+      var rows=blocks[i].querySelectorAll(".set-row"), done=true;
+      rows.forEach(function(row){
+        var w=row.querySelector(".set-weight"), r=row.querySelector(".set-reps");
+        if(w&&r&&(w.value===""||r.value==="")) done=false;
+      });
+      if(!done || rows.length===0) return name.trim()||t("ms_none");
+    }
+    return t("ms_none");
+  }
+  function updateMediaSession(){
+    if(!("mediaSession" in navigator) || !wkTimerStart) return;
+    try{
+      var total=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000)));
+      var rest=restStart?fmtMS(Math.max(0,Math.floor((Date.now()-restStart)/1000))):"--:--";
+      navigator.mediaSession.metadata=new MediaMetadata({
+        title: t("ms_next")+": "+nextExerciseName(),
+        artist: t("wk_total_time")+" "+total+" · "+t("wk_rest_time")+" "+rest,
+        album: "FutureApp"
+      });
+      navigator.mediaSession.playbackState="playing";
+    }catch(e){}
+  }
+  function startMediaSession(){
+    if(!("mediaSession" in navigator)) return;
+    try{
+      if(!msAudio){ msAudio=new Audio(makeSilentWav()); msAudio.loop=true; msAudio.volume=0.01; }
+      var p=msAudio.play(); if(p&&p.catch) p.catch(function(){});
+      // Nie pozwól systemowi "zatrzymać" sesji przyciskiem pauzy — wznów odtwarzanie
+      navigator.mediaSession.setActionHandler("play", function(){ if(msAudio) msAudio.play(); updateMediaSession(); });
+      navigator.mediaSession.setActionHandler("pause", function(){ if(msAudio) msAudio.play(); updateMediaSession(); });
+      updateMediaSession();
+    }catch(e){}
+  }
+  function stopMediaSession(){
+    try{
+      if(msAudio){ msAudio.pause(); msAudio.currentTime=0; }
+      if("mediaSession" in navigator){ navigator.mediaSession.metadata=null; navigator.mediaSession.playbackState="none"; }
+    }catch(e){}
+  }
+
+  function tickWkTimer(){
+    if(wkTimerStart){
+      $("wkTotalTimer").textContent=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000)));
+      updateMediaSession();
+    }
+  }
   function tickRest(){ if(restStart) $("wkRestTimer").textContent=fmtMS(Math.max(0,Math.floor((Date.now()-restStart)/1000))); }
   function startWorkoutTimer(ts){
     wkTimerStart=ts||Date.now();
     try{ localStorage.setItem("wkTimerStart",String(wkTimerStart)); }catch(e){}
     $("startWorkoutBtn").style.display="none";
     $("wkTimers").style.display="flex";
+    startMediaSession();
     tickWkTimer();
     clearInterval(wkTimerInt); wkTimerInt=setInterval(tickWkTimer,1000);
   }
@@ -2369,6 +2468,7 @@
   }
   function stopWorkoutTimer(){
     clearInterval(wkTimerInt); wkTimerInt=null; wkTimerStart=0;
+    stopMediaSession();
     try{ localStorage.removeItem("wkTimerStart"); }catch(e){}
     $("startWorkoutBtn").style.display="";
     $("wkTimers").style.display="none"; $("wkTotalTimer").textContent="00:00:00";
@@ -3113,6 +3213,111 @@
     saveCombats(); renderCombats();
     $("cbtRounds").value=""; $("cbtMinutes").value=""; $("cbtNote").value=""; $("cbtDate").value=todayISO();
   });
+
+  /* ---- Timer rund (sporty walki): runda -> gong -> przerwa -> gong -> kolejna runda ---- */
+  var cbtAudioCtx=null;
+  function cbtGong(hits){
+    // Syntetyczny "gong bokserski" (Web Audio) — działa offline, bez plików.
+    try{
+      if(!cbtAudioCtx) cbtAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      if(cbtAudioCtx.state==="suspended") cbtAudioCtx.resume();
+      var ctx=cbtAudioCtx;
+      hits=hits||1;
+      for(var h=0; h<hits; h++){
+        (function(offset){
+          var now=ctx.currentTime+offset;
+          var master=ctx.createGain();
+          master.gain.setValueAtTime(0.9,now);
+          master.connect(ctx.destination);
+          // metaliczne, niestrojone częstotliwości = brzmienie gongu/dzwonu
+          [111,172,241,338,467,616].forEach(function(f,i){
+            var o=ctx.createOscillator(), g=ctx.createGain();
+            o.type="sine"; o.frequency.value=f;
+            g.gain.setValueAtTime(0.45/(i+1), now);
+            g.gain.exponentialRampToValueAtTime(0.0001, now+2.4-(i*0.18));
+            o.connect(g); g.connect(master);
+            o.start(now); o.stop(now+2.5);
+          });
+          // krótki "strzał" ataku (uderzenie młotkiem)
+          var len=Math.floor(ctx.sampleRate*0.05), buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+          for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+          var src=ctx.createBufferSource(); src.buffer=buf;
+          var ng=ctx.createGain(); ng.gain.setValueAtTime(0.5,now); ng.gain.exponentialRampToValueAtTime(0.0001,now+0.06);
+          src.connect(ng); ng.connect(master); src.start(now);
+        })(h*0.55);
+      }
+    }catch(e){}
+  }
+  function parseMMSS(v){
+    // Akceptuje "3:00", "0:30" albo same minuty "3" -> sekundy
+    v=String(v||"").trim();
+    if(!v) return 0;
+    if(v.indexOf(":")>=0){
+      var p=v.split(":"), m=num(p[0]), s=num(p[1]);
+      return Math.max(0, m*60+Math.min(59,s));
+    }
+    return Math.max(0, Math.round(num(v)*60));
+  }
+  var cbtT={running:false, phase:"round", round:1, totalRounds:0, roundSec:0, restSec:0, endAt:0, int:null};
+  function cbtTimerRender(remaining){
+    var box=$("cbtTimerBox");
+    box.classList.toggle("rest", cbtT.phase==="rest");
+    $("cbtPhase").textContent=(cbtT.phase==="rest"?t("cbt_break_word"):t("cbt_round_word")+" "+cbtT.round+"/"+cbtT.totalRounds);
+    $("cbtCountdown").textContent=fmtMS(Math.max(0,remaining));
+    $("cbtProgress").textContent=t("cbt_round_word")+" "+cbtT.round+" / "+cbtT.totalRounds;
+  }
+  function cbtTimerStop(finished){
+    clearInterval(cbtT.int); cbtT.int=null; cbtT.running=false;
+    if(finished){
+      $("cbtPhase").textContent=t("cbt_done");
+      $("cbtCountdown").textContent="0:00";
+      $("cbtProgress").textContent=cbtT.totalRounds+" / "+cbtT.totalRounds;
+      setTimeout(function(){ $("cbtTimerBox").style.display="none"; $("cbtTimerStartBtn").style.display=""; }, 4000);
+    } else {
+      $("cbtTimerBox").style.display="none";
+      $("cbtTimerStartBtn").style.display="";
+    }
+  }
+  function cbtStartPhase(phase){
+    cbtT.phase=phase;
+    var dur=(phase==="rest"?cbtT.restSec:cbtT.roundSec);
+    cbtT.endAt=Date.now()+dur*1000;
+    cbtTimerRender(dur);
+  }
+  function cbtTick(){
+    if(!cbtT.running) return;
+    var remaining=Math.round((cbtT.endAt-Date.now())/1000);
+    if(remaining>0){ cbtTimerRender(remaining); return; }
+    // koniec fazy
+    if(cbtT.phase==="round"){
+      if(cbtT.round>=cbtT.totalRounds){
+        cbtGong(3);              // potrójny gong = koniec walki
+        cbtTimerStop(true);
+        return;
+      }
+      cbtGong(1);                // gong: koniec rundy
+      if(cbtT.restSec>0){ cbtStartPhase("rest"); }
+      else { cbtT.round++; cbtStartPhase("round"); }
+    } else {
+      cbtGong(1);                // gong: koniec przerwy -> kolejna runda
+      cbtT.round++;
+      cbtStartPhase("round");
+    }
+  }
+  if($("cbtTimerStartBtn")) $("cbtTimerStartBtn").addEventListener("click", function(){
+    var rounds=Math.floor(num($("cbtRounds").value));
+    var roundSec=parseMMSS($("cbtRoundLen").value);
+    var restSec=parseMMSS($("cbtRestLen").value);
+    if(rounds<1 || roundSec<1){ alert(t("cbt_timer_fill")); return; }
+    cbtT.totalRounds=rounds; cbtT.roundSec=roundSec; cbtT.restSec=restSec;
+    cbtT.round=1; cbtT.running=true;
+    cbtGong(1); // gong startowy
+    $("cbtTimerStartBtn").style.display="none";
+    $("cbtTimerBox").style.display="";
+    cbtStartPhase("round");
+    clearInterval(cbtT.int); cbtT.int=setInterval(cbtTick, 250);
+  });
+  if($("cbtTimerStopBtn")) $("cbtTimerStopBtn").addEventListener("click", function(){ cbtTimerStop(false); });
 
   /* ================= JOURNAL ================= */
   var journal=loadJSON("journal",[]);
