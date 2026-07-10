@@ -552,9 +552,15 @@
     .tick{min-width:104px;flex:0 0 auto;padding:8px 11px;}
     .header-info{margin-left:0;max-width:100%;width:100%;order:2;}
     main{padding:10px 12px 20px;}
-    /* full-width scrollable modals */
+    /* full-width scrollable modals — full-bleed sheet: drop the 1px frame (it sits on the
+       physical screen edge and only ever looked broken when a row overflowed) and hard-stop
+       any horizontal overflow so rows can't push content past the right edge. */
     .overlay{padding:0;align-items:stretch;}
-    .modal{max-width:100%;min-height:100%;border-radius:0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));margin:0;}
+    .modal{max-width:100%;width:100%;min-height:100%;border:none;border-radius:0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));margin:0;overflow-x:hidden;}
+    /* keep long settings rows from overflowing: let the label shrink + ellipsis, compact gaps */
+    .order-row{gap:8px;}
+    .order-row .or-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .order-row .or-arrows{flex:0 0 auto;}
     /* single-column grids */
     .tile-grid{grid-template-columns:1fr;}
     .subbar{grid-template-columns:1fr;}
@@ -717,11 +723,13 @@
 
     <div class="tab-panel active" id="tab-training">
       <div class="card">
-        <div class="row wk-timerow" style="align-items:flex-end;">
+        <div class="row" style="align-items:flex-end;">
           <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
+          <button class="btn-ghost" id="repeatLastBtn" style="white-space:nowrap;" data-i18n="repeat_last">↻ Powtórz ostatni</button>
+        </div>
+        <div class="row wk-timerow" style="margin-top:10px;">
           <div><label for="wStart" data-i18n="wk_start">Początek</label><input type="time" id="wStart"></div>
           <div><label for="wEnd" data-i18n="wk_end">Koniec</label><input type="time" id="wEnd"></div>
-          <button class="btn-ghost" id="repeatLastBtn" style="white-space:nowrap;" data-i18n="repeat_last">↻ Powtórz ostatni</button>
         </div>
         <div id="exercisesContainer"></div>
         <button class="btn-ghost" id="addExerciseBtn" style="margin-top:12px;" data-i18n="add_exercise">+ Dodaj ćwiczenie</button>
@@ -1164,71 +1172,106 @@
     </div>
 
     <div class="set-section">
-      <h4 data-i18n="set_tiles">Kafelki: kolejność i widoczność</h4>
-      <div id="tileConfigList"></div>
-    </div>
-
-    <div class="set-section">
-      <h4 data-i18n="set_currency">Personalizacja kursów walut</h4>
-      <div class="toggle-line" style="margin-bottom:10px;">
-        <span data-i18n="ticker_enable">Pokazuj widget kursów walut</span>
-        <input type="checkbox" id="tickerEnabledChk" style="width:18px;height:18px;accent-color:var(--accent);">
-      </div>
-      <div class="currency-grid" id="currencyGrid"></div>
-      <div class="cur-note" data-i18n="currency_note">Zaznacz maksymalnie 5 par. Wybór pojawi się w pasku w nagłówku.</div>
-    </div>
-
-    <div class="set-section">
-      <h4 data-i18n="set_timefmt">Format godziny</h4>
-      <div class="theme-opts" id="timeFmtOpts">
-        <button class="theme-chip" data-tf-opt="24" data-i18n="tf_24">24-godzinny</button>
-        <button class="theme-chip" data-tf-opt="12" data-i18n="tf_12">12-godzinny</button>
+      <button class="acc-head" data-acc="set_tiles" data-acc-open aria-controls="accTiles">
+        <h4 data-i18n="set_tiles">Kafelki: kolejność, widoczność i kolor</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accTiles">
+        <div class="color-row">
+          <span data-i18n="tile_color">Kolor podświetlenia kafelków</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="tileGlowColor" class="tile-col" title="">
+            <button class="or-colreset" id="tileGlowReset" title="" data-i18n-title="tile_color_reset">&#8634;</button>
+          </div>
+        </div>
+        <div id="tileConfigList"></div>
       </div>
     </div>
 
     <div class="set-section">
-      <h4 data-i18n="set_lang">Język strony</h4>
-      <div class="lang-opts" id="langOpts">
-        <button class="theme-chip" data-lang-opt="pl">Polski</button>
-        <button class="theme-chip" data-lang-opt="en">English</button>
+      <button class="acc-head" data-acc="set_currency" data-acc-open aria-controls="accCurrency">
+        <h4 data-i18n="set_currency">Personalizacja kursów walut</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accCurrency">
+        <div class="toggle-line" style="margin-bottom:10px;">
+          <span data-i18n="ticker_enable">Pokazuj widget kursów walut</span>
+          <input type="checkbox" id="tickerEnabledChk" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <div class="currency-grid" id="currencyGrid"></div>
+        <div class="cur-note" data-i18n="currency_note">Zaznacz maksymalnie 5 par. Wybór pojawi się w pasku w nagłówku.</div>
       </div>
     </div>
 
     <div class="set-section">
-      <h4 data-i18n="set_clock">Strefa czasowa zegara</h4>
-      <label data-i18n="tz_primary">Strefa główna</label>
-      <select id="tzPrimary"></select>
-      <div class="toggle-line" style="margin-top:12px;">
-        <span data-i18n="tz_second_enable">Drugi zegar</span>
-        <input type="checkbox" id="tzSecondEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
-      </div>
-      <select id="tzSecondary"></select>
-    </div>
-
-    <div class="set-section">
-      <h4 data-i18n="set_header">Pole informacyjne (nagłówek)</h4>
-      <div class="header-mode-opts" id="headerModeOpts">
-        <button class="theme-chip" data-header-opt="quote" data-i18n="header_quote">Cytat z NT</button>
-        <button class="theme-chip" data-header-opt="fact" data-i18n="header_fact">Ciekawostka</button>
-        <button class="theme-chip" data-header-opt="motiv" data-i18n="header_motiv">Cytat motywacyjny</button>
+      <button class="acc-head" data-acc="set_timefmt" data-acc-open aria-controls="accTimefmt">
+        <h4 data-i18n="set_timefmt">Format godziny</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accTimefmt">
+        <div class="theme-opts" id="timeFmtOpts">
+          <button class="theme-chip" data-tf-opt="24" data-i18n="tf_24">24-godzinny</button>
+          <button class="theme-chip" data-tf-opt="12" data-i18n="tf_12">12-godzinny</button>
+        </div>
       </div>
     </div>
 
     <div class="set-section">
-      <h4 data-i18n="set_pin">Zabezpieczenie PIN</h4>
-      <div class="toggle-line">
-        <span data-i18n="pin_journal">Chroń Dziennik</span>
-        <input type="checkbox" id="pinJournalEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+      <button class="acc-head" data-acc="set_lang" data-acc-open aria-controls="accLang">
+        <h4 data-i18n="set_lang">Język strony</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accLang">
+        <div class="lang-opts" id="langOpts">
+          <button class="theme-chip" data-lang-opt="pl">Polski</button>
+          <button class="theme-chip" data-lang-opt="en">English</button>
+        </div>
       </div>
-      <input type="password" id="pinJournalInput" inputmode="numeric" maxlength="4" data-i18n-ph="pin_set_ph" placeholder="Ustaw 4-cyfrowy PIN">
-      <div class="toggle-line" style="margin-top:12px;">
-        <span data-i18n="pin_calendar">Chroń Kalendarz</span>
-        <input type="checkbox" id="pinCalendarEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+    </div>
+
+    <div class="set-section">
+      <button class="acc-head" data-acc="set_clock" data-acc-open aria-controls="accClock">
+        <h4 data-i18n="set_clock">Strefa czasowa zegara</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accClock">
+        <label data-i18n="tz_primary">Strefa główna</label>
+        <select id="tzPrimary"></select>
+        <div class="toggle-line" style="margin-top:12px;">
+          <span data-i18n="tz_second_enable">Drugi zegar</span>
+          <input type="checkbox" id="tzSecondEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <select id="tzSecondary"></select>
       </div>
-      <input type="password" id="pinCalendarInput" inputmode="numeric" maxlength="4" data-i18n-ph="pin_set_ph" placeholder="Ustaw 4-cyfrowy PIN">
-      <button class="btn-primary" id="savePinBtn" data-i18n="save_pin">Zapisz ustawienia PIN</button>
-      <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="pin_note">
-        PIN jest przechowywany lokalnie w formie zaciemnionej (hash), nie jako zwykły tekst. To zabezpieczenie ekranowe, nie kryptograficzna ochrona danych.
+    </div>
+
+    <div class="set-section">
+      <button class="acc-head" data-acc="set_header" data-acc-open aria-controls="accHeader">
+        <h4 data-i18n="set_header">Pole informacyjne (nagłówek)</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accHeader">
+        <div class="header-mode-opts" id="headerModeOpts">
+          <button class="theme-chip" data-header-opt="quote" data-i18n="header_quote">Cytat z NT</button>
+          <button class="theme-chip" data-header-opt="fact" data-i18n="header_fact">Ciekawostka</button>
+          <button class="theme-chip" data-header-opt="motiv" data-i18n="header_motiv">Cytat motywacyjny</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <button class="acc-head" data-acc="set_pin" data-acc-open aria-controls="accPin">
+        <h4 data-i18n="set_pin">Zabezpieczenie PIN</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accPin">
+        <div class="toggle-line">
+          <span data-i18n="pin_journal">Chroń Dziennik</span>
+          <input type="checkbox" id="pinJournalEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <input type="password" id="pinJournalInput" inputmode="numeric" maxlength="4" data-i18n-ph="pin_set_ph" placeholder="Ustaw 4-cyfrowy PIN">
+        <div class="toggle-line" style="margin-top:12px;">
+          <span data-i18n="pin_calendar">Chroń Kalendarz</span>
+          <input type="checkbox" id="pinCalendarEnabled" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <input type="password" id="pinCalendarInput" inputmode="numeric" maxlength="4" data-i18n-ph="pin_set_ph" placeholder="Ustaw 4-cyfrowy PIN">
+        <button class="btn-primary" id="savePinBtn" data-i18n="save_pin">Zapisz ustawienia PIN</button>
+        <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="pin_note">
+          PIN jest przechowywany lokalnie w formie zaciemnionej (hash), nie jako zwykły tekst. To zabezpieczenie ekranowe, nie kryptograficzna ochrona danych.
+        </div>
       </div>
     </div>
   </div>
@@ -1317,7 +1360,7 @@
       send:"Wyślij", ai_ph:"Napisz wiadomość...", ai_config:"Konfiguracja API", ai_clear:"Wyczyść czat",
       about_link:"Informacje / O nas", rights:"Wszystkie prawa zastrzeżone",
       settings:"Ustawienia", set_theme:"Wygląd strony", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Jasny",
-      set_tiles:"Kafelki: kolejność, widoczność i kolor", tile_color:"Kolor podświetlenia kafelka", tile_color_reset:"Przywróć domyślny kolor", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
+      set_tiles:"Kafelki: kolejność, widoczność i kolor", tile_color:"Kolor podświetlenia kafelków", tile_color_reset:"Przywróć domyślny kolor", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
       tz_primary:"Strefa główna", tz_second_enable:"Drugi zegar",
       set_header:"Pole informacyjne (nagłówek)", header_quote:"Cytat z NT", header_fact:"Ciekawostka", header_motiv:"Cytat motywacyjny",
       acc_themes:"Motywy", acc_colors:"Kolory", acc_typo:"Typografia", acc_layout:"Układ",
@@ -1423,7 +1466,7 @@
       send:"Send", ai_ph:"Type a message...", ai_config:"API config", ai_clear:"Clear chat",
       about_link:"Info / About us", rights:"All rights reserved",
       settings:"Settings", set_theme:"Appearance", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Light",
-      set_tiles:"Tiles: order, visibility & color", tile_color:"Tile highlight color", tile_color_reset:"Reset to default color", set_lang:"Language", set_clock:"Clock time zone",
+      set_tiles:"Tiles: order, visibility & color", tile_color:"Tiles highlight color", tile_color_reset:"Reset to default color", set_lang:"Language", set_clock:"Clock time zone",
       tz_primary:"Primary zone", tz_second_enable:"Second clock",
       set_header:"Header info box", header_quote:"NT quote", header_fact:"Fun fact", header_motiv:"Motivational quote",
       acc_themes:"Themes", acc_colors:"Colors", acc_typo:"Typography", acc_layout:"Layout",
@@ -1516,6 +1559,9 @@
     document.querySelectorAll("[data-i18n-ph]").forEach(function(el){
       el.setAttribute("placeholder", t(el.getAttribute("data-i18n-ph")));
     });
+    document.querySelectorAll("[data-i18n-title]").forEach(function(el){
+      el.setAttribute("title", t(el.getAttribute("data-i18n-title")));
+    });
   }
 
   /* ================= STATE / SETTINGS ================= */
@@ -1548,7 +1594,10 @@
     fontPx: (typeof settings.fontPx==="number") ? settings.fontPx : legacyFontPx(settings.fontSize),
     radius: (typeof settings.radius==="number") ? settings.radius : 10,
     customColors: (settings.customColors && typeof settings.customColors==="object") ? settings.customColors : {}, // {accent,bg,text,panel}
-    tileColors: (settings.tileColors && typeof settings.tileColors==="object") ? settings.tileColors : {} // per-tile highlight color {tileId:"#hex"}
+    // Single highlight colour applied to ALL tiles ("" => theme default pink).
+    // Migrates from the old per-tile map by taking the first colour it finds.
+    tileGlow: (typeof settings.tileGlow==="string") ? settings.tileGlow
+              : (settings.tileColors && typeof settings.tileColors==="object" && Object.keys(settings.tileColors).length ? settings.tileColors[Object.keys(settings.tileColors)[0]] : "")
   };
   // ensure order integrity (in case of new tiles)
   DEFAULT_ORDER.forEach(function(id){ if(state.order.indexOf(id)===-1) state.order.push(id); });
@@ -1566,7 +1615,7 @@
       tickerPairs:state.tickerPairs, tickerEnabled:state.tickerEnabled,
       fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat,
       colorMode:state.colorMode, pageBg:state.pageBg, settingsBg:state.settingsBg, fontFamily:state.fontFamily,
-      fontPx:state.fontPx, radius:state.radius, customColors:state.customColors, tileColors:state.tileColors
+      fontPx:state.fontPx, radius:state.radius, customColors:state.customColors, tileGlow:state.tileGlow
     });
   }
 
@@ -1769,9 +1818,8 @@
                    (def.pin==="calendar" && state.pinCalendarEnabled && state.pinCalendarHash);
       var btn=document.createElement("button");
       btn.className="tile";
-      // Per-tile highlight colour (point: customizable tile glow). Unset => theme default (pink).
-      var tileCol=state.tileColors[id];
-      if(tileCol){ btn.classList.add("tile--tinted"); btn.style.setProperty("--tile-accent", tileCol); }
+      // Global tile highlight colour (applies to all tiles; unset => theme default pink).
+      if(state.tileGlow){ btn.classList.add("tile--tinted"); btn.style.setProperty("--tile-accent", state.tileGlow); }
       btn.innerHTML='<span class="tile-icon">'+def.icon+'</span>'+
         '<span class="tile-title"></span>'+
         '<span class="tile-sub"></span>'+
@@ -2864,16 +2912,11 @@
   }
   function renderTileConfig(){
     var c=$("tileConfigList"); c.innerHTML="";
-    // Theme's default highlight colour (used to seed the picker when a tile has no custom colour yet).
-    var defaultGlow = toHex((getComputedStyle(document.documentElement).getPropertyValue("--accent2")||"").trim()) || "#ff2fd0";
     state.order.forEach(function(id,idx){
       var def=TILE_DEFS[id]; if(!def) return;
-      var cur=state.tileColors[id];
       var row=document.createElement("div"); row.className="order-row";
       row.innerHTML='<input type="checkbox" '+(state.hidden[id]?"":"checked")+' data-vis="'+id+'">'+
         '<span class="or-name"></span>'+
-        '<input type="color" class="tile-col" data-col-tile="'+id+'" value="'+(cur||defaultGlow)+'" title="'+t("tile_color")+'">'+
-        (cur?'<button class="or-colreset" data-col-reset="'+id+'" title="'+t("tile_color_reset")+'">\u21BA</button>':'')+
         '<div class="or-arrows"><button class="btn-small" data-up="'+id+'">▲</button><button class="btn-small" data-down="'+id+'">▼</button></div>';
       row.querySelector(".or-name").textContent=t(def.titleKey);
       c.appendChild(row);
@@ -2881,20 +2924,19 @@
     c.querySelectorAll("[data-vis]").forEach(function(cb){
       cb.addEventListener("change", function(){ var id=cb.getAttribute("data-vis"); if(cb.checked) delete state.hidden[id]; else state.hidden[id]=true; persistSettings(); renderTiles(); });
     });
-    // Per-tile highlight colour pickers (live preview + persist).
-    c.querySelectorAll("[data-col-tile]").forEach(function(inp){
-      inp.addEventListener("input", function(){ state.tileColors[inp.getAttribute("data-col-tile")]=inp.value; renderTiles(); });
-      inp.addEventListener("change", function(){ state.tileColors[inp.getAttribute("data-col-tile")]=inp.value; persistSettings(); renderTiles(); renderTileConfig(); });
-    });
-    c.querySelectorAll("[data-col-reset]").forEach(function(b){
-      b.addEventListener("click", function(){ delete state.tileColors[b.getAttribute("data-col-reset")]; persistSettings(); renderTiles(); renderTileConfig(); });
-    });
     c.querySelectorAll("[data-up]").forEach(function(b){
       b.addEventListener("click", function(){ var id=b.getAttribute("data-up"); var i=state.order.indexOf(id); if(i>0){ state.order.splice(i,1); state.order.splice(i-1,0,id); persistSettings(); renderTileConfig(); renderTiles(); } });
     });
     c.querySelectorAll("[data-down]").forEach(function(b){
       b.addEventListener("click", function(){ var id=b.getAttribute("data-down"); var i=state.order.indexOf(id); if(i<state.order.length-1){ state.order.splice(i,1); state.order.splice(i+1,0,id); persistSettings(); renderTileConfig(); renderTiles(); } });
     });
+    // Single global tile-glow colour control (one setting for all tiles).
+    var picker=$("tileGlowColor"), reset=$("tileGlowReset");
+    if(picker){
+      var defaultGlow = toHex((getComputedStyle(document.documentElement).getPropertyValue("--accent2")||"").trim()) || "#ff2fd0";
+      picker.value = state.tileGlow || defaultGlow;
+      if(reset) reset.style.display = state.tileGlow ? "" : "none";
+    }
   }
   function syncSettingChips(){
     document.querySelectorAll("[data-theme-opt]").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-theme-opt")===state.theme); });
@@ -2970,6 +3012,14 @@
   });
   if($("colorResetBtn")) $("colorResetBtn").addEventListener("click", function(){
     state.customColors={}; applyCustomColors(); persistSettings(); syncAppearanceControls();
+  });
+  // Single global tile-glow colour (applies to ALL tiles at once).
+  if($("tileGlowColor")){
+    $("tileGlowColor").addEventListener("input", function(){ state.tileGlow=this.value; renderTiles(); if($("tileGlowReset")) $("tileGlowReset").style.display=""; });
+    $("tileGlowColor").addEventListener("change", function(){ state.tileGlow=this.value; persistSettings(); renderTiles(); });
+  }
+  if($("tileGlowReset")) $("tileGlowReset").addEventListener("click", function(){
+    state.tileGlow=""; persistSettings(); renderTiles(); renderTileConfig();
   });
   if($("fontFamilySel")) $("fontFamilySel").addEventListener("change", function(){ state.fontFamily=this.value; applyAppearance(); persistSettings(); });
   if($("fontSizeRange")) $("fontSizeRange").addEventListener("input", function(){
@@ -3285,7 +3335,7 @@
   /* ===== Service Worker: offline cache-first for the page ===== */
   if("serviceWorker" in navigator){
     var swSource=[
-      "const CACHE_NAME='futureapp-cache-v9';",
+      "const CACHE_NAME='futureapp-cache-v11';",
       "self.addEventListener('install',function(event){",
       "  self.skipWaiting();",
       "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
