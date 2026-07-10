@@ -530,6 +530,13 @@
   .tpl-item .tpl-main:hover .tpl-name{color:var(--accent);}
   .tpl-item .tpl-sub{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .tpl-item .tpl-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
+  /* workout timers */
+  .wk-timers{display:flex;gap:10px;}
+  .wk-timer-box{flex:1;min-width:0;background:var(--bg-input);border:1px solid var(--accent);border-radius:var(--radius);box-shadow:var(--glow);padding:10px 12px;text-align:center;}
+  .wk-timer-box.rest{border-color:var(--accent2);box-shadow:var(--glow2);}
+  .wk-timer-label{font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:4px;}
+  .wk-timer-val{font-family:var(--font-mono);font-size:1.45rem;color:var(--accent);letter-spacing:0.03em;}
+  .wk-timer-box.rest .wk-timer-val{color:var(--accent2);}
   .bud-section{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-panel);padding:16px 18px;margin-bottom:14px;}
   .bud-section h3{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--accent2);margin:0 0 12px;}
   .bud-add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
@@ -623,12 +630,10 @@
     .wk-daterow label{text-align:center;}
     .wk-daterow input[type=date]{text-align:center;}
     .wk-daterow>.btn-ghost{width:100%;margin-top:8px;}
-    /* Training: keep start / end side by side, compact so they never overlap or overflow */
-    .wk-timerow{flex-direction:row;flex-wrap:nowrap;justify-content:center;align-items:flex-end;gap:8px;}
-    .wk-timerow>div{flex:1 1 50%;min-width:0;margin:0;}
-    .wk-timerow>div label{text-align:center;}
-    .wk-timerow input[type=date],.wk-timerow input[type=time]{text-align:center;padding-left:6px;padding-right:6px;}
-    .wk-timerow>.btn-ghost{flex:1 1 100%;order:5;margin-top:6px;}
+    /* Training: workout timers side by side, compact on narrow screens */
+    .wk-timers{gap:8px;}
+    .wk-timer-box{padding:8px 6px;}
+    .wk-timer-val{font-size:1.15rem;}
     /* thumb-friendly touch targets (min 44px) */
     input[type=text],input[type=email],input[type=date],input[type=time],input[type=number],
     input[type=password],select,textarea{min-height:44px;font-size:16px;}
@@ -776,9 +781,18 @@
           <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
           <button class="btn-ghost" id="saveTplBtn" style="white-space:nowrap;" data-i18n="tpl_save">💾 Zapisz jako szablon</button>
         </div>
-        <div class="row wk-timerow" style="margin-top:10px;">
-          <div><label for="wStart" data-i18n="wk_start">Początek</label><input type="time" id="wStart"></div>
-          <div><label for="wEnd" data-i18n="wk_end">Koniec</label><input type="time" id="wEnd"></div>
+        <div class="wk-timer-area" style="margin-top:10px;">
+          <button class="btn-primary" id="startWorkoutBtn" style="margin-top:0;width:100%;" data-i18n="wk_start_btn">▶ Rozpocznij trening</button>
+          <div class="wk-timers" id="wkTimers" style="display:none;">
+            <div class="wk-timer-box">
+              <div class="wk-timer-label" data-i18n="wk_total_time">Czas treningu</div>
+              <div class="wk-timer-val" id="wkTotalTimer">00:00:00</div>
+            </div>
+            <div class="wk-timer-box rest" id="restBox" style="display:none;">
+              <div class="wk-timer-label" data-i18n="wk_rest_time">Przerwa</div>
+              <div class="wk-timer-val" id="wkRestTimer">00:00</div>
+            </div>
+          </div>
         </div>
         <div id="exercisesContainer"></div>
         <button class="btn-ghost" id="addExerciseBtn" style="margin-top:12px;" data-i18n="add_exercise">+ Dodaj ćwiczenie</button>
@@ -1137,6 +1151,7 @@
 
 <footer class="app-footer">
   <a id="aboutLink" data-i18n="about_link">Informacje / O nas</a>
+  &nbsp;·&nbsp; <a id="guideLink" data-i18n="guide_link">📲 Instrukcja</a>
   &nbsp;·&nbsp; <span data-i18n="rights">Wszystkie prawa zastrzeżone</span> &copy; SKB
 </footer>
 
@@ -1465,7 +1480,7 @@
       kcal:"Kalorie (kcal)", protein:"Białko (g)", carbs:"Węglow. (g)", fat:"Tłuszcze (g)", add_meal:"Dodaj posiłek",
       journal_prompt:"Twój wpis", journal_ph:"Przemyślenia, pomysły...", save_entry:"Zapisz wpis",
       send:"Wyślij", ai_ph:"Napisz wiadomość...", ai_config:"Konfiguracja API", ai_clear:"Wyczyść czat",
-      about_link:"Informacje / O nas", rights:"Wszystkie prawa zastrzeżone",
+      about_link:"Informacje / O nas", guide_link:"\uD83D\uDCF2 Instrukcja", rights:"Wszystkie prawa zastrzeżone",
       settings:"Ustawienia", set_theme:"Wygląd strony", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Jasny",
       set_tiles:"Kafelki: kolejność, widoczność i kolor", tile_color:"Kolor podświetlenia kafelków", tile_color_reset:"Przywróć domyślny kolor", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
       tz_primary:"Strefa główna", tz_second_enable:"Drugi zegar",
@@ -1483,7 +1498,7 @@
       welcome_a2hs_android:"Android (Chrome): dotknij menu \u22EE w prawym górnym rogu, wybierz \u201EDodaj do ekranu głównego\u201D (lub \u201EZainstaluj aplikację\u201D) i potwierdź.",
       welcome_text:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).",
       pin_fixed:"Oznacz jako stałe (nie kasuj przy resecie)", unpin_fixed:"Usuń oznaczenie stałej",
-      wk_start:"Początek", wk_end:"Koniec",
+      wk_start_btn:"\u25B6 Rozpocznij trening", wk_total_time:"Czas treningu", wk_rest_time:"Przerwa", wk_duration:"Czas trwania",
       set_pin:"Zabezpieczenie PIN", pin_journal:"Chroń Dziennik", pin_calendar:"Chroń Kalendarz",
       pin_set_ph:"Ustaw 4-cyfrowy PIN", save_pin:"Zapisz ustawienia PIN",
       pin_note:"PIN jest przechowywany lokalnie w formie zaciemnionej (hash), nie jako zwykły tekst. To zabezpieczenie ekranowe, nie kryptograficzna ochrona danych.",
@@ -1586,7 +1601,7 @@
       kcal:"Calories (kcal)", protein:"Protein (g)", carbs:"Carbs (g)", fat:"Fat (g)", add_meal:"Add meal",
       journal_prompt:"Your entry", journal_ph:"Thoughts, ideas...", save_entry:"Save entry",
       send:"Send", ai_ph:"Type a message...", ai_config:"API config", ai_clear:"Clear chat",
-      about_link:"Info / About us", rights:"All rights reserved",
+      about_link:"Info / About us", guide_link:"\uD83D\uDCF2 Guide", rights:"All rights reserved",
       settings:"Settings", set_theme:"Appearance", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Light",
       set_tiles:"Tiles: order, visibility & color", tile_color:"Tiles highlight color", tile_color_reset:"Reset to default color", set_lang:"Language", set_clock:"Clock time zone",
       tz_primary:"Primary zone", tz_second_enable:"Second clock",
@@ -1604,7 +1619,7 @@
       welcome_a2hs_android:"Android (Chrome): tap the \u22EE menu in the top-right corner, choose \u201CAdd to Home screen\u201D (or \u201CInstall app\u201D) and confirm.",
       welcome_text:"Your organization hub: tasks, calendar, fitness, budget and journal — all in one place. Data is stored only locally in your browser. Customize the look and layout in settings (the ⚙ icon in the corner).",
       pin_fixed:"Mark as fixed (keep on reset)", unpin_fixed:"Unmark fixed",
-      wk_start:"Start", wk_end:"End",
+      wk_start_btn:"\u25B6 Start workout", wk_total_time:"Workout time", wk_rest_time:"Rest", wk_duration:"Duration",
       set_pin:"PIN protection", pin_journal:"Protect Journal", pin_calendar:"Protect Calendar",
       pin_set_ph:"Set a 4-digit PIN", save_pin:"Save PIN settings",
       pin_note:"The PIN is stored locally in an obfuscated (hashed) form, not as plain text. This is a screen lock, not cryptographic data protection.",
@@ -2192,7 +2207,68 @@
     container.appendChild(block);
   }
   $("addExerciseBtn").addEventListener("click", function(){ addExerciseBlock(); });
-  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); $("wStart").value=""; $("wEnd").value=""; editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); }
+  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); stopWorkoutTimer(); }
+
+  /* ---- stopery: czas całego treningu + przerwy między seriami ---- */
+  function fmtHMS(sec){ var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return pad(h)+":"+pad(m)+":"+pad(s); }
+  function fmtMS(sec){ var m=Math.floor(sec/60), s=sec%60; return pad(m)+":"+pad(s); }
+  var wkTimerStart=0, wkTimerInt=null, restStart=0, restInt=null;
+  function tickWkTimer(){ if(wkTimerStart) $("wkTotalTimer").textContent=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000))); }
+  function tickRest(){ if(restStart) $("wkRestTimer").textContent=fmtMS(Math.max(0,Math.floor((Date.now()-restStart)/1000))); }
+  function startWorkoutTimer(ts){
+    wkTimerStart=ts||Date.now();
+    try{ localStorage.setItem("wkTimerStart",String(wkTimerStart)); }catch(e){}
+    $("startWorkoutBtn").style.display="none";
+    $("wkTimers").style.display="flex";
+    tickWkTimer();
+    clearInterval(wkTimerInt); wkTimerInt=setInterval(tickWkTimer,1000);
+  }
+  function stopRestTimer(){
+    clearInterval(restInt); restInt=null; restStart=0;
+    $("restBox").style.display="none"; $("wkRestTimer").textContent="00:00";
+  }
+  function stopWorkoutTimer(){
+    clearInterval(wkTimerInt); wkTimerInt=null; wkTimerStart=0;
+    try{ localStorage.removeItem("wkTimerStart"); }catch(e){}
+    $("startWorkoutBtn").style.display="";
+    $("wkTimers").style.display="none"; $("wkTotalTimer").textContent="00:00:00";
+    stopRestTimer();
+  }
+  // Przerwa resetuje się przy każdym "ukończeniu" serii (ciężar + powtórzenia uzupełnione)
+  // oraz po kliknięciu "+ Dodaj serię". Działa tylko podczas trwającego treningu.
+  function resetRestTimer(){
+    if(!wkTimerStart) return;
+    restStart=Date.now();
+    $("restBox").style.display="";
+    tickRest();
+    clearInterval(restInt); restInt=setInterval(tickRest,1000);
+  }
+  function checkRowComplete(row){
+    var wi=row.querySelector(".set-weight"), ri=row.querySelector(".set-reps");
+    if(!wi||!ri) return;
+    var complete=(wi.value!==""&&ri.value!=="");
+    if(complete && !row.__setDone){ row.__setDone=true; resetRestTimer(); }
+    else if(!complete){ row.__setDone=false; }
+  }
+  $("startWorkoutBtn").addEventListener("click", function(){ startWorkoutTimer(); });
+  $("exercisesContainer").addEventListener("input", function(e){
+    if(!e.target.classList) return;
+    if(e.target.classList.contains("set-weight")||e.target.classList.contains("set-reps")){
+      var row=e.target.closest(".set-row"); if(row) checkRowComplete(row);
+    }
+  });
+  $("exercisesContainer").addEventListener("click", function(e){
+    var t_=e.target;
+    var addBtn=t_.closest?t_.closest(".add-set-btn"):null;
+    if(addBtn){ resetRestTimer(); return; }
+    var stp=t_.closest?t_.closest(".stp"):null;
+    if(stp){ var row=stp.closest(".set-row"); if(row) checkRowComplete(row); }
+  });
+  // Wznowienie stopera po odświeżeniu strony (start zapisany w localStorage).
+  (function resumeWorkoutTimer(){
+    var saved=num(localStorage.getItem("wkTimerStart")||0);
+    if(saved>0 && saved<=Date.now()) startWorkoutTimer(saved);
+  })();
 
   // Zbiera ćwiczenia wpisane w formularzu poniżej (wspólne dla zapisu treningu i szablonu).
   // forTemplate=true: wystarczy nazwa ćwiczenia — kilogramy/powtórzenia mogą zostać puste,
@@ -2270,14 +2346,14 @@
   var editingWorkoutId=null;
   $("addWorkoutBtn").addEventListener("click", function(){
     var date=$("wDate").value;
-    var start=$("wStart").value||""; // "HH:MM" or ""
-    var end=$("wEnd").value||"";
     var exercises=collectExercises();
     if(!date||exercises.length===0){ alert(t("fill_workout")); return; }
     if(editingWorkoutId){
-      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; w.start=start; w.end=end; } });
+      // Edycja: czas trwania (i ewentualne stare pola start/end) zostają bez zmian.
+      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; } });
     } else {
-      workouts.push({id:uid(),date:date,exercises:exercises,start:start,end:end});
+      var durSec = wkTimerStart ? Math.max(0, Math.floor((Date.now()-wkTimerStart)/1000)) : null;
+      workouts.push({id:uid(),date:date,exercises:exercises,durSec:durSec});
     }
     saveWorkouts(); refreshExerciseDatalist();
     resetWorkoutForm(); renderWorkouts();
@@ -2315,11 +2391,17 @@
         '<button class="btn-small w-edit" data-id="'+w.id+'">'+t("edit")+'</button>'+
         '<button class="del-btn w-del" data-id="'+w.id+'">'+t("delete")+'</button></div>';
       head.querySelector(".w-date").textContent=formatDateReadable(w.date);
-      // Show start–end and computed duration when available (point 7).
+      // W historii pokazujemy sam czas trwania treningu (bez konkretnych godzin).
+      // Stare wpisy z polami start/end są przeliczane na czas trwania.
       var durEl=head.querySelector(".w-dur");
-      var dmin=workoutDurationMin(w.start,w.end);
-      if(w.start&&w.end){ durEl.textContent=fmtTime(w.start)+"–"+fmtTime(w.end)+(dmin!=null?" · "+formatDuration(dmin):""); }
-      else if(w.start){ durEl.textContent=fmtTime(w.start); }
+      var durTxt="";
+      if(w.durSec!=null){
+        durTxt = w.durSec<60 ? (w.durSec+" s") : formatDuration(Math.round(w.durSec/60));
+      } else {
+        var dmin=workoutDurationMin(w.start,w.end);
+        if(dmin!=null) durTxt=formatDuration(dmin);
+      }
+      if(durTxt){ durEl.textContent=t("wk_duration")+": "+durTxt; }
       else { durEl.style.display="none"; }
       entry.appendChild(head);
       (w.exercises||[]).forEach(function(ex){
@@ -2348,7 +2430,7 @@
           addExerciseBlock({name:ex.name,sets:blankSets,note:ex.note});
         });
         if((w.exercises||[]).length===0) addExerciseBlock();
-        $("wDate").value=todayISO(); $("wStart").value=""; $("wEnd").value="";
+        $("wDate").value=todayISO();
         editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
         document.querySelector('.tab-btn[data-tab="training"]').click();
         $("view-fitness").scrollIntoView({behavior:"smooth",block:"start"});
@@ -2360,8 +2442,6 @@
         var w=workouts.filter(function(x){return x.id===id;})[0]; if(!w) return;
         editingWorkoutId=id;
         $("wDate").value=w.date;
-        $("wStart").value=w.start||"";
-        $("wEnd").value=w.end||"";
         $("exercisesContainer").innerHTML="";
         (w.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note}); });
         if((w.exercises||[]).length===0) addExerciseBlock();
@@ -3699,13 +3779,16 @@
       $("welcomeOverlay").classList.remove("active");
       try{ localStorage.setItem(KEY,"1"); }catch(e){}
     }
+    // Zamykanie działa zawsze — modal można też otworzyć ponownie z linku w stopce.
+    $("welcomeStartBtn").addEventListener("click", dismiss);
+    $("welcomeCloseBtn").addEventListener("click", dismiss);
+    // backdrop click also dismisses (handled by generic overlay handler) — persist the flag then too
+    $("welcomeOverlay").addEventListener("click", function(e){ if(e.target===$("welcomeOverlay")) dismiss(); });
     if(!seen){
       $("welcomeOverlay").classList.add("active");
-      $("welcomeStartBtn").addEventListener("click", dismiss);
-      $("welcomeCloseBtn").addEventListener("click", dismiss);
-      // backdrop click also dismisses (handled by generic overlay handler) — persist the flag then too
-      $("welcomeOverlay").addEventListener("click", function(e){ if(e.target===$("welcomeOverlay")) dismiss(); });
     }
+    var gl=$("guideLink");
+    if(gl) gl.addEventListener("click", function(){ $("welcomeOverlay").classList.add("active"); });
   })();
 
 })();
