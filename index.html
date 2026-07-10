@@ -498,6 +498,30 @@
   .daily-done-note{color:var(--accent);font-size:0.82rem;font-family:var(--font-mono);}
 
   /* ===== BUDGET VIEW ===== */
+  /* ebook library */
+  .ebook-lib-title{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--accent2);margin:0 0 12px;}
+  .ebook-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft);}
+  .ebook-item:last-child{border-bottom:none;}
+  .ebook-item .eb-icon{font-size:1.6rem;flex-shrink:0;}
+  .ebook-item .eb-main{flex:1;min-width:0;}
+  .ebook-item .eb-title{font-size:0.92rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;}
+  .ebook-item .eb-sub{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px;}
+  .ebook-item .eb-open{flex-shrink:0;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;
+    padding:8px 14px;font-size:0.8rem;font-family:var(--font-mono);box-shadow:var(--glow);white-space:nowrap;}
+  .ebook-item .eb-open:hover{background:color-mix(in srgb,var(--accent) 10%,transparent);}
+  .ebook-item .eb-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;flex-shrink:0;}
+  /* fullscreen in-app PDF reader */
+  .reader-overlay{position:fixed;inset:0;z-index:10001;background:var(--bg);display:none;flex-direction:column;}
+  .reader-overlay.active{display:flex;}
+  .reader-top{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 14px 8px;border-bottom:1px solid var(--border);}
+  .reader-title{flex:1;min-width:0;font-family:var(--font-mono);font-size:0.85rem;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .reader-canvas-wrap{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;padding:10px;}
+  #readerCanvas{background:#fff;box-shadow:0 2px 14px rgba(0,0,0,0.35);display:inline-block;}
+  .reader-status{color:var(--text-dim);font-family:var(--font-mono);font-size:0.8rem;padding:30px 10px;}
+  .reader-nav{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--border);}
+  .reader-nav .btn-ghost{min-width:44px;min-height:40px;}
+  .reader-page{font-family:var(--font-mono);font-size:0.8rem;color:var(--text-dim);min-width:64px;text-align:center;}
   .bud-section{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-panel);padding:16px 18px;margin-bottom:14px;}
   .bud-section h3{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--accent2);margin:0 0 12px;}
   .bud-add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
@@ -919,6 +943,21 @@
     <div class="card"><div id="journalList"></div></div>
   </section>
 
+  <!-- EBOOKS -->
+  <section id="view-ebooks" class="view">
+    <div class="view-header">
+      <button class="back-btn" data-home>&larr; <span data-i18n="back">Wstecz</span></button>
+      <h2 data-i18n="tile_ebooks">E-booki</h2>
+    </div>
+    <div class="card">
+      <h3 class="ebook-lib-title" data-i18n="ebooks_lib">E-biblioteka</h3>
+      <div id="ebookList"></div>
+      <input type="file" id="ebookFile" accept="application/pdf,.pdf" style="display:none;">
+      <button class="btn-primary" id="ebookAddBtn" data-i18n="ebook_add">+ Dodaj e-book (PDF)</button>
+      <div class="calc-note" data-i18n="ebooks_note">E-booki dodane z pliku PDF zapisują się w pamięci tej przeglądarki i otwierają bezpośrednio w aplikacji — bez przekierowań, także offline.</div>
+    </div>
+  </section>
+
   <!-- BUDGET -->
   <section id="view-budget" class="view">
     <div class="view-header">
@@ -1092,6 +1131,11 @@
     </div>
     <div style="font-size:0.86rem;line-height:1.65;color:var(--text-dim);margin-bottom:14px;" data-i18n="welcome_text">
       Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).
+    </div>
+    <div style="border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--bg-input);padding:12px 14px;margin-bottom:14px;font-size:0.8rem;line-height:1.6;color:var(--text-dim);">
+      <div style="font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent2);margin-bottom:6px;" data-i18n="welcome_a2hs_title">📲 Dodaj skrót na ekran główny</div>
+      <div style="margin-bottom:6px;" data-i18n="welcome_a2hs_ios">iPhone (Safari): dotknij przycisku Udostępnij (kwadrat ze strzałką ↑ na dolnym pasku), przewiń w dół i wybierz „Dodaj do ekranu początkowego”, potem „Dodaj”.</div>
+      <div data-i18n="welcome_a2hs_android">Android (Chrome): dotknij menu ⋮ w prawym górnym rogu, wybierz „Dodaj do ekranu głównego” (lub „Zainstaluj aplikację”) i potwierdź.</div>
     </div>
     <button class="btn-primary" id="welcomeStartBtn" style="width:100%;" data-i18n="welcome_start">Zaczynamy</button>
   </div>
@@ -1295,6 +1339,25 @@
 </div>
 
 <!-- PIN UNLOCK MODAL -->
+<!-- EBOOK READER (fullscreen in-app PDF viewer) -->
+<div class="reader-overlay" id="readerOverlay">
+  <div class="reader-top">
+    <span class="reader-title" id="readerTitle"></span>
+    <button class="modal-close" id="readerClose">&times;</button>
+  </div>
+  <div class="reader-canvas-wrap" id="readerWrap">
+    <div class="reader-status" id="readerStatus" data-i18n="ebook_loading">Wczytywanie…</div>
+    <canvas id="readerCanvas" style="display:none;"></canvas>
+  </div>
+  <div class="reader-nav">
+    <button class="btn-ghost" id="readerPrev" aria-label="prev">&#8249;</button>
+    <span class="reader-page" id="readerPageInfo"></span>
+    <button class="btn-ghost" id="readerNext" aria-label="next">&#8250;</button>
+    <button class="btn-ghost" id="readerZoomOut" aria-label="zoom out">&minus;</button>
+    <button class="btn-ghost" id="readerZoomIn" aria-label="zoom in">+</button>
+  </div>
+</div>
+
 <div class="overlay" id="pinOverlay">
   <div class="modal" style="max-width:360px;">
     <div class="modal-head">
@@ -1362,6 +1425,13 @@
       tile_fitness:"Fitness", tile_fitness_sub:"Trening i kalorie",
       tile_journal:"Dziennik", tile_journal_sub:"Przemyślenia i pomysły",
       tile_ai:"Agent AI", tile_ai_sub:"Asystent AI",
+      tile_ebooks:"E-booki", tile_ebooks_sub:"Twoja e-biblioteka",
+      ebooks_lib:"E-biblioteka", ebook_open:"Otwórz", ebooks_empty:"Brak e-booków w bibliotece.",
+      ebook_add:"+ Dodaj e-book (PDF)", ebook_read:"Czytaj", ebook_saved:"PDF \u2022 zapisany w aplikacji",
+      ebook_link_sub:"link zewnętrzny", ebook_loading:"Wczytywanie\u2026",
+      ebook_load_err:"Nie udało się wczytać e-booka.", ebook_add_err:"Nie udało się dodać pliku — obsługiwane są pliki PDF.",
+      ebook_del_q:"Usunąć ten e-book z biblioteki?",
+      ebooks_note:"E-booki dodane z pliku PDF zapisują się w pamięci tej przeglądarki i otwierają bezpośrednio w aplikacji — bez przekierowań, także offline.",
       task_name:"Nazwa zadania", task_name_ph:"np. Wysłać raport", date:"Data", time:"Godzina", add_task:"Dodaj zadanie",
       event_name:"Nazwa wydarzenia", event_name_ph:"np. Spotkanie z klientem", desc_opt:"Opis (opcjonalnie)", add_event:"Dodaj wydarzenie",
       tab_training:"Trening", tab_calories:"Kalorie", add_exercise:"+ Dodaj ćwiczenie", save_workout:"Zapisz trening",
@@ -1388,6 +1458,9 @@
       set_font:"Czcionka", font_default:"Domyślna (motyw)", font_system:"Systemowa", font_serif:"Szeryfowa", font_mono:"Monospace", font_rounded:"Zaokrąglona",
       set_radius:"Zaokrąglenie rogów", ticker_enable:"Pokazuj widget kursów walut",
       welcome_title:"Witaj w FutureApp!", welcome_start:"Zaczynamy",
+      welcome_a2hs_title:"\uD83D\uDCF2 Dodaj skrót na ekran główny",
+      welcome_a2hs_ios:"iPhone (Safari): dotknij przycisku Udostępnij (kwadrat ze strzałką \u2191 na dolnym pasku), przewiń w dół i wybierz \u201EDodaj do ekranu początkowego\u201D, potem \u201EDodaj\u201D.",
+      welcome_a2hs_android:"Android (Chrome): dotknij menu \u22EE w prawym górnym rogu, wybierz \u201EDodaj do ekranu głównego\u201D (lub \u201EZainstaluj aplikację\u201D) i potwierdź.",
       welcome_text:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).",
       pin_fixed:"Oznacz jako stałe (nie kasuj przy resecie)", unpin_fixed:"Usuń oznaczenie stałej",
       wk_start:"Początek", wk_end:"Koniec",
@@ -1468,6 +1541,13 @@
       tile_fitness:"Fitness", tile_fitness_sub:"Training & calories",
       tile_journal:"Journal", tile_journal_sub:"Thoughts & ideas",
       tile_ai:"AI Agent", tile_ai_sub:"AI assistant",
+      tile_ebooks:"E-books", tile_ebooks_sub:"Your e-library",
+      ebooks_lib:"E-library", ebook_open:"Open", ebooks_empty:"No e-books in the library yet.",
+      ebook_add:"+ Add e-book (PDF)", ebook_read:"Read", ebook_saved:"PDF \u2022 stored in the app",
+      ebook_link_sub:"external link", ebook_loading:"Loading\u2026",
+      ebook_load_err:"Failed to load the e-book.", ebook_add_err:"Couldn't add the file — only PDF files are supported.",
+      ebook_del_q:"Remove this e-book from the library?",
+      ebooks_note:"E-books added from a PDF file are stored in this browser and open directly inside the app — no redirects, works offline too.",
       task_name:"Task name", task_name_ph:"e.g. Send the report", date:"Date", time:"Time", add_task:"Add task",
       event_name:"Event name", event_name_ph:"e.g. Client meeting", desc_opt:"Description (optional)", add_event:"Add event",
       tab_training:"Training", tab_calories:"Calories", add_exercise:"+ Add exercise", save_workout:"Save workout",
@@ -1494,6 +1574,9 @@
       set_font:"Font", font_default:"Default (theme)", font_system:"System", font_serif:"Serif", font_mono:"Monospace", font_rounded:"Rounded",
       set_radius:"Corner radius", ticker_enable:"Show currency ticker widget",
       welcome_title:"Welcome to FutureApp!", welcome_start:"Let's go",
+      welcome_a2hs_title:"\uD83D\uDCF2 Add a shortcut to your home screen",
+      welcome_a2hs_ios:"iPhone (Safari): tap the Share button (square with an \u2191 arrow on the bottom bar), scroll down and choose \u201CAdd to Home Screen\u201D, then \u201CAdd\u201D.",
+      welcome_a2hs_android:"Android (Chrome): tap the \u22EE menu in the top-right corner, choose \u201CAdd to Home screen\u201D (or \u201CInstall app\u201D) and confirm.",
       welcome_text:"Your organization hub: tasks, calendar, fitness, budget and journal — all in one place. Data is stored only locally in your browser. Customize the look and layout in settings (the ⚙ icon in the corner).",
       pin_fixed:"Mark as fixed (keep on reset)", unpin_fixed:"Unmark fixed",
       wk_start:"Start", wk_end:"End",
@@ -1582,7 +1665,7 @@
   }
 
   /* ================= STATE / SETTINGS ================= */
-  var DEFAULT_ORDER = ["todo","calendar","fitness","budget","journal"];
+  var DEFAULT_ORDER = ["todo","calendar","fitness","budget","journal","ebooks"];
   var DEFAULT_PAIRS = ["USDPLN","EURPLN","BTCUSD"];
   var settings = loadJSON("settings", {});
   var state = {
@@ -1662,6 +1745,16 @@
       if(c[key]) root.style.setProperty(map[key], c[key]);
       else root.style.removeProperty(map[key]);
     });
+    // "Kolor tekstu" obejmuje też wszystkie różowe napisy (--accent2): nagłówki sekcji
+    // typu ZEGAR I DATA, CODZIENNE ZADANIA, drugi człon nazwy strony itd.
+    // Przy własnym kolorze wyciszamy różową poświatę, żeby nie prześwitywała spod nowego koloru.
+    if(c.text){
+      root.style.setProperty("--accent2", c.text);
+      root.style.setProperty("--glow2", "none");
+    } else {
+      root.style.removeProperty("--accent2");
+      root.style.removeProperty("--glow2");
+    }
   }
   var FONT_STACKS={
     "default":"", // empty => inherit theme's --font-sans (handled by not overriding)
@@ -1824,7 +1917,8 @@
     calendar:{icon:"\uD83D\uDCC5", titleKey:"tile_calendar", subKey:"tile_calendar_sub", pin:"calendar"},
     fitness:{icon:"\uD83D\uDCAA", titleKey:"tile_fitness", subKey:"tile_fitness_sub"},
     budget:{icon:"\uD83D\uDCB0", titleKey:"tile_budget", subKey:"tile_budget_sub"},
-    journal:{icon:"\uD83D\uDCD3", titleKey:"tile_journal", subKey:"tile_journal_sub", pin:"journal"}
+    journal:{icon:"\uD83D\uDCD3", titleKey:"tile_journal", subKey:"tile_journal_sub", pin:"journal"},
+    ebooks:{icon:"\uD83D\uDCDA", titleKey:"tile_ebooks", subKey:"tile_ebooks_sub"}
   };
   function renderTiles(){
     var grid=$("tileGrid"); grid.innerHTML="";
@@ -2544,6 +2638,173 @@
     if(!text){ alert(t("fill_journal")); return; }
     journal.push({id:uid(),ts:Date.now(),text:text}); saveJournal();
     $("journalText").value=""; renderJournal();
+  });
+
+  /* ================= EBOOKS ================= */
+  // Linki zewnętrzne (otwierają się w nowej karcie). Kolejne: {title:"Tytuł", url:"https://...", author:"(opcjonalnie)"}
+  var EBOOKS = [];
+  // Pliki PDF dodane przez użytkownika trafiają do IndexedDB (localStorage jest za mały na e-booki)
+  // i są czytane bezpośrednio w aplikacji przez wbudowany czytnik (PDF.js).
+  var EBOOK_DB=null;
+  function ebookDB(){
+    return new Promise(function(res,rej){
+      if(EBOOK_DB) return res(EBOOK_DB);
+      if(!window.indexedDB) return rej(new Error("no idb"));
+      var rq=indexedDB.open("futureapp-ebooks",1);
+      rq.onupgradeneeded=function(){ rq.result.createObjectStore("files",{keyPath:"id"}); };
+      rq.onsuccess=function(){ EBOOK_DB=rq.result; res(EBOOK_DB); };
+      rq.onerror=function(){ rej(rq.error); };
+    });
+  }
+  function ebookAll(){ return ebookDB().then(function(db){ return new Promise(function(res,rej){
+    var rq=db.transaction("files","readonly").objectStore("files").getAll();
+    rq.onsuccess=function(){ res(rq.result||[]); }; rq.onerror=function(){ rej(rq.error); };
+  });});}
+  function ebookGet(id){ return ebookDB().then(function(db){ return new Promise(function(res,rej){
+    var rq=db.transaction("files","readonly").objectStore("files").get(id);
+    rq.onsuccess=function(){ res(rq.result); }; rq.onerror=function(){ rej(rq.error); };
+  });});}
+  function ebookPut(rec){ return ebookDB().then(function(db){ return new Promise(function(res,rej){
+    var tx=db.transaction("files","readwrite"); tx.objectStore("files").put(rec);
+    tx.oncomplete=function(){ res(); }; tx.onerror=function(){ rej(tx.error); };
+  });});}
+  function ebookDel(id){ return ebookDB().then(function(db){ return new Promise(function(res,rej){
+    var tx=db.transaction("files","readwrite"); tx.objectStore("files").delete(id);
+    tx.oncomplete=function(){ res(); }; tx.onerror=function(){ rej(tx.error); };
+  });});}
+
+  var ebookRenderSeq=0;
+  function renderEbooks(){
+    var list=$("ebookList"); if(!list) return;
+    var seq=++ebookRenderSeq;
+    ebookAll().catch(function(){ return []; }).then(function(files){
+      if(seq!==ebookRenderSeq) return;
+      list.innerHTML="";
+      if(files.length===0 && EBOOKS.length===0){ list.innerHTML='<div class="empty-note">'+t("ebooks_empty")+'</div>'; return; }
+      // zapisane pliki PDF — czytane w aplikacji
+      files.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }).forEach(function(f){
+        var item=document.createElement("div");
+        item.className="ebook-item";
+        item.innerHTML='<span class="eb-icon">\uD83D\uDCD6</span>'+
+          '<div class="eb-main"><div class="eb-title"></div><div class="eb-sub"></div></div>'+
+          '<div class="eb-actions"><button class="eb-open eb-read"></button>'+
+          '<button class="del-btn eb-del"></button></div>';
+        item.querySelector(".eb-title").textContent=f.title;
+        item.querySelector(".eb-sub").textContent=t("ebook_saved");
+        var rd=item.querySelector(".eb-read");
+        rd.textContent=t("ebook_read"); rd.addEventListener("click", function(){ openReader(f.id); });
+        var del=item.querySelector(".eb-del");
+        del.textContent=t("delete");
+        del.addEventListener("click", function(){
+          if(!confirm(t("ebook_del_q"))) return;
+          ebookDel(f.id).then(renderEbooks);
+        });
+        list.appendChild(item);
+      });
+      // linki zewnętrzne
+      EBOOKS.forEach(function(b){
+        var item=document.createElement("div");
+        item.className="ebook-item";
+        item.innerHTML='<span class="eb-icon">\uD83D\uDCD6</span>'+
+          '<div class="eb-main"><div class="eb-title"></div><div class="eb-sub"></div></div>'+
+          '<a class="eb-open" target="_blank" rel="noopener noreferrer"></a>';
+        item.querySelector(".eb-title").textContent=b.title;
+        item.querySelector(".eb-sub").textContent=(b.author?b.author+" \u2022 ":"")+t("ebook_link_sub");
+        var a=item.querySelector(".eb-open");
+        a.href=b.url; a.textContent=t("ebook_open")+" \u2197";
+        list.appendChild(item);
+      });
+    });
+  }
+  $("ebookAddBtn").addEventListener("click", function(){ $("ebookFile").click(); });
+  $("ebookFile").addEventListener("change", function(){
+    var file=this.files && this.files[0]; this.value="";
+    if(!file) return;
+    var isPdf=(file.type==="application/pdf")||/\.pdf$/i.test(file.name||"");
+    if(!isPdf){ alert(t("ebook_add_err")); return; }
+    var rec={ id:uid(), title:(file.name||"E-book").replace(/\.pdf$/i,""), ts:Date.now(), blob:file };
+    ebookPut(rec).then(renderEbooks).catch(function(){ alert(t("ebook_add_err")); });
+  });
+
+  /* ---- wbudowany czytnik PDF (PDF.js ładowany dopiero przy pierwszym użyciu) ---- */
+  var pdfjsReady=null;
+  function loadPdfJs(){
+    if(pdfjsReady) return pdfjsReady;
+    pdfjsReady=new Promise(function(res,rej){
+      if(window.pdfjsLib) return res(window.pdfjsLib);
+      var s=document.createElement("script");
+      s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      s.onload=function(){
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        res(window.pdfjsLib);
+      };
+      s.onerror=function(){ pdfjsReady=null; rej(new Error("pdfjs load failed")); };
+      document.head.appendChild(s);
+    });
+    return pdfjsReady;
+  }
+  function blobToBuf(blob){ return new Promise(function(res,rej){
+    var r=new FileReader(); r.onload=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); };
+    r.readAsArrayBuffer(blob);
+  });}
+  var readerDoc=null, readerPageNum=1, readerZoom=1, readerRendering=false, readerPending=false;
+  function openReader(id){
+    $("readerOverlay").classList.add("active");
+    document.body.style.overflow="hidden";
+    $("readerCanvas").style.display="none";
+    $("readerStatus").style.display="block"; $("readerStatus").textContent=t("ebook_loading");
+    $("readerPageInfo").textContent=""; $("readerTitle").textContent="";
+    Promise.all([loadPdfJs(), ebookGet(id)]).then(function(rr){
+      var pdfjs=rr[0], rec=rr[1];
+      if(!rec) throw new Error("missing");
+      $("readerTitle").textContent=rec.title;
+      return blobToBuf(rec.blob).then(function(buf){ return pdfjs.getDocument({data:buf}).promise; });
+    }).then(function(doc){
+      readerDoc=doc; readerPageNum=1; readerZoom=1;
+      $("readerStatus").style.display="none"; $("readerCanvas").style.display="inline-block";
+      renderReaderPage();
+    }).catch(function(){
+      $("readerStatus").textContent=t("ebook_load_err");
+    });
+  }
+  function renderReaderPage(){
+    if(!readerDoc) return;
+    if(readerRendering){ readerPending=true; return; }
+    readerRendering=true;
+    readerDoc.getPage(readerPageNum).then(function(page){
+      var wrap=$("readerWrap"), canvas=$("readerCanvas"), ctx=canvas.getContext("2d");
+      var base=page.getViewport({scale:1});
+      var fit=Math.max(60,(wrap.clientWidth-24))/base.width;
+      var scale=fit*readerZoom;
+      var dpr=Math.min(window.devicePixelRatio||1,2);
+      var vp=page.getViewport({scale:scale});
+      canvas.width=Math.floor(vp.width*dpr); canvas.height=Math.floor(vp.height*dpr);
+      canvas.style.width=Math.floor(vp.width)+"px"; canvas.style.height=Math.floor(vp.height)+"px";
+      var renderVp=page.getViewport({scale:scale*dpr});
+      return page.render({canvasContext:ctx, viewport:renderVp}).promise.then(function(){
+        $("readerPageInfo").textContent=readerPageNum+" / "+readerDoc.numPages;
+      });
+    }).catch(function(){}).then(function(){
+      readerRendering=false;
+      if(readerPending){ readerPending=false; renderReaderPage(); }
+    });
+  }
+  function closeReader(){
+    $("readerOverlay").classList.remove("active");
+    document.body.style.overflow="";
+    if(readerDoc){ try{ readerDoc.destroy(); }catch(e){} readerDoc=null; }
+  }
+  $("readerClose").addEventListener("click", closeReader);
+  $("readerPrev").addEventListener("click", function(){ if(readerDoc && readerPageNum>1){ readerPageNum--; $("readerWrap").scrollTop=0; renderReaderPage(); } });
+  $("readerNext").addEventListener("click", function(){ if(readerDoc && readerPageNum<readerDoc.numPages){ readerPageNum++; $("readerWrap").scrollTop=0; renderReaderPage(); } });
+  $("readerZoomOut").addEventListener("click", function(){ readerZoom=Math.max(0.5, Math.round((readerZoom-0.25)*100)/100); renderReaderPage(); });
+  $("readerZoomIn").addEventListener("click", function(){ readerZoom=Math.min(3, Math.round((readerZoom+0.25)*100)/100); renderReaderPage(); });
+  window.addEventListener("resize", function(){ if($("readerOverlay").classList.contains("active")) renderReaderPage(); });
+  document.addEventListener("keydown", function(e){
+    if(!$("readerOverlay").classList.contains("active")) return;
+    if(e.key==="Escape") closeReader();
+    if(e.key==="ArrowLeft") $("readerPrev").click();
+    if(e.key==="ArrowRight") $("readerNext").click();
   });
 
   /* ================= UPCOMING (home) ================= */
@@ -3303,7 +3564,7 @@
   /* ================= RENDER ALL / INIT ================= */
   function renderAll(){
     renderTiles(); renderTasks(); renderCalendar(); renderWorkouts();
-    renderMealDay(); renderMealHistory(); renderJournal();
+    renderMealDay(); renderMealHistory(); renderJournal(); renderEbooks();
     renderUpcomingBig(); renderHeaderInfo(); tickClock();
     refreshExerciseDatalist(); refreshFoodList(); renderRecent();
     renderDaily(); renderBudget(); renderExerciseDb();
