@@ -248,6 +248,33 @@
   .cal-day .dot-wrap{margin-top:auto;display:flex;gap:2px;flex-wrap:wrap;}
   .cal-day .dot{width:5px;height:5px;border-radius:50%;background:var(--accent2);}
   .day-events-list{margin-top:16px;}
+  /* --- Kalendarz: przełącznik widoku, widok tygodniowy --- */
+  .cal-view-seg{margin-bottom:12px;}
+  .cal-week{display:flex;flex-direction:column;gap:6px;}
+  .cw-day{border:1px solid var(--border-soft);border-radius:8px;background:var(--bg-input);padding:8px 10px;cursor:pointer;}
+  .cw-day.today{border-color:var(--accent);box-shadow:var(--glow);}
+  .cw-day:hover{border-color:var(--accent);}
+  .cw-head{display:flex;align-items:baseline;gap:8px;font-family:var(--font-mono);}
+  .cw-head .cw-dow{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);}
+  .cw-head .cw-num{font-size:0.95rem;color:var(--text);}
+  .cw-day.today .cw-num{color:var(--accent);}
+  .cw-evs{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
+  .cw-ev{display:flex;align-items:center;gap:6px;font-size:0.76rem;color:var(--text);min-width:0;}
+  .cw-ev .cw-ev-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .cw-ev .cw-ev-time{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-dim);flex:0 0 auto;}
+  .cw-ev .cw-ev-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* --- Kolor znacznika --- */
+  .color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+  .csw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex:0 0 auto;}
+  .csw.sel{border-color:var(--text);box-shadow:0 0 0 2px var(--bg-panel),0 0 8px currentColor;transform:scale(1.1);}
+  /* --- Dni tygodnia (powtarzanie) --- */
+  .dow-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .dchip{border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:8px;padding:8px 0;font-family:var(--font-mono);font-size:0.72rem;flex:1;min-width:38px;cursor:pointer;}
+  .dchip.on{color:var(--accent);border-color:var(--accent);box-shadow:var(--glow);}
+  /* --- Wpis wydarzenia: pasek koloru + plakietki --- */
+  .event-item{border-left:3px solid transparent;padding-left:10px;}
+  .event-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+  .ev-badge{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);border:1px solid var(--border-soft);border-radius:6px;padding:2px 6px;white-space:nowrap;}
   .event-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border-soft);}
   .event-item:last-child{border-bottom:none;}
   .event-time{font-size:0.76rem;color:var(--accent);font-weight:700;white-space:nowrap;font-family:var(--font-mono);}
@@ -793,19 +820,66 @@
       <h2 data-i18n="tile_calendar">Kalendarz</h2>
     </div>
     <div class="card">
+      <div class="seg cal-view-seg" id="calViewSeg">
+        <button class="seg-btn active" data-calview="month" data-i18n="cal_view_month">Miesiąc</button>
+        <button class="seg-btn" data-calview="week" data-i18n="cal_view_week">Tydzień</button>
+      </div>
       <div class="cal-nav">
         <button id="prevMonth">&#8249;</button>
         <span class="cal-title" id="calTitle"></span>
         <button id="nextMonth">&#8250;</button>
       </div>
       <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-week" id="calWeek" style="display:none;"></div>
     </div>
     <div class="card" id="dayDetailCard" style="display:none;">
       <div class="view-header" style="margin:0 0 10px;"><h2 id="dayDetailTitle" style="font-size:1rem;"></h2></div>
       <label for="evName" data-i18n="event_name">Nazwa wydarzenia</label>
       <input type="text" id="evName" data-i18n-ph="event_name_ph" placeholder="np. Spotkanie z klientem">
-      <div class="row"><div><label for="evTime" data-i18n="time">Godzina</label><input type="time" id="evTime"></div></div>
-      <label for="evDesc" data-i18n="desc_opt">Opis (opcjonalnie)</label>
+      <div class="row spaced">
+        <div><label for="evTime" data-i18n="ev_time_start">Godzina rozpoczęcia</label><input type="time" id="evTime"></div>
+        <div><label for="evTimeEnd" data-i18n="ev_time_end">Godzina zakończenia</label><input type="time" id="evTimeEnd"></div>
+      </div>
+      <div class="row spaced">
+        <div>
+          <label for="evTravel" data-i18n="ev_travel">Czas dojazdu</label>
+          <select id="evTravel">
+            <option value="0" data-i18n="ev_travel_none">Brak</option>
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">1 h</option>
+            <option value="90">1,5 h</option>
+            <option value="120">2 h</option>
+          </select>
+        </div>
+        <div>
+          <label for="evNotify" data-i18n="ev_notify">Powiadomienie</label>
+          <select id="evNotify">
+            <option value="none" data-i18n="ntf_none">Brak</option>
+            <option value="0" data-i18n="ntf_at">W momencie rozpoczęcia</option>
+            <option value="5" data-i18n="ntf_5">5 min przed</option>
+            <option value="10" data-i18n="ntf_10">10 min przed</option>
+            <option value="30" data-i18n="ntf_30">30 min przed</option>
+            <option value="60" data-i18n="ntf_60">1 godz. przed</option>
+            <option value="1440" data-i18n="ntf_day">Dzień wcześniej</option>
+          </select>
+        </div>
+      </div>
+      <label for="evRepeat" data-i18n="ev_repeat">Powtarzanie</label>
+      <select id="evRepeat">
+        <option value="none" data-i18n="rep_none">Bez powtarzania</option>
+        <option value="daily" data-i18n="rep_daily">Codziennie</option>
+        <option value="weekly" data-i18n="rep_weekly">Co tydzień</option>
+        <option value="monthly" data-i18n="rep_monthly">Co miesiąc</option>
+        <option value="days" data-i18n="rep_days">Wybrane dni tygodnia</option>
+      </select>
+      <div class="dow-chips" id="evDowChips" style="display:none;"></div>
+      <label data-i18n="ev_color">Kolor znacznika</label>
+      <div class="color-swatches" id="evColors"></div>
+      <label for="evDesc" data-i18n="ev_note">Notatka (opcjonalnie)</label>
       <textarea id="evDesc"></textarea>
       <button class="btn-primary" id="addEventBtn" data-i18n="add_event">Dodaj wydarzenie</button>
       <div class="day-events-list" id="dayEventsList"></div>
@@ -1628,6 +1702,12 @@
       ebooks_note:"E-booki dodane z pliku PDF zapisują się w pamięci tej przeglądarki i otwierają bezpośrednio w aplikacji — bez przekierowań, także offline.",
       task_name:"Nazwa zadania", task_name_ph:"np. Wysłać raport", date:"Data", time:"Godzina", add_task:"Dodaj zadanie",
       event_name:"Nazwa wydarzenia", event_name_ph:"np. Spotkanie z klientem", desc_opt:"Opis (opcjonalnie)", add_event:"Dodaj wydarzenie",
+      cal_view_month:"Miesiąc", cal_view_week:"Tydzień",
+      ev_time_start:"Godzina rozpoczęcia", ev_time_end:"Godzina zakończenia", ev_travel:"Czas dojazdu", ev_travel_none:"Brak", ev_note:"Notatka (opcjonalnie)",
+      ev_repeat:"Powtarzanie", rep_none:"Bez powtarzania", rep_daily:"Codziennie", rep_weekly:"Co tydzień", rep_monthly:"Co miesiąc", rep_days:"Wybrane dni tygodnia",
+      ev_color:"Kolor znacznika",
+      ev_notify:"Powiadomienie", ntf_none:"Brak", ntf_at:"W momencie rozpoczęcia", ntf_5:"5 min przed", ntf_10:"10 min przed", ntf_30:"30 min przed", ntf_60:"1 godz. przed", ntf_day:"Dzień wcześniej",
+      ev_travel_badge:"dojazd", ev_notify_badge:"powiadomienie", notif_travel_hint:"czas wyjść (dojazd)",
       tab_training:"Trening", tab_calories:"Kalorie", add_exercise:"+ Dodaj ćwiczenie", save_workout:"Zapisz trening",
       exercise:"Ćwiczenie", ex_name:"Nazwa ćwiczenia", ex_name_ph:"np. Przysiad ze sztangą", sets:"Serie", add_set:"+ Dodaj serię",
       rm_exercise:"Usuń ćwiczenie", note:"Notatka", weight_ph:"Ciężar (kg)", reps_ph:"Powtórzenia",
@@ -1638,7 +1718,6 @@
       run_add_title:"Dodaj bieg", run_distance:"Dystans (km)", run_time:"Czas", run_time_ph:"np. 28:30", run_note:"Notatka (opcjonalnie)", run_note_ph:"np. Las, interwały...", run_save:"Zapisz bieg", run_pace:"Tempo", run_history:"Historia biegów", run_empty:"Brak zapisanych biegów.", run_fill:"Podaj datę i dystans biegu.", run_total_dist:"Łączny dystans", run_count:"Liczba biegów", run_best:"Najdłuższy bieg", run_record:"Nowy rekord biegu!",
       cbt_add_title:"Dodaj sesję", cbt_discipline:"Dyscyplina", cbt_boxing:"Boks", cbt_kickboxing:"Kickboxing", cbt_muaythai:"Muay Thai", cbt_mma:"MMA", cbt_bjj:"BJJ", cbt_judo:"Judo", cbt_wrestling:"Zapasy", cbt_karate:"Karate", cbt_other:"Inne", cbt_type:"Rodzaj treningu", cbt_technique:"Technika", cbt_sparring:"Sparing", cbt_bag:"Worek / tarcze", cbt_conditioning:"Kondycja", cbt_rounds:"Rundy", cbt_rounds_short:"rund", cbt_minutes:"Czas (min)", cbt_note:"Notatka (opcjonalnie)", cbt_note_ph:"np. Praca nad obroną...", cbt_save:"Zapisz sesję", cbt_history:"Historia sesji", cbt_empty:"Brak zapisanych sesji.", cbt_fill:"Podaj datę sesji.", cbt_sessions:"Liczba sesji", cbt_total_min:"Łączny czas", cbt_total_rounds:"Łącznie rund",
       cbt_round_len:"Długość rundy (mm:ss)", cbt_round_len_ph:"np. 3:00", cbt_rest_len:"Przerwa między rundami (mm:ss)", cbt_rest_len_ph:"np. 1:00", cbt_timer_start:"▶ Start rund", cbt_timer_stop:"■ Zatrzymaj", cbt_round_word:"Runda", cbt_break_word:"Przerwa", cbt_done:"Koniec! Dobra robota 🥊", cbt_timer_fill:"Podaj liczbę rund i długość rundy (np. 3:00).",
-      ms_next:"Następne ćwiczenie", ms_none:"Wszystkie ćwiczenia ukończone",
       calc_data:"Twoje dane", calc_results:"Wyniki", calc_target_label:"Dzienne zapotrzebowanie",
       calc_macros_label:"Sugerowane makroskładniki",
       kcal:"Kalorie (kcal)", protein:"Białko (g)", carbs:"Węglow. (g)", fat:"Tłuszcze (g)", add_meal:"Dodaj posiłek",
@@ -1754,6 +1833,12 @@
       ebooks_note:"E-books added from a PDF file are stored in this browser and open directly inside the app — no redirects, works offline too.",
       task_name:"Task name", task_name_ph:"e.g. Send the report", date:"Date", time:"Time", add_task:"Add task",
       event_name:"Event name", event_name_ph:"e.g. Client meeting", desc_opt:"Description (optional)", add_event:"Add event",
+      cal_view_month:"Month", cal_view_week:"Week",
+      ev_time_start:"Start time", ev_time_end:"End time", ev_travel:"Travel time", ev_travel_none:"None", ev_note:"Note (optional)",
+      ev_repeat:"Repeat", rep_none:"Does not repeat", rep_daily:"Daily", rep_weekly:"Weekly", rep_monthly:"Monthly", rep_days:"Selected weekdays",
+      ev_color:"Marker color",
+      ev_notify:"Notification", ntf_none:"None", ntf_at:"At start", ntf_5:"5 min before", ntf_10:"10 min before", ntf_30:"30 min before", ntf_60:"1 hour before", ntf_day:"Day before",
+      ev_travel_badge:"travel", ev_notify_badge:"notification", notif_travel_hint:"time to leave (travel)",
       tab_training:"Training", tab_calories:"Calories", add_exercise:"+ Add exercise", save_workout:"Save workout",
       exercise:"Exercise", ex_name:"Exercise name", ex_name_ph:"e.g. Barbell squat", sets:"Sets", add_set:"+ Add set",
       rm_exercise:"Remove exercise", note:"Note", weight_ph:"Weight (kg)", reps_ph:"Reps",
@@ -1764,7 +1849,6 @@
       run_add_title:"Add a run", run_distance:"Distance (km)", run_time:"Time", run_time_ph:"e.g. 28:30", run_note:"Note (optional)", run_note_ph:"e.g. Forest, intervals...", run_save:"Save run", run_pace:"Pace", run_history:"Run history", run_empty:"No runs saved yet.", run_fill:"Enter the run date and distance.", run_total_dist:"Total distance", run_count:"Runs", run_best:"Longest run", run_record:"New running record!",
       cbt_add_title:"Add a session", cbt_discipline:"Discipline", cbt_boxing:"Boxing", cbt_kickboxing:"Kickboxing", cbt_muaythai:"Muay Thai", cbt_mma:"MMA", cbt_bjj:"BJJ", cbt_judo:"Judo", cbt_wrestling:"Wrestling", cbt_karate:"Karate", cbt_other:"Other", cbt_type:"Session type", cbt_technique:"Technique", cbt_sparring:"Sparring", cbt_bag:"Bag / pads", cbt_conditioning:"Conditioning", cbt_rounds:"Rounds", cbt_rounds_short:"rounds", cbt_minutes:"Time (min)", cbt_note:"Note (optional)", cbt_note_ph:"e.g. Working on defense...", cbt_save:"Save session", cbt_history:"Session history", cbt_empty:"No sessions saved yet.", cbt_fill:"Enter the session date.", cbt_sessions:"Sessions", cbt_total_min:"Total time", cbt_total_rounds:"Total rounds",
       cbt_round_len:"Round length (mm:ss)", cbt_round_len_ph:"e.g. 3:00", cbt_rest_len:"Rest between rounds (mm:ss)", cbt_rest_len_ph:"e.g. 1:00", cbt_timer_start:"▶ Start rounds", cbt_timer_stop:"■ Stop", cbt_round_word:"Round", cbt_break_word:"Rest", cbt_done:"Done! Great work 🥊", cbt_timer_fill:"Enter the number of rounds and round length (e.g. 3:00).",
-      ms_next:"Next exercise", ms_none:"All exercises completed",
       calc_data:"Your details", calc_results:"Results", calc_target_label:"Daily requirement",
       calc_macros_label:"Suggested macros",
       kcal:"Calories (kcal)", protein:"Protein (g)", carbs:"Carbs (g)", fat:"Fat (g)", add_meal:"Add meal",
@@ -2224,8 +2308,110 @@
   var events=loadJSON("events",[]);
   function saveEvents(){ saveJSON("events",events); }
   var calCursor=new Date(); calCursor.setDate(1);
+  var calWeekCursor=new Date();
   var selectedDay=null;
+  var calViewMode=(function(){ try{ return localStorage.getItem("calViewMode")||"month"; }catch(e){ return "month"; } })();
+
+  /* --- Kolory znaczników --- */
+  var EV_COLORS=["#00e5ff","#ff2fd0","#ffd166","#5be97c","#8ab4ff","#ff8a4a","#c084fc"];
+  var evColorSel=EV_COLORS[0];
+  function buildColorSwatches(){
+    var box=$("evColors"); if(!box) return;
+    box.innerHTML="";
+    EV_COLORS.forEach(function(c){
+      var b=document.createElement("button");
+      b.type="button"; b.className="csw"+(c===evColorSel?" sel":"");
+      b.style.background=c; b.style.color=c;
+      b.addEventListener("click", function(){
+        evColorSel=c;
+        box.querySelectorAll(".csw").forEach(function(x){x.classList.remove("sel");});
+        b.classList.add("sel");
+      });
+      box.appendChild(b);
+    });
+  }
+  /* --- Dni tygodnia dla powtarzania "wybrane dni" (0=Pon ... 6=Nd) --- */
+  var evDowSel=[];
+  function buildDowChips(){
+    var box=$("evDowChips"); if(!box) return;
+    box.innerHTML="";
+    var dows=state.lang==="en"?dowShortEN:dowShortPL;
+    dows.forEach(function(d,i){
+      var b=document.createElement("button");
+      b.type="button"; b.className="dchip"+(evDowSel.indexOf(i)>=0?" on":"");
+      b.textContent=d;
+      b.addEventListener("click", function(){
+        var ix=evDowSel.indexOf(i);
+        if(ix>=0) evDowSel.splice(ix,1); else evDowSel.push(i);
+        b.classList.toggle("on");
+      });
+      box.appendChild(b);
+    });
+  }
+  if($("evRepeat")) $("evRepeat").addEventListener("change", function(){
+    $("evDowChips").style.display=(this.value==="days")?"flex":"none";
+  });
+
+  /* --- Powtarzanie: czy wydarzenie występuje danego dnia? --- */
+  function mondayDow(d){ return (d.getDay()+6)%7; } // 0=Pon ... 6=Nd
+  function isoToDate(iso){ var p=iso.split("-"); return new Date(num(p[0]),num(p[1])-1,num(p[2])); }
+  function eventOccursOn(e, iso){
+    if(iso<e.date) return false;
+    var rep=e.repeat||"none";
+    if(rep==="none") return iso===e.date;
+    if(rep==="daily") return true;
+    var d=isoToDate(iso), d0=isoToDate(e.date);
+    if(rep==="weekly") return mondayDow(d)===mondayDow(d0);
+    if(rep==="monthly") return d.getDate()===d0.getDate();
+    if(rep==="days") return (e.repeatDays||[]).indexOf(mondayDow(d))>=0;
+    return false;
+  }
+  function eventsOnDay(iso){
+    return events.filter(function(e){ return eventOccursOn(e,iso); })
+      .sort(function(a,b){ return (a.time||"").localeCompare(b.time||""); });
+  }
+  /* Najbliższe wystąpienie wydarzenia (Date) — skan do 366 dni w przód */
+  function nextOccurrence(e, from){
+    var d=new Date(from.getFullYear(),from.getMonth(),from.getDate());
+    for(var i=0;i<366;i++){
+      var iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+      if(eventOccursOn(e,iso)){
+        var when=new Date(iso+"T"+(e.time||"00:00"));
+        if(when>=from) return when;
+      }
+      d.setDate(d.getDate()+1);
+    }
+    return null;
+  }
+  function repeatLabel(e){
+    var rep=e.repeat||"none";
+    if(rep==="daily") return t("rep_daily");
+    if(rep==="weekly") return t("rep_weekly");
+    if(rep==="monthly") return t("rep_monthly");
+    if(rep==="days"){
+      var dows=state.lang==="en"?dowShortEN:dowShortPL;
+      return (e.repeatDays||[]).slice().sort().map(function(i){return dows[i];}).join(", ");
+    }
+    return "";
+  }
+  function notifyLabel(v){
+    if(v==="0") return t("ntf_at");
+    if(v==="5") return t("ntf_5");
+    if(v==="10") return t("ntf_10");
+    if(v==="30") return t("ntf_30");
+    if(v==="60") return t("ntf_60");
+    if(v==="1440") return t("ntf_day");
+    return "";
+  }
+
+  /* --- Renderowanie: widok miesięczny / tygodniowy --- */
   function renderCalendar(){
+    var month=(calViewMode==="month");
+    $("calGrid").style.display=month?"grid":"none";
+    $("calWeek").style.display=month?"none":"flex";
+    if(month) renderMonthView(); else renderWeekView();
+  }
+  function renderMonthView(){
     var mn = state.lang==="en"?monEN:calMonPL;
     $("calTitle").textContent=mn[calCursor.getMonth()]+" "+calCursor.getFullYear();
     var grid=$("calGrid"); grid.innerHTML="";
@@ -2240,27 +2426,84 @@
       var iso=y+"-"+pad(m+1)+"-"+pad(day);
       var cell=document.createElement("div");
       cell.className="cal-day"+(iso===todayStr?" today":"");
-      var de=events.filter(function(e){return e.date===iso;});
-      var dots=""; de.slice(0,4).forEach(function(){ dots+='<span class="dot"></span>'; });
+      var de=eventsOnDay(iso);
+      var dots="";
+      de.slice(0,4).forEach(function(e){ dots+='<span class="dot" style="background:'+(e.color||EV_COLORS[1])+';"></span>'; });
       cell.innerHTML='<span class="num">'+day+'</span><span class="dot-wrap">'+dots+'</span>';
       cell.addEventListener("click",(function(iso){return function(){ openDayDetail(iso); };})(iso));
       grid.appendChild(cell);
     }
   }
+  function weekStart(d){
+    var w=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    w.setDate(w.getDate()-mondayDow(w));
+    return w;
+  }
+  function renderWeekView(){
+    var mn = state.lang==="en"?monEN:calMonPL;
+    var start=weekStart(calWeekCursor);
+    var end=new Date(start); end.setDate(end.getDate()+6);
+    var titleA=start.getDate()+" "+mn[start.getMonth()].slice(0,3).toLowerCase();
+    var titleB=end.getDate()+" "+mn[end.getMonth()].slice(0,3).toLowerCase()+" "+end.getFullYear();
+    $("calTitle").textContent=titleA+" – "+titleB;
+    var box=$("calWeek"); box.innerHTML="";
+    var dows=state.lang==="en"?dowShortEN:dowShortPL;
+    var todayStr=todayISO();
+    for(var i=0;i<7;i++){
+      var d=new Date(start); d.setDate(d.getDate()+i);
+      var iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+      var de=eventsOnDay(iso);
+      var row=document.createElement("div");
+      row.className="cw-day"+(iso===todayStr?" today":"");
+      var evsHtml="";
+      de.forEach(function(e){
+        evsHtml+='<div class="cw-ev"><span class="cw-ev-dot" style="background:'+(e.color||EV_COLORS[1])+';"></span>'+
+          '<span class="cw-ev-time">'+fmtTime(e.time)+(e.timeEnd?"–"+fmtTime(e.timeEnd):"")+'</span>'+
+          '<span class="cw-ev-name"></span></div>';
+      });
+      row.innerHTML='<div class="cw-head"><span class="cw-dow">'+dows[i]+'</span><span class="cw-num">'+d.getDate()+"."+pad(d.getMonth()+1)+'</span></div>'+
+        (evsHtml?'<div class="cw-evs">'+evsHtml+'</div>':'');
+      var names=row.querySelectorAll(".cw-ev-name");
+      de.forEach(function(e,ix){ if(names[ix]) names[ix].textContent=e.name; });
+      row.addEventListener("click",(function(iso){return function(){ openDayDetail(iso); };})(iso));
+      box.appendChild(row);
+    }
+  }
+  document.querySelectorAll("#calViewSeg .seg-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#calViewSeg .seg-btn").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active");
+      calViewMode=b.getAttribute("data-calview");
+      try{ localStorage.setItem("calViewMode",calViewMode); }catch(e){}
+      renderCalendar();
+    });
+  });
+  document.querySelectorAll("#calViewSeg .seg-btn").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-calview")===calViewMode);
+  });
+
   function openDayDetail(iso){
     selectedDay=iso; var c=$("dayDetailCard"); c.style.display="block";
     $("dayDetailTitle").textContent=formatDateReadable(iso);
+    buildColorSwatches(); buildDowChips();
     renderDayEvents(); c.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   function renderDayEvents(){
     var list=$("dayEventsList"); list.innerHTML="";
-    var de=events.filter(function(e){return e.date===selectedDay;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    var de=eventsOnDay(selectedDay);
     if(de.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_events")+'</div>'; return; }
     de.forEach(function(e){
       var item=document.createElement("div"); item.className="event-item";
-      item.innerHTML='<div><div class="event-time"></div><div class="event-name"></div>'+(e.desc?'<div class="event-desc"></div>':'')+'</div>'+
+      item.style.borderLeftColor=e.color||EV_COLORS[1];
+      var badges="";
+      if(num(e.travel)>0) badges+='<span class="ev-badge">🚗 '+num(e.travel)+' min</span>';
+      if(e.repeat&&e.repeat!=="none") badges+='<span class="ev-badge">🔁 '+repeatLabel(e)+'</span>';
+      if(e.notify&&e.notify!=="none") badges+='<span class="ev-badge">🔔 '+notifyLabel(e.notify)+'</span>';
+      item.innerHTML='<div style="min-width:0;"><div class="event-time"></div><div class="event-name"></div>'+
+        (e.desc?'<div class="event-desc"></div>':'')+
+        (badges?'<div class="event-badges">'+badges+'</div>':'')+'</div>'+
         '<button class="del-btn" data-id="'+e.id+'">'+t("delete")+'</button>';
-      item.querySelector(".event-time").textContent=fmtTime(e.time);
+      item.querySelector(".event-time").textContent=fmtTime(e.time)+(e.timeEnd?" – "+fmtTime(e.timeEnd):"");
       item.querySelector(".event-name").textContent=e.name;
       if(e.desc) item.querySelector(".event-desc").textContent=e.desc;
       list.appendChild(item);
@@ -2272,12 +2515,33 @@
   $("addEventBtn").addEventListener("click", function(){
     var name=$("evName").value.trim(), time=$("evTime").value, desc=$("evDesc").value.trim();
     if(!name||!time||!selectedDay){ alert(t("fill_event")); return; }
-    events.push({id:uid(),date:selectedDay,time:time,name:name,desc:desc}); saveEvents();
-    $("evName").value=""; $("evTime").value=""; $("evDesc").value="";
+    var repeat=$("evRepeat").value;
+    events.push({
+      id:uid(), date:selectedDay, time:time,
+      timeEnd:$("evTimeEnd").value||"",
+      travel:num($("evTravel").value),
+      repeat:repeat,
+      repeatDays:(repeat==="days"?evDowSel.slice().sort():[]),
+      color:evColorSel,
+      notify:$("evNotify").value,
+      name:name, desc:desc
+    });
+    saveEvents();
+    $("evName").value=""; $("evTime").value=""; $("evTimeEnd").value=""; $("evDesc").value="";
+    $("evTravel").value="0"; $("evNotify").value="none"; $("evRepeat").value="none";
+    evDowSel=[]; $("evDowChips").style.display="none"; buildDowChips();
     renderDayEvents(); renderCalendar(); renderUpcomingBig();
   });
-  $("prevMonth").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); });
-  $("nextMonth").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); });
+  $("prevMonth").addEventListener("click", function(){
+    if(calViewMode==="week"){ calWeekCursor.setDate(calWeekCursor.getDate()-7); }
+    else { calCursor.setMonth(calCursor.getMonth()-1); }
+    renderCalendar();
+  });
+  $("nextMonth").addEventListener("click", function(){
+    if(calViewMode==="week"){ calWeekCursor.setDate(calWeekCursor.getDate()+7); }
+    else { calCursor.setMonth(calCursor.getMonth()+1); }
+    renderCalendar();
+  });
 
   /* ================= FITNESS TABS ================= */
   document.querySelectorAll(".tab-btn").forEach(function(b){
@@ -2385,80 +2649,13 @@
   function fmtHMS(sec){ var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return pad(h)+":"+pad(m)+":"+pad(s); }
   function fmtMS(sec){ var m=Math.floor(sec/60), s=sec%60; return pad(m)+":"+pad(s); }
   var wkTimerStart=0, wkTimerInt=null, restStart=0, restInt=null;
-
-  /* ---- Ekran blokady (Media Session API): czas treningu, przerwa, następne ćwiczenie ----
-     Przeglądarka pokazuje metadane "odtwarzacza" na ekranie blokady tylko wtedy,
-     gdy strona odtwarza dźwięk — dlatego w tle gra zapętlona, niesłyszalna ścieżka. */
-  var msAudio=null;
-  function makeSilentWav(){
-    // 1 s niemal ciszy (amplituda 1/32767) jako WAV w data-URI — bez zewnętrznych plików
-    var rate=8000, n=rate, header=44, buf=new ArrayBuffer(header+n*2), v=new DataView(buf);
-    function wstr(o,s){ for(var i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); }
-    wstr(0,"RIFF"); v.setUint32(4,36+n*2,true); wstr(8,"WAVE"); wstr(12,"fmt ");
-    v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
-    v.setUint32(24,rate,true); v.setUint32(28,rate*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
-    wstr(36,"data"); v.setUint32(40,n*2,true);
-    for(var i=0;i<n;i++) v.setInt16(header+i*2, (i%2?1:-1), true);
-    var b=new Uint8Array(buf), s=""; for(var j=0;j<b.length;j++) s+=String.fromCharCode(b[j]);
-    return "data:audio/wav;base64,"+btoa(s);
-  }
-  function nextExerciseName(){
-    var blocks=document.querySelectorAll("#exercisesContainer .exercise-block");
-    for(var i=0;i<blocks.length;i++){
-      var name=(blocks[i].querySelector(".ex-name")||{}).value||"";
-      var rows=blocks[i].querySelectorAll(".set-row"), done=true;
-      rows.forEach(function(row){
-        var w=row.querySelector(".set-weight"), r=row.querySelector(".set-reps");
-        if(w&&r&&(w.value===""||r.value==="")) done=false;
-      });
-      if(!done || rows.length===0) return name.trim()||t("ms_none");
-    }
-    return t("ms_none");
-  }
-  function updateMediaSession(){
-    if(!("mediaSession" in navigator) || !wkTimerStart) return;
-    try{
-      var total=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000)));
-      var rest=restStart?fmtMS(Math.max(0,Math.floor((Date.now()-restStart)/1000))):"--:--";
-      navigator.mediaSession.metadata=new MediaMetadata({
-        title: t("ms_next")+": "+nextExerciseName(),
-        artist: t("wk_total_time")+" "+total+" · "+t("wk_rest_time")+" "+rest,
-        album: "FutureApp"
-      });
-      navigator.mediaSession.playbackState="playing";
-    }catch(e){}
-  }
-  function startMediaSession(){
-    if(!("mediaSession" in navigator)) return;
-    try{
-      if(!msAudio){ msAudio=new Audio(makeSilentWav()); msAudio.loop=true; msAudio.volume=0.01; }
-      var p=msAudio.play(); if(p&&p.catch) p.catch(function(){});
-      // Nie pozwól systemowi "zatrzymać" sesji przyciskiem pauzy — wznów odtwarzanie
-      navigator.mediaSession.setActionHandler("play", function(){ if(msAudio) msAudio.play(); updateMediaSession(); });
-      navigator.mediaSession.setActionHandler("pause", function(){ if(msAudio) msAudio.play(); updateMediaSession(); });
-      updateMediaSession();
-    }catch(e){}
-  }
-  function stopMediaSession(){
-    try{
-      if(msAudio){ msAudio.pause(); msAudio.currentTime=0; }
-      if("mediaSession" in navigator){ navigator.mediaSession.metadata=null; navigator.mediaSession.playbackState="none"; }
-    }catch(e){}
-  }
-
-  function tickWkTimer(){
-    if(wkTimerStart){
-      $("wkTotalTimer").textContent=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000)));
-      updateMediaSession();
-    }
-  }
+  function tickWkTimer(){ if(wkTimerStart) $("wkTotalTimer").textContent=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000))); }
   function tickRest(){ if(restStart) $("wkRestTimer").textContent=fmtMS(Math.max(0,Math.floor((Date.now()-restStart)/1000))); }
   function startWorkoutTimer(ts){
     wkTimerStart=ts||Date.now();
     try{ localStorage.setItem("wkTimerStart",String(wkTimerStart)); }catch(e){}
     $("startWorkoutBtn").style.display="none";
     $("wkTimers").style.display="flex";
-    startMediaSession();
     tickWkTimer();
     clearInterval(wkTimerInt); wkTimerInt=setInterval(tickWkTimer,1000);
   }
@@ -2468,7 +2665,6 @@
   }
   function stopWorkoutTimer(){
     clearInterval(wkTimerInt); wkTimerInt=null; wkTimerStart=0;
-    stopMediaSession();
     try{ localStorage.removeItem("wkTimerStart"); }catch(e){}
     $("startWorkoutBtn").style.display="";
     $("wkTimers").style.display="none"; $("wkTotalTimer").textContent="00:00:00";
@@ -3515,9 +3711,12 @@
   /* ================= UPCOMING (home) ================= */
   function renderUpcomingBig(){
     var box=$("upcomingBig"); var now=new Date();
-    var up=events.map(function(e){ return {when:new Date(e.date+"T"+e.time),name:e.name,desc:e.desc}; })
-      .filter(function(x){ return x.when>=now; })
-      .sort(function(a,b){ return a.when-b.when; });
+    var up=[];
+    events.forEach(function(e){
+      var when=nextOccurrence(e, now);
+      if(when) up.push({when:when,name:e.name,desc:e.desc});
+    });
+    up.sort(function(a,b){ return a.when-b.when; });
     if(up.length===0){ box.innerHTML='<div class="empty-note">'+t("empty_upcoming")+'</div>'; return; }
     var e=up[0];
     var whenStr=formatDateReadable(e.when.getFullYear()+"-"+pad(e.when.getMonth()+1)+"-"+pad(e.when.getDate()))+", "+fmtTime(pad(e.when.getHours())+":"+pad(e.when.getMinutes()));
@@ -3943,8 +4142,25 @@
       if(diff>0&&diff<=oneHour&&!notifiedIds[key]){ sendNotification(t("notif_task"),tk.name+" — "+tk.time); markNotified(key); }
     });
     events.forEach(function(e){
-      var diff=new Date(e.date+"T"+e.time)-now, key="event_"+e.id;
-      if(diff>0&&diff<=oneHour&&!notifiedIds[key]){ sendNotification(t("notif_event"),e.name+" — "+e.time); markNotified(key); }
+      if(e.notify!==undefined){
+        // Nowe wydarzenia: powiadomienie wg wybranej opcji (+ czas dojazdu przesuwa przypomnienie wcześniej)
+        if(e.notify==="none") return;
+        var occ=nextOccurrence(e, new Date(now.getTime()-60000));
+        if(!occ || occ<=now) return;
+        var travel=num(e.travel||0);
+        var target=occ.getTime()-(num(e.notify)+travel)*60000;
+        var occIso=occ.getFullYear()+"-"+pad(occ.getMonth()+1)+"-"+pad(occ.getDate());
+        var key="event_"+e.id+"_"+occIso;
+        if(now.getTime()>=target && !notifiedIds[key]){
+          var body=e.name+" — "+fmtTime(e.time)+(travel>0?" · 🚗 "+t("notif_travel_hint")+" "+travel+" min":"");
+          sendNotification(t("notif_event"), body);
+          markNotified(key);
+        }
+      } else {
+        // Starsze wydarzenia (bez ustawienia): dotychczasowe zachowanie — 1 h przed
+        var diff=new Date(e.date+"T"+e.time)-now, key2="event_"+e.id;
+        if(diff>0&&diff<=oneHour&&!notifiedIds[key2]){ sendNotification(t("notif_event"),e.name+" — "+e.time); markNotified(key2); }
+      }
     });
   }
 
