@@ -522,6 +522,14 @@
   .reader-nav{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--border);}
   .reader-nav .btn-ghost{min-width:44px;min-height:40px;}
   .reader-page{font-family:var(--font-mono);font-size:0.8rem;color:var(--text-dim);min-width:64px;text-align:center;}
+  /* workout templates */
+  .tpl-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+  .tpl-item:last-child{border-bottom:none;}
+  .tpl-item .tpl-main{flex:1;min-width:0;cursor:pointer;}
+  .tpl-item .tpl-name{font-size:0.9rem;color:var(--text);}
+  .tpl-item .tpl-main:hover .tpl-name{color:var(--accent);}
+  .tpl-item .tpl-sub{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tpl-item .tpl-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
   .bud-section{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-panel);padding:16px 18px;margin-bottom:14px;}
   .bud-section h3{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--accent2);margin:0 0 12px;}
   .bud-add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
@@ -766,7 +774,7 @@
       <div class="card">
         <div class="row wk-daterow">
           <div><label for="wDate" data-i18n="date">Data</label><input type="date" id="wDate"></div>
-          <button class="btn-ghost" id="repeatLastBtn" style="white-space:nowrap;" data-i18n="repeat_last">↻ Powtórz ostatni</button>
+          <button class="btn-ghost" id="saveTplBtn" style="white-space:nowrap;" data-i18n="tpl_save">💾 Zapisz jako szablon</button>
         </div>
         <div class="row wk-timerow" style="margin-top:10px;">
           <div><label for="wStart" data-i18n="wk_start">Początek</label><input type="time" id="wStart"></div>
@@ -777,6 +785,18 @@
         <button class="btn-primary" id="addWorkoutBtn" data-i18n="save_workout">Zapisz trening</button>
       </div>
       <datalist id="exerciseNames"></datalist>
+
+      <div class="card">
+        <div class="db-section">
+          <button class="db-head" type="button" data-acc="wktpl" data-acc-open aria-controls="tplBody">
+            <h4 data-i18n="tpl_title">Szablony</h4>
+            <span class="db-arrow" aria-hidden="true">&#9660;</span>
+          </button>
+          <div class="db-collapse" id="tplBody">
+            <div id="tplList"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="card">
         <div class="db-section">
@@ -1486,7 +1506,12 @@
       ai_thinking:"Asystent myśli...", ai_error:"Błąd połączenia z API. Sprawdź klucz i połączenie.",
       notif_task:"Zbliżający się termin zadania", notif_event:"Zbliżające się wydarzenie",
       saved:"Zapisano.", min_one_ex:"Sesja musi zawierać przynajmniej jedno ćwiczenie.",
-      tab_calc:"Zapotrzebowanie", repeat_last:"↻ Powtórz ostatni", today:"Dziś",
+      tab_calc:"Zapotrzebowanie", today:"Dziś",
+      tpl_title:"Szablony", tpl_save:"\uD83D\uDCBE Zapisz jako szablon",
+      tpl_empty:"Brak szablonów. Wypełnij trening poniżej i kliknij \u201EZapisz jako szablon\u201D.",
+      tpl_name_q:"Nazwa szablonu:", tpl_load:"Wczytaj", tpl_del_q:"Usunąć ten szablon?",
+      tpl_need_ex:"Najpierw wpisz poniżej nazwę przynajmniej jednego ćwiczenia.",
+      wk_repeat:"Powtórz trening",
       from_base:"Z bazy produktów", manual_entry:"Ręcznie", food_search:"Wybierz produkt",
       food_search_ph:"np. Ryż, jajko, kurczak...", grams:"Ilość (g)", calc_result:"Wyliczono",
       recent_products:"Ostatnie produkty", cat_breakfast:"Śniadanie", cat_lunch:"Obiad",
@@ -1602,7 +1627,12 @@
       ai_thinking:"Assistant is thinking...", ai_error:"API connection error. Check your key and connection.",
       notif_task:"Upcoming task deadline", notif_event:"Upcoming event",
       saved:"Saved.", min_one_ex:"A session must contain at least one exercise.",
-      tab_calc:"Needs", repeat_last:"↻ Repeat last", today:"Today",
+      tab_calc:"Needs", today:"Today",
+      tpl_title:"Templates", tpl_save:"\uD83D\uDCBE Save as template",
+      tpl_empty:"No templates yet. Fill in a workout below and tap \u201CSave as template\u201D.",
+      tpl_name_q:"Template name:", tpl_load:"Load", tpl_del_q:"Delete this template?",
+      tpl_need_ex:"First enter the name of at least one exercise below.",
+      wk_repeat:"Repeat workout",
       from_base:"From food base", manual_entry:"Manual", food_search:"Choose product",
       food_search_ph:"e.g. Rice, egg, chicken...", grams:"Amount (g)", calc_result:"Calculated",
       recent_products:"Recent products", cat_breakfast:"Breakfast", cat_lunch:"Lunch",
@@ -2164,21 +2194,10 @@
   $("addExerciseBtn").addEventListener("click", function(){ addExerciseBlock(); });
   function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); $("wStart").value=""; $("wEnd").value=""; editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); }
 
-  $("repeatLastBtn").addEventListener("click", function(){
-    if(workouts.length===0){ alert(t("no_last_workout")); return; }
-    var last=workouts.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0];
-    $("exercisesContainer").innerHTML="";
-    (last.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note}); });
-    if((last.exercises||[]).length===0) addExerciseBlock();
-    $("wDate").value=todayISO();
-    editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
-  });
-
-  var editingWorkoutId=null;
-  $("addWorkoutBtn").addEventListener("click", function(){
-    var date=$("wDate").value;
-    var start=$("wStart").value||""; // "HH:MM" or ""
-    var end=$("wEnd").value||"";
+  // Zbiera ćwiczenia wpisane w formularzu poniżej (wspólne dla zapisu treningu i szablonu).
+  // forTemplate=true: wystarczy nazwa ćwiczenia — kilogramy/powtórzenia mogą zostać puste,
+  // a liczba wierszy serii jest zachowywana nawet bez wartości.
+  function collectExercises(forTemplate){
     var exercises=[];
     document.querySelectorAll("#exercisesContainer .exercise-block").forEach(function(block){
       var name=block.querySelector(".ex-name").value.trim();
@@ -2186,10 +2205,74 @@
       var sets=[];
       block.querySelectorAll(".set-row").forEach(function(row){
         var w=row.querySelector(".set-weight").value, r=row.querySelector(".set-reps").value;
-        if(w!==""||r!=="") sets.push({weight:w||"0",reps:r||"0"});
+        if(forTemplate){ sets.push({weight:w||"",reps:r||""}); }
+        else if(w!==""||r!==""){ sets.push({weight:w||"0",reps:r||"0"}); }
       });
-      if(name&&sets.length>0) exercises.push({name:name,sets:sets,note:note});
+      if(name && (forTemplate || sets.length>0)) exercises.push({name:name,sets:sets,note:note});
     });
+    return exercises;
+  }
+
+  /* ---- szablony treningów ---- */
+  var wkTemplates=loadJSON("wkTemplates",[]);
+  function saveWkTemplates(){ saveJSON("wkTemplates",wkTemplates); }
+  function renderTemplates(){
+    var list=$("tplList"); if(!list) return;
+    list.innerHTML="";
+    if(wkTemplates.length===0){ list.innerHTML='<div class="empty-note">'+t("tpl_empty")+'</div>'; return; }
+    wkTemplates.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).forEach(function(tp){
+      var item=document.createElement("div");
+      item.className="tpl-item";
+      item.innerHTML='<div class="tpl-main"><div class="tpl-name"></div><div class="tpl-sub"></div></div>'+
+        '<div class="tpl-actions"><button class="btn-small tpl-load"></button>'+
+        '<button class="del-btn tpl-del"></button></div>';
+      item.querySelector(".tpl-name").textContent=tp.name;
+      item.querySelector(".tpl-sub").textContent=(tp.exercises||[]).map(function(ex){return ex.name;}).join(", ");
+      function loadTpl(){
+        $("exercisesContainer").innerHTML="";
+        // Zachowujemy nazwy ćwiczeń, liczbę serii i notatki, ale kilogramy i powtórzenia
+        // startują puste (do wpisania na bieżąco podczas treningu).
+        (tp.exercises||[]).forEach(function(ex){
+          var blankSets=(ex.sets&&ex.sets.length?ex.sets:[null]).map(function(){ return null; });
+          addExerciseBlock({name:ex.name,sets:blankSets,note:ex.note});
+        });
+        if((tp.exercises||[]).length===0) addExerciseBlock();
+        $("wDate").value=todayISO();
+        editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
+        var card=$("wDate").closest(".card"); if(card && card.scrollIntoView) card.scrollIntoView({behavior:"smooth",block:"start"});
+      }
+      item.querySelector(".tpl-main").addEventListener("click", loadTpl);
+      var lb=item.querySelector(".tpl-load"); lb.textContent=t("tpl_load"); lb.addEventListener("click", loadTpl);
+      var db=item.querySelector(".tpl-del"); db.textContent=t("delete");
+      db.addEventListener("click", function(){
+        if(!confirm(t("tpl_del_q"))) return;
+        wkTemplates=wkTemplates.filter(function(x){return x.id!==tp.id;});
+        saveWkTemplates(); renderTemplates();
+      });
+      list.appendChild(item);
+    });
+  }
+  $("saveTplBtn").addEventListener("click", function(){
+    var exercises=collectExercises(true);
+    if(exercises.length===0){ alert(t("tpl_need_ex")); return; }
+    var suggested=exercises.map(function(ex){return ex.name;}).slice(0,3).join(" + ");
+    var name=prompt(t("tpl_name_q"), suggested);
+    if(name===null) return;
+    name=name.trim(); if(!name) name=suggested;
+    wkTemplates.push({id:uid(), name:name, ts:Date.now(), exercises:exercises});
+    saveWkTemplates(); renderTemplates();
+    // upewnij się, że sekcja Szablony jest rozwinięta, żeby nowy wpis był od razu widoczny
+    var head=document.querySelector('[data-acc="wktpl"]');
+    if(head){ accState["wktpl"]=true; saveJSON("accordions",accState); setAccordion(head,true,true); }
+    alert(t("saved"));
+  });
+
+  var editingWorkoutId=null;
+  $("addWorkoutBtn").addEventListener("click", function(){
+    var date=$("wDate").value;
+    var start=$("wStart").value||""; // "HH:MM" or ""
+    var end=$("wEnd").value||"";
+    var exercises=collectExercises();
     if(!date||exercises.length===0){ alert(t("fill_workout")); return; }
     if(editingWorkoutId){
       workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; w.start=start; w.end=end; } });
@@ -2228,6 +2311,7 @@
       var head=document.createElement("div");
       head.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:8px;";
       head.innerHTML='<div><div class="w-date"></div><div class="w-dur"></div></div><div style="display:flex;gap:6px;">'+
+        '<button class="btn-small w-repeat" data-id="'+w.id+'" title="'+t("wk_repeat")+'" aria-label="'+t("wk_repeat")+'">&#8635;</button>'+
         '<button class="btn-small w-edit" data-id="'+w.id+'">'+t("edit")+'</button>'+
         '<button class="del-btn w-del" data-id="'+w.id+'">'+t("delete")+'</button></div>';
       head.querySelector(".w-date").textContent=formatDateReadable(w.date);
@@ -2251,6 +2335,24 @@
     });
     c.querySelectorAll(".w-del").forEach(function(b){
       b.addEventListener("click", function(){ workouts=workouts.filter(function(w){return w.id!==b.getAttribute("data-id");}); saveWorkouts(); refreshExerciseDatalist(); renderWorkouts(); });
+    });
+    // Powtórzenie zapisanego treningu: nazwy ćwiczeń, liczba serii i notatki wracają do formularza,
+    // kilogramy i powtórzenia startują puste (jak przy wczytaniu szablonu).
+    c.querySelectorAll(".w-repeat").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id=b.getAttribute("data-id");
+        var w=workouts.filter(function(x){return x.id===id;})[0]; if(!w) return;
+        $("exercisesContainer").innerHTML="";
+        (w.exercises||[]).forEach(function(ex){
+          var blankSets=(ex.sets&&ex.sets.length?ex.sets:[null]).map(function(){ return null; });
+          addExerciseBlock({name:ex.name,sets:blankSets,note:ex.note});
+        });
+        if((w.exercises||[]).length===0) addExerciseBlock();
+        $("wDate").value=todayISO(); $("wStart").value=""; $("wEnd").value="";
+        editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
+        document.querySelector('.tab-btn[data-tab="training"]').click();
+        $("view-fitness").scrollIntoView({behavior:"smooth",block:"start"});
+      });
     });
     c.querySelectorAll(".w-edit").forEach(function(b){
       b.addEventListener("click", function(){
@@ -3563,7 +3665,7 @@
 
   /* ================= RENDER ALL / INIT ================= */
   function renderAll(){
-    renderTiles(); renderTasks(); renderCalendar(); renderWorkouts();
+    renderTiles(); renderTasks(); renderCalendar(); renderWorkouts(); renderTemplates();
     renderMealDay(); renderMealHistory(); renderJournal(); renderEbooks();
     renderUpcomingBig(); renderHeaderInfo(); tickClock();
     refreshExerciseDatalist(); refreshFoodList(); renderRecent();
