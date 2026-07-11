@@ -43,7 +43,9 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  /* overscroll-behavior: blokuje "rubber-band" przy przeciąganiu ekranu z góry na dół,
+     dzięki czemu elementy position:fixed (np. przycisk ustawień) nie przesuwają się podczas gestu */
+  html,body{margin:0;padding:0;overscroll-behavior-y:none;}
   body{
     background:var(--bg);
     color:var(--text);
@@ -420,16 +422,29 @@
   /* Journal */
   .journal-entry{padding:14px 0;border-bottom:1px solid var(--border-soft);}
   .journal-entry:last-child{border-bottom:none;}
-  .journal-entry .je-date{font-family:var(--font-mono);font-size:0.76rem;color:var(--accent);display:flex;justify-content:space-between;align-items:center;}
+  .journal-entry .je-date{font-family:var(--font-mono);font-size:0.76rem;color:var(--accent);display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .journal-entry .je-text{font-size:0.9rem;margin-top:6px;white-space:pre-wrap;line-height:1.5;}
+  /* zwijanie / rozwijanie i edycja wpisów dziennika */
+  .journal-entry .je-toggle{background:none;border:none;padding:0;display:flex;align-items:center;gap:8px;color:var(--accent);font-family:var(--font-mono);font-size:0.76rem;min-width:0;text-align:left;cursor:pointer;flex:1;}
+  .journal-entry .je-toggle .db-arrow{font-size:0.68rem;flex:0 0 auto;}
+  .journal-entry .je-stamp{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .journal-entry.collapsed .je-toggle .db-arrow{transform:rotate(-90deg);}
+  .journal-entry.collapsed .je-text{display:none;}
+  .journal-entry .je-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
+  .journal-entry .je-edit-area textarea{margin-top:8px;min-height:110px;}
+  .journal-entry .je-edit-btns{display:flex;gap:8px;margin-top:8px;}
 
   /* Settings gear + panel */
+  /* Fix: przycisk ustawień jest zablokowany w miejscu — position:fixed + własna warstwa
+     kompozycji (translateZ) zapobiega przesuwaniu się / "bugowaniu" przycisku podczas gestu
+     przeciągania ekranu z góry na dół (razem z overscroll-behavior na html/body powyżej). */
   .gear-btn{
     position:fixed;right:18px;bottom:18px;z-index:120;width:52px;height:52px;border-radius:50%;
     background:var(--bg-panel);border:1px solid var(--border);color:var(--accent);font-size:1.4rem;
     box-shadow:var(--glow);display:flex;align-items:center;justify-content:center;
+    transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;
   }
-  .gear-btn:hover{transform:rotate(30deg);}
+  .gear-btn:hover{transform:translateZ(0) rotate(30deg);}
   .overlay{
     position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
     display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
@@ -836,6 +851,10 @@
       <div class="view-header" style="margin:0 0 10px;"><h2 id="dayDetailTitle" style="font-size:1rem;"></h2></div>
       <label for="evName" data-i18n="event_name">Nazwa wydarzenia</label>
       <input type="text" id="evName" data-i18n-ph="event_name_ph" placeholder="np. Spotkanie z klientem">
+      <!-- Data widoczna tylko w trybie edycji istniejącego wydarzenia (pozwala je przenieść na inny dzień) -->
+      <div class="row spaced" id="evDateRow" style="display:none;">
+        <div><label for="evDate" data-i18n="date">Data</label><input type="date" id="evDate"></div>
+      </div>
       <div class="row spaced">
         <div><label for="evTime" data-i18n="ev_time_start">Godzina rozpoczęcia</label><input type="time" id="evTime"></div>
         <div><label for="evTimeEnd" data-i18n="ev_time_end">Godzina zakończenia</label><input type="time" id="evTimeEnd"></div>
@@ -882,6 +901,7 @@
       <label for="evDesc" data-i18n="ev_note">Notatka (opcjonalnie)</label>
       <textarea id="evDesc"></textarea>
       <button class="btn-primary" id="addEventBtn" data-i18n="add_event">Dodaj wydarzenie</button>
+      <button class="btn-ghost" id="cancelEventEditBtn" style="display:none;margin-top:14px;margin-left:8px;" data-i18n="cancel">Anuluj</button>
       <div class="day-events-list" id="dayEventsList"></div>
     </div>
   </section>
@@ -1583,6 +1603,21 @@
     </div>
 
     <div class="set-section">
+      <button class="acc-head" data-acc="set_notif" data-acc-open aria-controls="accNotif">
+        <h4 data-i18n="set_notif">Powiadomienia PUSH</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accNotif">
+        <div class="toggle-line">
+          <span data-i18n="notif_toggle">Włącz powiadomienia PUSH</span>
+          <input type="checkbox" id="pushNotifChk" style="width:18px;height:18px;accent-color:var(--accent);">
+        </div>
+        <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="notif_note">
+          Powiadomienia o wydarzeniach i zadaniach działają po udzieleniu zgody w przeglądarce. Aby otrzymywać je również w tle na telefonie, dodaj aplikację do ekranu głównego.
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
       <button class="acc-head" data-acc="set_pin" data-acc-open aria-controls="accPin">
         <h4 data-i18n="set_pin">Zabezpieczenie PIN</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
       </button>
@@ -1813,7 +1848,16 @@
       budget_history:"Historia budżetu", budget_history_none:"Brak zapisanych okresów.",
       ai_hf_note:"Agent AI korzysta z darmowego API Hugging Face (router). Wklej swój bezpłatny token (huggingface.co → Settings → Access Tokens) — przechowywany tylko lokalnie w tej przeglądarce.",
       ai_hf_token:"Token Hugging Face", ai_hf_get:"Pobierz darmowy token", ai_need_token:"Najpierw ustaw darmowy token Hugging Face w konfiguracji.",
-      ai_model_hint:"Model (repozytorium HF, np. openai/gpt-oss-120b)"
+      ai_model_hint:"Model (repozytorium HF, np. openai/gpt-oss-120b)",
+      /* --- powiadomienia PUSH + edycja --- */
+      set_notif:"Powiadomienia PUSH",
+      notif_toggle:"Włącz powiadomienia PUSH",
+      notif_note:"Powiadomienia o wydarzeniach i zadaniach działają po udzieleniu zgody w przeglądarce. Aby otrzymywać je również w tle na telefonie, dodaj aplikację do ekranu głównego.",
+      notif_denied:"Powiadomienia są zablokowane w ustawieniach przeglądarki dla tej strony. Odblokuj je, aby otrzymywać przypomnienia.",
+      notif_unsupported:"Ta przeglądarka nie obsługuje powiadomień.",
+      notif_event_start:"Wydarzenie się rozpoczyna",
+      save_changes:"Zapisz zmiany",
+      edited_label:"edytowano"
     },
     en:{
       clock_title:"Clock & date", upcoming_title:"Upcoming event",
@@ -1944,7 +1988,16 @@
       budget_history:"Budget history", budget_history_none:"No saved periods yet.",
       ai_hf_note:"The AI Agent uses the free Hugging Face API (router). Paste your free token (huggingface.co → Settings → Access Tokens) — stored only locally in this browser.",
       ai_hf_token:"Hugging Face token", ai_hf_get:"Get a free token", ai_need_token:"Set your free Hugging Face token in config first.",
-      ai_model_hint:"Model (HF repo, e.g. openai/gpt-oss-120b)"
+      ai_model_hint:"Model (HF repo, e.g. openai/gpt-oss-120b)",
+      /* --- push notifications + editing --- */
+      set_notif:"Push notifications",
+      notif_toggle:"Enable push notifications",
+      notif_note:"Event and task notifications work after you grant permission in the browser. To also receive them in the background on your phone, add the app to your home screen.",
+      notif_denied:"Notifications are blocked for this site in your browser settings. Unblock them to receive reminders.",
+      notif_unsupported:"This browser does not support notifications.",
+      notif_event_start:"Event starting now",
+      save_changes:"Save changes",
+      edited_label:"edited"
     }
   };
   function t(k){ var d=I18N[state.lang]||I18N.pl; return d[k]!==undefined?d[k]:(I18N.pl[k]!==undefined?I18N.pl[k]:k); }
@@ -1984,6 +2037,7 @@
     fontSize: settings.fontSize || "default",   // small | default | large (legacy, mapowane na fontPx)
     density: settings.density || "standard",    // compact | standard | spacious
     timeFormat: settings.timeFormat || "24",    // 24 | 12
+    pushEnabled: settings.pushEnabled!==false,  // powiadomienia PUSH: domyślnie włączone (działają dopiero po zgodzie przeglądarki)
     // --- rozbudowana personalizacja wyglądu ---
     colorMode: settings.colorMode || "dark",    // dark | light | system
     pageBg: settings.pageBg || "default",        // default | gradient | pattern
@@ -2011,7 +2065,7 @@
       headerMode:state.headerMode, pinJournalEnabled:state.pinJournalEnabled,
       pinCalendarEnabled:state.pinCalendarEnabled, pinJournalHash:state.pinJournalHash, pinCalendarHash:state.pinCalendarHash,
       tickerPairs:state.tickerPairs, tickerEnabled:state.tickerEnabled,
-      fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat,
+      fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat, pushEnabled:state.pushEnabled,
       colorMode:state.colorMode, pageBg:state.pageBg, settingsBg:state.settingsBg, fontFamily:state.fontFamily,
       fontPx:state.fontPx, radius:state.radius, customColors:state.customColors, tileGlow:state.tileGlow
     });
@@ -2260,12 +2314,14 @@
           '<button class="del-btn" data-id="'+tk.id+'">'+t("delete")+'</button></div>'+
         '</div>'+
         '<div class="task-edit-row" style="display:none;" data-edit-for="'+tk.id+'">'+
+          '<input type="text" class="edit-name">'+
           '<input type="date" class="edit-date" value="'+tk.date+'">'+
           '<input type="time" class="edit-time" value="'+tk.time+'">'+
           '<button class="btn-small save-edit-btn" data-id="'+tk.id+'">'+t("save")+'</button>'+
           '<button class="btn-small cancel-edit-btn" data-id="'+tk.id+'">'+t("cancel")+'</button>'+
         '</div>';
       item.querySelector(".task-name").textContent=tk.name;
+      item.querySelector(".edit-name").value=tk.name;
       item.querySelector(".task-meta").textContent=formatDateReadable(tk.date)+", "+fmtTime(tk.time);
       list.appendChild(item);
     });
@@ -2273,11 +2329,11 @@
       cb.addEventListener("change", function(){
         var id=cb.getAttribute("data-id");
         tasks.forEach(function(tk){ if(tk.id===id) tk.done=cb.checked; });
-        saveTasks(); renderTasks();
+        saveTasks(); renderTasks(); rescheduleNotifications();
       });
     });
     list.querySelectorAll(".del-btn").forEach(function(b){
-      b.addEventListener("click", function(){ var id=b.getAttribute("data-id"); tasks=tasks.filter(function(tk){return tk.id!==id;}); saveTasks(); renderTasks(); renderUpcomingBig(); });
+      b.addEventListener("click", function(){ var id=b.getAttribute("data-id"); tasks=tasks.filter(function(tk){return tk.id!==id;}); clearNotifiedFor("task_"+id); saveTasks(); renderTasks(); renderUpcomingBig(); rescheduleNotifications(); });
     });
     list.querySelectorAll(".edit-btn").forEach(function(b){
       b.addEventListener("click", function(){ var r=list.querySelector('.task-edit-row[data-edit-for="'+b.getAttribute("data-id")+'"]'); if(r) r.style.display="flex"; });
@@ -2289,10 +2345,12 @@
       b.addEventListener("click", function(){
         var id=b.getAttribute("data-id");
         var r=list.querySelector('.task-edit-row[data-edit-for="'+id+'"]');
-        var nd=r.querySelector(".edit-date").value, nt=r.querySelector(".edit-time").value;
-        if(!nd||!nt){ alert(t("fill_task")); return; }
-        tasks.forEach(function(tk){ if(tk.id===id){ tk.date=nd; tk.time=nt; delete notifiedIds["task_"+tk.id]; } });
-        saveJSON("notifiedIds",notifiedIds); saveTasks(); renderTasks(); renderUpcomingBig();
+        var nn=r.querySelector(".edit-name").value.trim(), nd=r.querySelector(".edit-date").value, nt=r.querySelector(".edit-time").value;
+        if(!nn||!nd||!nt){ alert(t("fill_task")); return; }
+        tasks.forEach(function(tk){ if(tk.id===id){ tk.name=nn; tk.date=nd; tk.time=nt; } });
+        // Zmiana terminu: stare powiadomienie zostaje anulowane i planowane od nowa
+        clearNotifiedFor("task_"+id);
+        saveTasks(); renderTasks(); renderUpcomingBig(); rescheduleNotifications();
       });
     });
   }
@@ -2301,7 +2359,7 @@
     if(!name||!date||!time){ alert(t("fill_task")); return; }
     tasks.push({id:uid(),name:name,date:date,time:time,done:false}); saveTasks();
     $("taskName").value=""; $("taskDate").value=todayISO(); $("taskTime").value="";
-    renderTasks(); renderUpcomingBig();
+    renderTasks(); renderUpcomingBig(); rescheduleNotifications();
   });
 
   /* ================= CALENDAR ================= */
@@ -2482,10 +2540,45 @@
     b.classList.toggle("active", b.getAttribute("data-calview")===calViewMode);
   });
 
+  /* --- Edycja istniejących wydarzeń --- */
+  var editingEventId=null;
+  function resetEventForm(){
+    editingEventId=null;
+    $("evName").value=""; $("evTime").value=""; $("evTimeEnd").value=""; $("evDesc").value="";
+    $("evTravel").value="0"; $("evNotify").value="none"; $("evRepeat").value="none";
+    evDowSel=[]; $("evDowChips").style.display="none"; buildDowChips();
+    evColorSel=EV_COLORS[0]; buildColorSwatches();
+    $("evDate").value=""; $("evDateRow").style.display="none";
+    $("addEventBtn").textContent=t("add_event");
+    $("cancelEventEditBtn").style.display="none";
+  }
+  function startEventEdit(id){
+    var e=null; events.forEach(function(x){ if(x.id===id) e=x; });
+    if(!e) return;
+    editingEventId=id;
+    $("evName").value=e.name||"";
+    $("evDate").value=e.date||selectedDay||""; $("evDateRow").style.display="flex";
+    $("evTime").value=e.time||""; $("evTimeEnd").value=e.timeEnd||"";
+    var tv=""+num(e.travel||0);
+    $("evTravel").value=tv; if($("evTravel").value!==tv) $("evTravel").value="0";
+    $("evNotify").value=(e.notify===undefined||e.notify===null)?"none":(""+e.notify);
+    var rep=e.repeat||"none";
+    $("evRepeat").value=rep;
+    evDowSel=(e.repeatDays||[]).slice();
+    $("evDowChips").style.display=(rep==="days")?"flex":"none"; buildDowChips();
+    evColorSel=e.color||EV_COLORS[0]; buildColorSwatches();
+    $("evDesc").value=e.desc||"";
+    $("addEventBtn").textContent=t("save_changes");
+    $("cancelEventEditBtn").style.display="";
+    $("dayDetailCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+    $("evName").focus();
+  }
+  if($("cancelEventEditBtn")) $("cancelEventEditBtn").addEventListener("click", resetEventForm);
+
   function openDayDetail(iso){
     selectedDay=iso; var c=$("dayDetailCard"); c.style.display="block";
     $("dayDetailTitle").textContent=formatDateReadable(iso);
-    buildColorSwatches(); buildDowChips();
+    resetEventForm();
     renderDayEvents(); c.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   function renderDayEvents(){
@@ -2502,35 +2595,59 @@
       item.innerHTML='<div style="min-width:0;"><div class="event-time"></div><div class="event-name"></div>'+
         (e.desc?'<div class="event-desc"></div>':'')+
         (badges?'<div class="event-badges">'+badges+'</div>':'')+'</div>'+
-        '<button class="del-btn" data-id="'+e.id+'">'+t("delete")+'</button>';
+        '<div class="task-actions"><button class="btn-small edit-ev-btn" data-id="'+e.id+'">'+t("edit")+'</button>'+
+        '<button class="del-btn" data-id="'+e.id+'">'+t("delete")+'</button></div>';
       item.querySelector(".event-time").textContent=fmtTime(e.time)+(e.timeEnd?" – "+fmtTime(e.timeEnd):"");
       item.querySelector(".event-name").textContent=e.name;
       if(e.desc) item.querySelector(".event-desc").textContent=e.desc;
       list.appendChild(item);
     });
+    list.querySelectorAll(".edit-ev-btn").forEach(function(b){
+      b.addEventListener("click", function(){ startEventEdit(b.getAttribute("data-id")); });
+    });
     list.querySelectorAll(".del-btn").forEach(function(b){
-      b.addEventListener("click", function(){ events=events.filter(function(e){return e.id!==b.getAttribute("data-id");}); saveEvents(); renderDayEvents(); renderCalendar(); renderUpcomingBig(); });
+      b.addEventListener("click", function(){
+        var id=b.getAttribute("data-id");
+        if(editingEventId===id) resetEventForm();
+        events=events.filter(function(e){return e.id!==id;});
+        clearNotifiedFor("event_"+id);
+        saveEvents(); renderDayEvents(); renderCalendar(); renderUpcomingBig(); rescheduleNotifications();
+      });
     });
   }
   $("addEventBtn").addEventListener("click", function(){
     var name=$("evName").value.trim(), time=$("evTime").value, desc=$("evDesc").value.trim();
-    if(!name||!time||!selectedDay){ alert(t("fill_event")); return; }
+    if(!name||!time||(!selectedDay&&!editingEventId)){ alert(t("fill_event")); return; }
     var repeat=$("evRepeat").value;
-    events.push({
-      id:uid(), date:selectedDay, time:time,
-      timeEnd:$("evTimeEnd").value||"",
-      travel:num($("evTravel").value),
-      repeat:repeat,
-      repeatDays:(repeat==="days"?evDowSel.slice().sort():[]),
-      color:evColorSel,
-      notify:$("evNotify").value,
-      name:name, desc:desc
-    });
-    saveEvents();
-    $("evName").value=""; $("evTime").value=""; $("evTimeEnd").value=""; $("evDesc").value="";
-    $("evTravel").value="0"; $("evNotify").value="none"; $("evRepeat").value="none";
-    evDowSel=[]; $("evDowChips").style.display="none"; buildDowChips();
-    renderDayEvents(); renderCalendar(); renderUpcomingBig();
+    if(editingEventId){
+      // aktualizacja istniejącego wydarzenia
+      var ev=null; events.forEach(function(x){ if(x.id===editingEventId) ev=x; });
+      if(ev){
+        ev.name=name; ev.desc=desc;
+        ev.date=$("evDate").value||ev.date;
+        ev.time=time; ev.timeEnd=$("evTimeEnd").value||"";
+        ev.travel=num($("evTravel").value);
+        ev.repeat=repeat; ev.repeatDays=(repeat==="days"?evDowSel.slice().sort():[]);
+        ev.color=evColorSel; ev.notify=$("evNotify").value;
+        // Zmiana daty / godziny / powiadomienia / dojazdu: wszystkie zaplanowane powiadomienia
+        // tego wydarzenia są natychmiast anulowane i planowane od nowa z nowymi wartościami.
+        clearNotifiedFor("event_"+ev.id);
+      }
+      saveEvents(); resetEventForm();
+    } else {
+      events.push({
+        id:uid(), date:selectedDay, time:time,
+        timeEnd:$("evTimeEnd").value||"",
+        travel:num($("evTravel").value),
+        repeat:repeat,
+        repeatDays:(repeat==="days"?evDowSel.slice().sort():[]),
+        color:evColorSel,
+        notify:$("evNotify").value,
+        name:name, desc:desc
+      });
+      saveEvents(); resetEventForm();
+    }
+    renderDayEvents(); renderCalendar(); renderUpcomingBig(); rescheduleNotifications();
   });
   $("prevMonth").addEventListener("click", function(){
     if(calViewMode==="week"){ calWeekCursor.setDate(calWeekCursor.getDate()-7); }
@@ -3518,20 +3635,64 @@
   /* ================= JOURNAL ================= */
   var journal=loadJSON("journal",[]);
   function saveJournal(){ saveJSON("journal",journal); }
+  var journalEditingId=null; // id wpisu aktualnie edytowanego
   function renderJournal(){
     var list=$("journalList"); list.innerHTML="";
     if(journal.length===0){ list.innerHTML='<div class="empty-note">'+t("empty_journal")+'</div>'; return; }
     journal.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(en){
       var d=new Date(en.ts);
-      var stamp=formatDateReadable(d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()))+", "+fmtTime(pad(d.getHours())+":"+pad(d.getMinutes()));
-      var item=document.createElement("div"); item.className="journal-entry";
-      item.innerHTML='<div class="je-date"><span></span><button class="del-btn" data-id="'+en.id+'">'+t("delete")+'</button></div><div class="je-text"></div>';
-      item.querySelector(".je-date span").textContent=stamp;
+      var stamp=formatDateReadable(d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()))+", "+fmtTime(pad(d.getHours())+":"+pad(d.getMinutes()))
+        +(en.edited?" · "+t("edited_label"):"");
+      var editing=(journalEditingId===en.id);
+      var item=document.createElement("div");
+      item.className="journal-entry"+((en.collapsed&&!editing)?" collapsed":"");
+      item.innerHTML=
+        '<div class="je-date">'+
+          '<button class="je-toggle" type="button" aria-expanded="'+(en.collapsed?"false":"true")+'">'+
+            '<span class="db-arrow" aria-hidden="true">&#9660;</span><span class="je-stamp"></span>'+
+          '</button>'+
+          '<span class="je-actions">'+
+            '<button class="btn-small je-edit">'+t("edit")+'</button>'+
+            '<button class="del-btn" data-id="'+en.id+'">'+t("delete")+'</button>'+
+          '</span>'+
+        '</div>'+
+        '<div class="je-text"></div>'+
+        '<div class="je-edit-area" style="display:none;">'+
+          '<textarea class="je-editor"></textarea>'+
+          '<div class="je-edit-btns">'+
+            '<button class="btn-small je-save">'+t("save")+'</button>'+
+            '<button class="btn-small je-cancel">'+t("cancel")+'</button>'+
+          '</div>'+
+        '</div>';
+      item.querySelector(".je-stamp").textContent=stamp;
       item.querySelector(".je-text").textContent=en.text;
+      item.querySelector(".je-editor").value=en.text;
+      if(editing){
+        item.querySelector(".je-text").style.display="none";
+        item.querySelector(".je-edit-area").style.display="block";
+      }
+      // zwijanie / rozwijanie wpisu (stan zapamiętywany razem z wpisem)
+      item.querySelector(".je-toggle").addEventListener("click", function(){
+        if(journalEditingId===en.id) return; // nie zwijaj wpisu w trakcie edycji
+        en.collapsed=!en.collapsed; saveJournal(); renderJournal();
+      });
+      // edycja zapisanego wpisu
+      item.querySelector(".je-edit").addEventListener("click", function(){ journalEditingId=en.id; renderJournal(); });
+      item.querySelector(".je-save").addEventListener("click", function(){
+        var v=item.querySelector(".je-editor").value.trim();
+        if(!v){ alert(t("fill_journal")); return; }
+        en.text=v; en.edited=Date.now(); journalEditingId=null;
+        saveJournal(); renderJournal();
+      });
+      item.querySelector(".je-cancel").addEventListener("click", function(){ journalEditingId=null; renderJournal(); });
       list.appendChild(item);
     });
     list.querySelectorAll(".del-btn").forEach(function(b){
-      b.addEventListener("click", function(){ journal=journal.filter(function(en){return en.id!==b.getAttribute("data-id");}); saveJournal(); renderJournal(); });
+      b.addEventListener("click", function(){
+        var id=b.getAttribute("data-id");
+        if(journalEditingId===id) journalEditingId=null;
+        journal=journal.filter(function(en){return en.id!==id;}); saveJournal(); renderJournal();
+      });
     });
   }
   $("addJournalBtn").addEventListener("click", function(){
@@ -4125,42 +4286,124 @@
     }
   }
 
-  /* ================= NOTIFICATIONS ================= */
+  /* ================= NOTIFICATIONS (PUSH) =================
+     Logika powiadomień:
+     - Wydarzenia: punktem startowym liczenia jest MOMENT WYJAZDU (start − czas dojazdu),
+       a nie godzina rozpoczęcia, jeśli ustawiono czas dojazdu.
+       * powiadomienie "X min przed"  => 1) X min przed momentem wyjazdu (lub startem, gdy brak dojazdu)
+                                         2) drugie powiadomienie DOKŁADNIE w momencie rozpoczęcia
+       * "w momencie rozpoczęcia"     => jedno powiadomienie w punkcie startowym
+                                         (moment wyjazdu, gdy ustawiono dojazd; inaczej start wydarzenia)
+     - Zadania: powiadomienie dokładnie w momencie deadline'u (data + godzina).
+     - Po każdej edycji wydarzenia/zadania stare powiadomienia są natychmiast anulowane
+       i planowane od nowa (rescheduleNotifications + clearNotifiedFor).
+     - Dostarczanie: preferowany Service Worker (registration.showNotification — na telefonie
+       działa także w tle / przy zablokowanym ekranie), fallback: new Notification(). */
   var notifiedIds=loadJSON("notifiedIds",{});
   function markNotified(id){ notifiedIds[id]=true; saveJSON("notifiedIds",notifiedIds); }
-  function refreshNotifBanner(){
-    if("Notification" in window && Notification.permission==="default") $("notifBanner").style.display="block";
-    else $("notifBanner").style.display="none";
+  // Kasuje "pamięć" wysłanych powiadomień elementu — po edycji plan liczony jest od zera.
+  function clearNotifiedFor(prefix){
+    var changed=false;
+    Object.keys(notifiedIds).forEach(function(k){ if(k.indexOf(prefix)===0){ delete notifiedIds[k]; changed=true; } });
+    if(changed) saveJSON("notifiedIds",notifiedIds);
   }
-  $("enableNotifBtn").addEventListener("click", function(){ if("Notification" in window) Notification.requestPermission().then(refreshNotifBanner); });
-  function sendNotification(title,body){ if("Notification" in window && Notification.permission==="granted"){ try{ new Notification(title,{body:body}); }catch(e){} } }
-  function checkUpcoming(){
-    var now=new Date(), oneHour=3600000;
+  function canNotify(){ return ("Notification" in window) && Notification.permission==="granted" && state.pushEnabled; }
+  function refreshNotifBanner(){
+    var show=("Notification" in window) && Notification.permission==="default" && state.pushEnabled;
+    $("notifBanner").style.display=show?"block":"none";
+  }
+  $("enableNotifBtn").addEventListener("click", function(){
+    state.pushEnabled=true; persistSettings();
+    if("Notification" in window) Notification.requestPermission().then(function(){ refreshNotifBanner(); rescheduleNotifications(); });
+  });
+  function sendNotification(title,body,tag){
+    if(!canNotify()) return;
+    var opts={body:body}; if(tag) opts.tag=tag;
+    function direct(){ try{ new Notification(title,opts); }catch(e){} }
+    if("serviceWorker" in navigator && navigator.serviceWorker.getRegistration){
+      navigator.serviceWorker.getRegistration().then(function(reg){
+        if(reg && typeof reg.showNotification==="function"){ reg.showNotification(title,opts).catch(direct); }
+        else direct();
+      }).catch(direct);
+    } else direct();
+  }
+  function hhmmOfTs(ts){ var d=new Date(ts); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+
+  /* Pełny plan powiadomień na najbliższe dni (zadania + wszystkie wystąpienia wydarzeń). */
+  var NOTIF_HORIZON_DAYS=7, NOTIF_GRACE_MS=10*60000;
+  function plannedNotifications(){
+    var out=[], now=Date.now();
+    // zadania: dokładnie w momencie deadline'u
     tasks.forEach(function(tk){
-      if(tk.done) return;
-      var diff=new Date(tk.date+"T"+tk.time)-now, key="task_"+tk.id;
-      if(diff>0&&diff<=oneHour&&!notifiedIds[key]){ sendNotification(t("notif_task"),tk.name+" — "+tk.time); markNotified(key); }
+      if(tk.done||!tk.date||!tk.time) return;
+      var at=new Date(tk.date+"T"+tk.time).getTime();
+      if(isNaN(at)) return;
+      out.push({key:"task_"+tk.id+"_"+tk.date+"_"+tk.time, at:at,
+        title:t("notif_task"), body:tk.name+" — "+fmtTime(tk.time)+", "+formatDateReadable(tk.date)});
     });
-    events.forEach(function(e){
-      if(e.notify!==undefined){
-        // Nowe wydarzenia: powiadomienie wg wybranej opcji (+ czas dojazdu przesuwa przypomnienie wcześniej)
-        if(e.notify==="none") return;
-        var occ=nextOccurrence(e, new Date(now.getTime()-60000));
-        if(!occ || occ<=now) return;
-        var travel=num(e.travel||0);
-        var target=occ.getTime()-(num(e.notify)+travel)*60000;
-        var occIso=occ.getFullYear()+"-"+pad(occ.getMonth()+1)+"-"+pad(occ.getDate());
-        var key="event_"+e.id+"_"+occIso;
-        if(now.getTime()>=target && !notifiedIds[key]){
-          var body=e.name+" — "+fmtTime(e.time)+(travel>0?" · 🚗 "+t("notif_travel_hint")+" "+travel+" min":"");
-          sendNotification(t("notif_event"), body);
-          markNotified(key);
+    // wydarzenia: skan dzień po dniu (obsługuje powtarzanie)
+    var d=new Date(); d=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    for(var i=0;i<=NOTIF_HORIZON_DAYS;i++){
+      var iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+      events.forEach(function(e){
+        var notify=(e.notify===undefined||e.notify===null)?"none":(""+e.notify);
+        if(notify==="none"||!e.time) return;
+        if(!eventOccursOn(e,iso)) return;
+        var start=new Date(iso+"T"+e.time).getTime();
+        if(isNaN(start)) return;
+        var travel=num(e.travel||0), lead=num(notify);
+        var anchor=start-travel*60000; // moment wyjazdu (= start, gdy brak dojazdu)
+        var base="event_"+e.id+"_"+iso;
+        if(lead>0){
+          // 1) przypomnienie X min przed momentem wyjazdu / startu
+          out.push({key:base+"_pre", at:anchor-lead*60000, title:t("notif_event"),
+            body:e.name+" — "+fmtTime(e.time)+(travel>0?" · 🚗 "+t("notif_travel_hint")+": "+fmtTime(hhmmOfTs(anchor)):"")});
+          // 2) drugie powiadomienie dokładnie w momencie rozpoczęcia wydarzenia
+          out.push({key:base+"_start", at:start, title:t("notif_event_start"), body:e.name+" — "+fmtTime(e.time)});
+        } else {
+          // tylko "w momencie rozpoczęcia": jedno powiadomienie w punkcie startowym
+          out.push({key:base+"_start", at:anchor, title:(travel>0?t("notif_event"):t("notif_event_start")),
+            body:e.name+" — "+fmtTime(e.time)+(travel>0?" · 🚗 "+t("notif_travel_hint"):"")});
         }
-      } else {
-        // Starsze wydarzenia (bez ustawienia): dotychczasowe zachowanie — 1 h przed
-        var diff=new Date(e.date+"T"+e.time)-now, key2="event_"+e.id;
-        if(diff>0&&diff<=oneHour&&!notifiedIds[key2]){ sendNotification(t("notif_event"),e.name+" — "+e.time); markNotified(key2); }
-      }
+      });
+      d.setDate(d.getDate()+1);
+    }
+    return out.filter(function(n){ return !notifiedIds[n.key] && n.at>=now-NOTIF_GRACE_MS; })
+      .sort(function(a,b){ return a.at-b.at; });
+  }
+
+  /* Harmonogram: precyzyjne timery na najbliższe 48 h + synchronizacja planu z Service Workerem.
+     Wywołanie anuluje WSZYSTKIE wcześniejsze timery i planuje od nowa (używane po każdej edycji). */
+  var notifTimers=[];
+  function rescheduleNotifications(){
+    notifTimers.forEach(clearTimeout); notifTimers=[];
+    var plan=canNotify()?plannedNotifications():[];
+    var now=Date.now();
+    plan.forEach(function(n){
+      var delay=n.at-now;
+      if(delay<=0||delay>2*86400000) return; // dalsze terminy obsłuży cykliczny sweep
+      notifTimers.push(setTimeout(function(){
+        if(notifiedIds[n.key]||!canNotify()) return;
+        sendNotification(n.title,n.body,n.key); markNotified(n.key);
+      }, delay));
+    });
+    syncSWSchedule(plan);
+  }
+  // Przekazuje plan do Service Workera — gdy przeglądarka wspiera Notification Triggers,
+  // powiadomienia wyświetli system nawet bez aktywnej karty aplikacji.
+  function syncSWSchedule(plan){
+    if(!("serviceWorker" in navigator)||!navigator.serviceWorker.getRegistration) return;
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if(reg&&reg.active) reg.active.postMessage({type:"scheduleNotifications", plan:plan.slice(0,40)});
+    }).catch(function(){});
+  }
+  // Sweep co minutę (fallback po uśpieniu karty itp.) — wysyła zaległe powiadomienia
+  // z tolerancją 10 min, żeby nie zgubić terminu, gdy timer nie zdążył się wykonać.
+  function checkUpcoming(){
+    if(!canNotify()) return;
+    var now=Date.now();
+    plannedNotifications().forEach(function(n){
+      if(n.at<=now && now-n.at<=NOTIF_GRACE_MS){ sendNotification(n.title,n.body,n.key); markNotified(n.key); }
     });
   }
 
@@ -4248,6 +4491,7 @@
     fillTzSelects(); renderTileConfig(); syncSettingChips(); renderCurrencyGrid(); syncAppearanceControls();
     $("pinJournalEnabled").checked=state.pinJournalEnabled;
     $("pinCalendarEnabled").checked=state.pinCalendarEnabled;
+    if($("pushNotifChk")) $("pushNotifChk").checked=state.pushEnabled;
     $("settingsOverlay").classList.add("active");
   }
   $("gearBtn").addEventListener("click", openSettings);
@@ -4312,6 +4556,25 @@
   // Ticker on/off toggle (point 6): hides the whole widget when disabled.
   if($("tickerEnabledChk")) $("tickerEnabledChk").addEventListener("change", function(){
     state.tickerEnabled=this.checked; persistSettings(); renderTicker(); if(state.tickerEnabled){ lastRates={}; fetchRates(); }
+  });
+  // Przełącznik powiadomień PUSH (ustawienia): włączenie prosi o zgodę przeglądarki,
+  // wyłączenie natychmiast anuluje wszystkie zaplanowane powiadomienia.
+  if($("pushNotifChk")) $("pushNotifChk").addEventListener("change", function(){
+    if(this.checked){
+      if(!("Notification" in window)){
+        alert(t("notif_unsupported"));
+        this.checked=false; state.pushEnabled=false; persistSettings(); return;
+      }
+      state.pushEnabled=true; persistSettings();
+      if(Notification.permission==="default"){
+        Notification.requestPermission().then(function(){ refreshNotifBanner(); rescheduleNotifications(); });
+      } else if(Notification.permission==="denied"){
+        alert(t("notif_denied"));
+      }
+    } else {
+      state.pushEnabled=false; persistSettings();
+    }
+    refreshNotifBanner(); rescheduleNotifications();
   });
   $("tzPrimary").addEventListener("change", function(){ state.tzPrimary=$("tzPrimary").value; persistSettings(); tickClock(); });
   $("tzSecondary").addEventListener("change", function(){ state.tzSecondary=$("tzSecondary").value; persistSettings(); tickClock(); });
@@ -4574,9 +4837,17 @@
   tickClock();
   setInterval(tickClock, 1000);
   refreshNotifBanner();
-  if("Notification" in window && Notification.permission==="default"){ try{ Notification.requestPermission().then(refreshNotifBanner); }catch(e){} }
+  // Zgoda przy pierwszym uruchomieniu funkcji powiadomień — powiadomienia działają tylko po jej udzieleniu
+  if(state.pushEnabled && "Notification" in window && Notification.permission==="default"){
+    try{ Notification.requestPermission().then(function(){ refreshNotifBanner(); rescheduleNotifications(); }); }catch(e){}
+  }
   checkUpcoming();
+  rescheduleNotifications();
   setInterval(checkUpcoming, 60000);
+  // Po powrocie do karty (np. odblokowanie telefonu) natychmiast nadrób zaległe i przelicz timery
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden){ checkUpcoming(); rescheduleNotifications(); } });
+  // Ponowna synchronizacja planu po zarejestrowaniu Service Workera (rejestracja startuje przy "load")
+  window.addEventListener("load", function(){ setTimeout(rescheduleNotifications, 2500); });
 
   /* ===== Welcome pop-up — first visit only (point 1) ===== */
   (function initWelcome(){
@@ -4603,10 +4874,16 @@
 </script>
 
 <script>
-  /* ===== Service Worker: offline cache-first for the page ===== */
+  /* ===== Service Worker: offline cache + powiadomienia w tle =====
+     - Powiadomienia wysyłane przez registration.showNotification() są powiadomieniami
+       systemowymi: na telefonie pojawiają się także przy zablokowanym ekranie.
+     - Gdy przeglądarka wspiera Notification Triggers (TimestampTrigger), Service Worker
+       sam wyświetli zaplanowane powiadomienia — nawet gdy karta aplikacji nie jest aktywna.
+       Plan przekazuje strona przez postMessage ({type:'scheduleNotifications', plan:[...]}).
+     - notificationclick: kliknięcie powiadomienia otwiera / fokusuje aplikację. */
   if("serviceWorker" in navigator){
     var swSource=[
-      "const CACHE_NAME='futureapp-cache-v13';",
+      "const CACHE_NAME='futureapp-cache-v14';",
       "self.addEventListener('install',function(event){",
       "  self.skipWaiting();",
       "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
@@ -4624,11 +4901,41 @@
       "        .catch(function(){ return cache.match(self.registration.scope); });",
       "    });",
       "  }));",
+      "});",
+      "/* Harmonogram powiadomień ze strony: anuluj wszystkie zaplanowane i zaplanuj od nowa */",
+      "self.addEventListener('message',function(event){",
+      "  var data=event.data||{};",
+      "  if(data.type!=='scheduleNotifications') return;",
+      "  if(!(self.Notification && 'showTrigger' in Notification.prototype && self.TimestampTrigger)) return;",
+      "  var run=self.registration.getNotifications({includeTriggered:false}).then(function(list){",
+      "    list.forEach(function(n){ if(n.data&&n.data.futureapp){ try{ n.close(); }catch(e){} } });",
+      "    return Promise.all((data.plan||[]).map(function(n){",
+      "      if(!n||!n.at||n.at<=Date.now()) return Promise.resolve();",
+      "      return self.registration.showNotification(n.title||'FutureApp',{",
+      "        body:n.body||'', tag:n.key, data:{futureapp:true},",
+      "        showTrigger:new TimestampTrigger(n.at)",
+      "      }).catch(function(){});",
+      "    }));",
+      "  }).catch(function(){});",
+      "  if(event.waitUntil) event.waitUntil(run);",
+      "});",
+      "self.addEventListener('notificationclick',function(event){",
+      "  event.notification.close();",
+      "  event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(list){",
+      "    for(var i=0;i<list.length;i++){ if('focus' in list[i]) return list[i].focus(); }",
+      "    if(self.clients.openWindow) return self.clients.openWindow(self.registration.scope);",
+      "  }));",
       "});"
     ].join("\n");
     var swBlob=new Blob([swSource],{type:"application/javascript"});
     var swUrl=URL.createObjectURL(swBlob);
-    window.addEventListener("load", function(){ navigator.serviceWorker.register(swUrl).catch(function(){}); });
+    window.addEventListener("load", function(){
+      // Najpierw plik sw.js obok index.html (pełne wsparcie tła na hostingu),
+      // w razie braku — rejestracja inline (blob) jako fallback.
+      navigator.serviceWorker.register("sw.js").catch(function(){
+        return navigator.serviceWorker.register(swUrl);
+      }).catch(function(){});
+    });
   }
 </script>
 
