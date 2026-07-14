@@ -3281,8 +3281,7 @@
       '<label data-i18n="ex_name">'+t("ex_name")+'</label><input type="text" class="ex-name" list="exerciseNames" data-i18n-ph="ex_name_ph" placeholder="'+t("ex_name_ph")+'">'+
       '<div class="ex-hint" style="display:none;"></div>'+
       '<label data-i18n="sets">'+t("sets")+'</label><div class="sets-container"></div>'+
-      '<button type="button" class="btn-ghost add-set-btn" style="margin-top:8px;" data-i18n="add_set">'+t("add_set")+'</button>'+
-      '<label data-i18n="note">'+t("note")+'</label><textarea class="ex-note"></textarea>';
+      '<button type="button" class="btn-ghost add-set-btn" style="margin-top:8px;" data-i18n="add_set">'+t("add_set")+'</button>';
 
     block.querySelector(".rm-exercise").addEventListener("click", function(){
       if(container.querySelectorAll(".exercise-block").length>1){
@@ -3341,7 +3340,7 @@
       nameInp.value=prefill.name||"";
       var ps=(prefill.sets && prefill.sets.length) ? prefill.sets : [{}];
       ps.forEach(function(st){ addSetRow(sc, st||{}); });
-      if(prefill.note) block.querySelector(".ex-note").value=prefill.note;
+      block.__exNote=prefill.note||"";   // stare wpisy: notatka ćwiczenia nie ma już pola, ale nie kasujemy jej
       block.__ssRaw=prefill.ss||null;
       showHint();
     } else {
@@ -3479,7 +3478,7 @@
     var exercises=[];
     document.querySelectorAll("#exercisesContainer .exercise-block").forEach(function(block){
       var name=block.querySelector(".ex-name").value.trim();
-      var note=block.querySelector(".ex-note").value.trim();
+      var note=(block.__exNote||"").trim();
       var sets=[];
       block.querySelectorAll(".set-item").forEach(function(item){
         var w=item.querySelector(".set-weight").value, r=item.querySelector(".set-reps").value;
