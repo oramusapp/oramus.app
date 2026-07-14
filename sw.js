@@ -3,7 +3,7 @@
    (navigator.serviceWorker.register("sw.js")); dzięki temu powiadomienia systemowe
    działają także przy zablokowanym ekranie, a tam gdzie przeglądarka wspiera
    Notification Triggers — nawet bez otwartej karty aplikacji. */
-const CACHE_NAME = 'futureapp-cache-v15';
+const CACHE_NAME = 'futureapp-cache-v16';
 
 self.addEventListener('install', function (event) {
   self.skipWaiting();
@@ -15,7 +15,13 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('activate', function (event) {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(function (names) {
+      return Promise.all(names.map(function (n) {
+        if (n !== CACHE_NAME) return caches.delete(n);   // usuń nieaktualne cache
+      }));
+    }).then(function () { return self.clients.claim(); })
+  );
 });
 
 /* Strategia NETWORK-FIRST: zawsze próbuj pobrać świeżą wersję strony z sieci

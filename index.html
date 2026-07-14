@@ -1917,20 +1917,23 @@
         </div>
         <!-- Web Push (własny serwer) działa w pełni automatycznie — adres serwera jest
              wbudowany w stronę (WP_DEFAULT_SERVER), steruje nim główny suwak powyżej. -->
-        <!-- ntfy: dostarczanie w tle — działa przy zamkniętej aplikacji i zgaszonym ekranie -->
-        <div class="toggle-line" style="margin-top:14px;">
-          <span data-i18n="ntfy_toggle">Powiadomienia w tle (ntfy)</span>
-          <input type="checkbox" id="ntfyEnabledChk" style="width:18px;height:18px;accent-color:var(--accent);">
-        </div>
-        <div id="ntfyConfig" style="display:none;">
-          <label for="ntfyTopicInput" data-i18n="ntfy_topic">Prywatny temat (topic)</label>
-          <input type="text" id="ntfyTopicInput" autocapitalize="none" autocorrect="off" spellcheck="false">
-          <label for="ntfyServerInput" data-i18n="ntfy_server">Serwer ntfy</label>
-          <input type="text" id="ntfyServerInput" placeholder="https://ntfy.sh" autocapitalize="none" autocorrect="off" spellcheck="false">
-          <button class="btn-ghost" id="ntfyTestBtn" style="margin-top:10px;" data-i18n="ntfy_test">Wyślij powiadomienie testowe</button>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="ntfy_note">
-            Zainstaluj darmową aplikację „ntfy” (App Store / Google Play) i zasubskrybuj w niej dokładnie ten temat. Powiadomienia będą przychodzić także przy zamkniętej aplikacji i zgaszonym ekranie. Temat działa jak hasło — nie udostępniaj go nikomu. Treść powiadomień przechodzi przez wybrany serwer ntfy.
-          </div>
+      </div>
+    </div>
+
+    <!-- ================= KOPIA ZAPASOWA (Etap 0) =================
+         Eksport/import wszystkich danych aplikacji do jednego pliku .json.
+         Ten sam format posłuży później jako ścieżka migracji do konta w chmurze. -->
+    <div class="set-section">
+      <button class="acc-head" data-acc="set_backup" aria-controls="accBackup">
+        <h4 data-i18n="set_backup">Kopia zapasowa</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="db-collapse" id="accBackup">
+        <button class="btn-primary" id="backupExportBtn" data-i18n="backup_export">Pobierz kopię zapasową</button>
+        <button class="btn-ghost" id="backupImportBtn" style="margin-top:10px;" data-i18n="backup_import">Wczytaj kopię zapasową</button>
+        <input type="file" id="backupFileInput" accept="application/json,.json" style="display:none;">
+        <div id="backupStatus" style="font-size:0.72rem;margin-top:10px;line-height:1.5;display:none;"></div>
+        <div style="font-size:0.68rem;color:var(--text-dim);margin-top:8px;line-height:1.5;" data-i18n="backup_note">
+          Kopia zawiera wszystkie Twoje dane (zadania, kalendarz, fitness, budżet, dziennik, ustawienia) w jednym pliku .json. E-booki (pliki PDF) nie są objęte kopią ze względu na rozmiar. Plik zapisz w bezpiecznym miejscu — nie jest zaszyfrowany.
         </div>
       </div>
     </div>
@@ -2208,21 +2211,22 @@
       notif_event_start:"Wydarzenie się rozpoczyna",
       save_changes:"Zapisz zmiany",
       edited_label:"edytowano",
-      /* --- ntfy (powiadomienia w tle) --- */
-      ntfy_toggle:"Powiadomienia w tle (ntfy)",
-      ntfy_topic:"Prywatny temat (topic)",
-      ntfy_server:"Serwer ntfy",
-      ntfy_test:"Wyślij powiadomienie testowe",
-      ntfy_test_msg:"Test powiadomień Fortislly — działa! 🎉",
-      ntfy_test_sent:"Wysłano! Sprawdź aplikację ntfy na telefonie.",
-      ntfy_test_fail:"Nie udało się wysłać. Sprawdź połączenie, serwer i nazwę tematu.",
-      ntfy_note:"Zainstaluj darmową aplikację „ntfy” (App Store / Google Play) i zasubskrybuj w niej dokładnie ten temat. Powiadomienia będą przychodzić także przy zamkniętej aplikacji i zgaszonym ekranie. Temat działa jak hasło — nie udostępniaj go nikomu. Treść powiadomień przechodzi przez wybrany serwer ntfy.",
-      /* --- Web Push przez własny serwer (bez ntfy) --- */
-      wp_toggle:"Web Push — własny serwer (bez ntfy)",
+      /* --- kopia zapasowa (eksport / import) --- */
+      set_backup:"Kopia zapasowa",
+      backup_export:"Pobierz kopię zapasową",
+      backup_import:"Wczytaj kopię zapasową",
+      backup_note:"Kopia zawiera wszystkie Twoje dane (zadania, kalendarz, fitness, budżet, dziennik, ustawienia) w jednym pliku .json. E-booki (pliki PDF) nie są objęte kopią ze względu na rozmiar. Plik zapisz w bezpiecznym miejscu — nie jest zaszyfrowany.",
+      backup_exported:"Kopia zapasowa została pobrana.",
+      backup_confirm:"Wczytanie kopii ZASTĄPI wszystkie obecne dane w tej przeglądarce. Tej operacji nie da się cofnąć.\n\nZalecenie: najpierw pobierz kopię obecnych danych.\n\nKontynuować?",
+      backup_imported:"Kopia wczytana. Aplikacja zostanie przeładowana…",
+      backup_bad_file:"To nie jest prawidłowy plik kopii zapasowej Fortislly.",
+      backup_read_fail:"Nie udało się odczytać pliku.",
+      /* --- Web Push przez własny serwer --- */
+      wp_toggle:"Web Push — własny serwer",
       wp_server:"Adres serwera push (Cloudflare Worker)",
       wp_connect:"Połącz to urządzenie",
       wp_test:"Wyślij test",
-      wp_note:"Powiadomienia systemowe bezpośrednio z tej aplikacji — bez aplikacji ntfy. Wymaga: aplikacji hostowanej na HTTPS (np. GitHub Pages) razem z plikiem sw.js oraz wdrożonego darmowego Cloudflare Workera (instrukcja w pliku INSTRUKCJA-POWIADOMIENIA.md). Na iPhone: iOS 16.4+, aplikacja dodana do ekranu głównego i otwierana z ikony.",
+      wp_note:"Powiadomienia systemowe bezpośrednio z tej aplikacji — Wymaga: aplikacji hostowanej na HTTPS (np. GitHub Pages) razem z plikiem sw.js oraz wdrożonego darmowego Cloudflare Workera (instrukcja w pliku INSTRUKCJA-POWIADOMIENIA.md). Na iPhone: iOS 16.4+, aplikacja dodana do ekranu głównego i otwierana z ikony.",
       wp_need_server:"Najpierw podaj adres serwera push (Cloudflare Worker).",
       wp_need_sw:"Brak aktywnego Service Workera. Aplikacja musi być otwarta z hostingu HTTPS z plikiem sw.js obok index.html (np. GitHub Pages), a na iPhone — z ikony na ekranie głównym.",
       wp_sub_ok:"Urządzenie połączone! Powiadomienia będą przychodzić bezpośrednio do tej aplikacji.",
@@ -2408,21 +2412,22 @@
       notif_event_start:"Event starting now",
       save_changes:"Save changes",
       edited_label:"edited",
-      /* --- ntfy (background delivery) --- */
-      ntfy_toggle:"Background delivery (ntfy)",
-      ntfy_topic:"Private topic",
-      ntfy_server:"ntfy server",
-      ntfy_test:"Send test notification",
-      ntfy_test_msg:"Fortislly notification test — it works! 🎉",
-      ntfy_test_sent:"Sent! Check the ntfy app on your phone.",
-      ntfy_test_fail:"Sending failed. Check your connection, server and topic name.",
-      ntfy_note:"Install the free “ntfy” app (App Store / Google Play) and subscribe to exactly this topic in it. Notifications will arrive even with the app closed and the screen off. The topic works like a password — don't share it. Notification content passes through the chosen ntfy server.",
-      /* --- Web Push via own server (no ntfy) --- */
-      wp_toggle:"Web Push — own server (no ntfy)",
+      /* --- backup (export / import) --- */
+      set_backup:"Backup",
+      backup_export:"Download backup",
+      backup_import:"Restore backup",
+      backup_note:"The backup contains all your data (tasks, calendar, fitness, budget, journal, settings) in a single .json file. E-books (PDF files) are not included due to their size. Keep the file somewhere safe — it is not encrypted.",
+      backup_exported:"Backup downloaded.",
+      backup_confirm:"Restoring a backup will REPLACE all current data in this browser. This cannot be undone.\n\nRecommended: download a backup of your current data first.\n\nContinue?",
+      backup_imported:"Backup restored. Reloading the app…",
+      backup_bad_file:"This is not a valid Fortislly backup file.",
+      backup_read_fail:"Could not read the file.",
+      /* --- Web Push via own server --- */
+      wp_toggle:"Web Push — own server",
       wp_server:"Push server address (Cloudflare Worker)",
       wp_connect:"Connect this device",
       wp_test:"Send test",
-      wp_note:"System notifications directly from this app — no ntfy app needed. Requires: the app hosted on HTTPS (e.g. GitHub Pages) together with sw.js, and a deployed free Cloudflare Worker (see INSTRUKCJA-POWIADOMIENIA.md). On iPhone: iOS 16.4+, app added to the home screen and opened from its icon.",
+      wp_note:"System notifications directly from this app — Requires: the app hosted on HTTPS (e.g. GitHub Pages) together with sw.js, and a deployed free Cloudflare Worker (see INSTRUKCJA-POWIADOMIENIA.md). On iPhone: iOS 16.4+, app added to the home screen and opened from its icon.",
       wp_need_server:"Enter the push server address (Cloudflare Worker) first.",
       wp_need_sw:"No active Service Worker. The app must be opened from HTTPS hosting with sw.js next to index.html (e.g. GitHub Pages), and on iPhone — from the home screen icon.",
       wp_sub_ok:"Device connected! Notifications will arrive directly in this app.",
@@ -2492,11 +2497,7 @@
     density: settings.density || "standard",    // compact | standard | spacious
     timeFormat: settings.timeFormat || "24",    // 24 | 12
     pushEnabled: settings.pushEnabled!==false,  // powiadomienia PUSH: domyślnie włączone (działają dopiero po zgodzie przeglądarki)
-    // --- ntfy: dostarczanie powiadomień w tle (zamknięta aplikacja / zgaszony ekran) ---
-    ntfyEnabled: !!settings.ntfyEnabled,
-    ntfyTopic: settings.ntfyTopic || "",
-    ntfyServer: settings.ntfyServer || "https://ntfy.sh",
-    // --- Web Push przez własny serwer (Cloudflare Worker) — bez aplikacji ntfy ---
+    // --- Web Push przez własny serwer (Cloudflare Worker) ---
     // W pełni automatyczne (bez opcji w ustawieniach): działa, gdy WP_DEFAULT_SERVER
     // jest ustawiony i główny suwak "Powiadomienia PUSH" jest włączony.
     wpServer: settings.wpServer || WP_DEFAULT_SERVER,
@@ -2539,7 +2540,6 @@
       pinJournalHash:state.pinJournalHash, pinCalendarHash:state.pinCalendarHash, pinBudgetHash:state.pinBudgetHash,
       tickerPairs:state.tickerPairs, tickerEnabled:state.tickerEnabled,
       fontSize:state.fontSize, density:state.density, timeFormat:state.timeFormat, pushEnabled:state.pushEnabled,
-      ntfyEnabled:state.ntfyEnabled, ntfyTopic:state.ntfyTopic, ntfyServer:state.ntfyServer,
       wpServer:state.wpServer, wpChannel:state.wpChannel,
       colorMode:state.colorMode, pageBg:state.pageBg, settingsBg:state.settingsBg, fontFamily:state.fontFamily,
       fontPx:state.fontPx, radius:state.radius, customColors:state.customColors, tileGlow:state.tileGlow
@@ -5147,9 +5147,8 @@
      Kanały dostarczania:
      1) Lokalnie: Service Worker (registration.showNotification) lub new Notification()
         — działa gdy aplikacja/przeglądarka jest uruchomiona (także w tle na Androidzie).
-     2) ntfy: zaplanowane wiadomości wysyłane na prywatny temat (topic) — aplikacja ntfy
-        na telefonie dostarcza je również przy ZAMKNIĘTEJ aplikacji i ZGASZONYM ekranie.
-        Przy edycji zaplanowane wiadomości ntfy są anulowane i planowane od nowa. */
+     2) Web Push (własny serwer): powiadomienia docierają przy ZAMKNIĘTEJ aplikacji
+        i ZGASZONYM ekranie. Wysłanie nowego planu zastępuje poprzedni. */
   var notifiedIds=loadJSON("notifiedIds",{});
   function markNotified(id){ notifiedIds[id]=true; saveJSON("notifiedIds",notifiedIds); }
   // Kasuje "pamięć" wysłanych powiadomień elementu — po edycji plan liczony jest od zera.
@@ -5223,76 +5222,7 @@
       .sort(function(a,b){ return a.at-b.at; });
   }
 
-  /* ---- ntfy: dostarczanie w tle (zamknięta aplikacja / zgaszony ekran) ----
-     Publikacja: POST {serwer}/{topic}?title=..&delay=<unix_ts>  (planowana dostawa, max 3 dni w przód).
-     Anulowanie przy edycji: GET {serwer}/{topic}/{id}/delete (best-effort — wymaga serwera ntfy
-     wspierającego kasowanie zaplanowanych wiadomości; w razie braku wsparcia stare powiadomienie
-     może dotrzeć mimo edycji). Rejestr wysłanych: localStorage "ntfySent" (key -> {id, at, topic, server}). */
-  var ntfySent=loadJSON("ntfySent",{});
-  function ntfyReady(){ return state.ntfyEnabled && !!state.ntfyTopic; }
-  function ntfyBase(server){ return (server||state.ntfyServer||"https://ntfy.sh").replace(/\/+$/,""); }
-  function ntfyPublish(n){
-    var url=ntfyBase()+"/"+encodeURIComponent(state.ntfyTopic)
-      +"?title="+encodeURIComponent(n.title)
-      +"&tags=bell"
-      +"&delay="+Math.round(n.at/1000);
-    return fetch(url,{method:"POST",body:n.body})
-      .then(function(r){ return r.ok?r.json():null; })
-      .then(function(j){ return (j&&j.id)?j.id:null; })
-      .catch(function(){ return null; });
-  }
-  function ntfyCancel(rec){
-    if(!rec||!rec.id||!rec.topic) return;
-    var url=ntfyBase(rec.server)+"/"+encodeURIComponent(rec.topic)+"/"+encodeURIComponent(rec.id)+"/delete";
-    try{ fetch(url).catch(function(){}); }catch(e){}
-  }
-  var ntfySyncTimer=null, ntfySyncing=false;
-  function syncNtfySchedule(){
-    clearTimeout(ntfySyncTimer);
-    ntfySyncTimer=setTimeout(doNtfySync, 600); // krótki debounce przy serii edycji
-  }
-  function doNtfySync(){
-    if(ntfySyncing) { syncNtfySchedule(); return; }
-    var now=Date.now();
-    // wyłączone -> anuluj wszystko, co jeszcze nie zostało dostarczone
-    if(!ntfyReady()){
-      var any=false;
-      Object.keys(ntfySent).forEach(function(k){
-        if(ntfySent[k].at>now) ntfyCancel(ntfySent[k]);
-        delete ntfySent[k]; any=true;
-      });
-      if(any) saveJSON("ntfySent",ntfySent);
-      return;
-    }
-    var desired={};
-    plannedNotifications().forEach(function(n){
-      // ograniczenia ntfy: dostawa planowana od 10 s do ~3 dni w przód
-      if(n.at-now>15000 && n.at-now<(3*86400000-60000)) desired[n.key]=n;
-    });
-    // 1) anuluj wpisy nieaktualne (element usunięty/edytowany, zmiana czasu, tematu lub serwera)
-    Object.keys(ntfySent).forEach(function(key){
-      var rec=ntfySent[key];
-      if(rec.at<=now){ delete ntfySent[key]; return; } // już dostarczone — tylko porządek w rejestrze
-      if(!desired[key] || desired[key].at!==rec.at || rec.topic!==state.ntfyTopic || rec.server!==state.ntfyServer){
-        ntfyCancel(rec); delete ntfySent[key];
-      }
-    });
-    saveJSON("ntfySent",ntfySent);
-    // 2) opublikuj brakujące (sekwencyjnie)
-    var pending=Object.keys(desired).filter(function(k){ return !ntfySent[k]; });
-    if(pending.length===0) return;
-    ntfySyncing=true;
-    (function next(i){
-      if(i>=pending.length){ ntfySyncing=false; saveJSON("ntfySent",ntfySent); return; }
-      var n=desired[pending[i]];
-      ntfyPublish(n).then(function(id){
-        if(id) ntfySent[n.key]={id:id, at:n.at, topic:state.ntfyTopic, server:state.ntfyServer};
-        next(i+1);
-      });
-    })(0);
-  }
-
-  /* ---- Web Push przez własny serwer (Cloudflare Worker) — bez aplikacji ntfy ----
+  /* ---- Web Push przez własny serwer (Cloudflare Worker) ----
      Aplikacja subskrybuje systemowy push (pushManager.subscribe) i wysyła harmonogram
      na Workera; Worker co minutę wysyła zaległe powiadomienia przez kanał push
      Apple/Google — docierają przy ZAMKNIĘTEJ aplikacji i ZGASZONYM ekranie.
@@ -5348,8 +5278,8 @@
       .catch(function(){});
   }
 
-  /* Harmonogram: precyzyjne timery na najbliższe 48 h + synchronizacja z Service Workerem,
-     ntfy i własnym serwerem Web Push. Wywołanie anuluje WSZYSTKIE wcześniejsze timery
+  /* Harmonogram: precyzyjne timery na najbliższe 48 h + synchronizacja z Service Workerem
+     i własnym serwerem Web Push. Wywołanie anuluje WSZYSTKIE wcześniejsze timery
      i planuje od nowa (używane po każdej edycji). */
   var notifTimers=[];
   function rescheduleNotifications(){
@@ -5365,7 +5295,6 @@
       }, delay));
     });
     syncSWSchedule(plan);
-    syncNtfySchedule();     // ntfy działa niezależnie od zgody przeglądarki na Notification
     syncWebPushSchedule();  // własny serwer push (pełny plan, zastępowany przy każdej zmianie)
   }
   // Przekazuje plan do Service Workera — gdy przeglądarka wspiera Notification Triggers,
@@ -5471,7 +5400,7 @@
     $("pinCalendarEnabled").checked=state.pinCalendarEnabled;
     if($("pinBudgetEnabled")) $("pinBudgetEnabled").checked=state.pinBudgetEnabled;
     if($("pushNotifChk")) $("pushNotifChk").checked=state.pushEnabled;
-    syncNtfyUI();
+    if($("backupStatus")) $("backupStatus").style.display="none";
     $("settingsOverlay").classList.add("active");
   }
   $("gearBtn").addEventListener("click", openSettings);
@@ -5560,36 +5489,131 @@
   // Web Push (własny serwer): w pełni automatyczny — bez opcji w ustawieniach.
   // Adres serwera jest wbudowany (WP_DEFAULT_SERVER), a włączaniem/wyłączaniem
   // steruje główny suwak "Włącz powiadomienia PUSH" (state.pushEnabled).
-  // ntfy: konfiguracja dostarczania w tle
-  function syncNtfyUI(){
-    if(!$("ntfyEnabledChk")) return;
-    $("ntfyEnabledChk").checked=state.ntfyEnabled;
-    $("ntfyConfig").style.display=state.ntfyEnabled?"block":"none";
-    $("ntfyTopicInput").value=state.ntfyTopic;
-    $("ntfyServerInput").value=state.ntfyServer;
+  /* ================= KOPIA ZAPASOWA (eksport / import) =================
+     Cel: (1) ochrona przed utratą danych przy wyczyszczeniu pamięci przeglądarki,
+          (2) format przenoszenia danych — ten sam plik posłuży jako ścieżka migracji
+              do konta w chmurze (Etap 2/3).
+
+     Zakres: WSZYSTKIE klucze localStorage używane przez aplikację.
+     Świadomie POMIJAMY:
+       - e-booki (IndexedDB "futureapp-ebooks") — pliki PDF, zbyt duże na plik JSON,
+       - wpChannel (wewnątrz "settings") — identyfikator subskrypcji push TEGO urządzenia;
+         przeniesienie go na inne urządzenie zepsułoby powiadomienia,
+       - notifiedIds / wkTimerStart / wkDraft — stan chwilowy, per urządzenie. */
+  var BACKUP_FORMAT = "fortislly-backup";
+  var BACKUP_VERSION = 1;
+  // Klucze przenoszone między urządzeniami (dane właściwe + preferencje).
+  var BACKUP_KEYS = [
+    "settings", "accordions", "calViewMode",
+    "tasks", "events",
+    "workouts", "wkTemplates", "meals", "recentProducts", "calorieTargets", "calorieGoal",
+    "runs", "combats",
+    "journal", "dailyTasks", "dailyState", "streak",
+    "budget"
+  ];
+  // Klucze celowo NIEobjęte kopią (stan lokalny urządzenia).
+  var BACKUP_SKIP_SETTINGS = ["wpChannel"];
+
+  function backupStatus(msg, ok){
+    var el=$("backupStatus"); if(!el) return;
+    el.textContent=msg;
+    el.style.color = ok ? "var(--accent)" : "var(--danger)";
+    el.style.display="block";
   }
-  if($("ntfyEnabledChk")) $("ntfyEnabledChk").addEventListener("change", function(){
-    state.ntfyEnabled=this.checked;
-    if(state.ntfyEnabled && !state.ntfyTopic){
-      // temat pełni rolę hasła — generujemy trudny do odgadnięcia
-      state.ntfyTopic="futureapp-"+uid()+Math.random().toString(36).slice(2,10);
+
+  function buildBackup(){
+    var data={};
+    BACKUP_KEYS.forEach(function(k){
+      var raw;
+      try{ raw=localStorage.getItem(k); }catch(e){ raw=null; }
+      if(raw===null || raw===undefined) return;
+      try{ data[k]=JSON.parse(raw); }
+      catch(e){ data[k]=raw; }   // calorieGoal / wkTimerStart bywają zwykłym stringiem
+    });
+    // usuń identyfikator push tego urządzenia z kopii ustawień
+    if(data.settings && typeof data.settings==="object"){
+      BACKUP_SKIP_SETTINGS.forEach(function(k){ delete data.settings[k]; });
     }
-    persistSettings(); syncNtfyUI(); rescheduleNotifications();
+    return {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      app: "Fortislly",
+      exportedAt: new Date().toISOString(),
+      data: data
+    };
+  }
+
+  function exportBackup(){
+    var payload=JSON.stringify(buildBackup(), null, 2);
+    var blob=new Blob([payload],{type:"application/json"});
+    var d=new Date();
+    var stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes());
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="fortislly-backup-"+stamp+".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 2000);
+    backupStatus(t("backup_exported"), true);
+  }
+
+  function restoreBackup(obj){
+    if(!obj || obj.format!==BACKUP_FORMAT || !obj.data || typeof obj.data!=="object"){
+      backupStatus(t("backup_bad_file"), false);
+      return;
+    }
+    if(!confirm(t("backup_confirm"))) return;
+
+    // Zachowaj wpChannel TEGO urządzenia — nie może przyjść z kopii.
+    var keepChannel="";
+    try{
+      var cur=JSON.parse(localStorage.getItem("settings")||"{}");
+      keepChannel=cur.wpChannel||"";
+    }catch(e){}
+
+    // Wyczyść tylko klucze objęte kopią (nie ruszamy IndexedDB ani stanu urządzenia).
+    BACKUP_KEYS.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    try{ localStorage.removeItem("notifiedIds"); }catch(e){}  // plan powiadomień policzy się od nowa
+
+    Object.keys(obj.data).forEach(function(k){
+      if(BACKUP_KEYS.indexOf(k)===-1) return;   // ignoruj nieznane klucze z pliku
+      var v=obj.data[k];
+      try{
+        localStorage.setItem(k, (typeof v==="string") ? v : JSON.stringify(v));
+      }catch(e){}
+    });
+
+    // Przywróć identyfikator push tego urządzenia.
+    if(keepChannel){
+      try{
+        var s=JSON.parse(localStorage.getItem("settings")||"{}");
+        s.wpChannel=keepChannel;
+        localStorage.setItem("settings", JSON.stringify(s));
+      }catch(e){}
+    }
+
+    backupStatus(t("backup_imported"), true);
+    setTimeout(function(){ location.reload(); }, 900);
+  }
+
+  if($("backupExportBtn")) $("backupExportBtn").addEventListener("click", exportBackup);
+  if($("backupImportBtn")) $("backupImportBtn").addEventListener("click", function(){
+    $("backupFileInput").click();
   });
-  if($("ntfyTopicInput")) $("ntfyTopicInput").addEventListener("change", function(){
-    state.ntfyTopic=this.value.trim(); persistSettings(); rescheduleNotifications();
-  });
-  if($("ntfyServerInput")) $("ntfyServerInput").addEventListener("change", function(){
-    var v=this.value.trim()||"https://ntfy.sh";
-    if(!/^https?:\/\//i.test(v)) v="https://"+v;
-    state.ntfyServer=v; this.value=v; persistSettings(); rescheduleNotifications();
-  });
-  if($("ntfyTestBtn")) $("ntfyTestBtn").addEventListener("click", function(){
-    if(!state.ntfyTopic){ alert(t("ntfy_test_fail")); return; }
-    var url=ntfyBase()+"/"+encodeURIComponent(state.ntfyTopic)+"?title="+encodeURIComponent("Fortislly")+"&tags=tada";
-    fetch(url,{method:"POST",body:t("ntfy_test_msg")})
-      .then(function(r){ alert(r.ok?t("ntfy_test_sent"):t("ntfy_test_fail")); })
-      .catch(function(){ alert(t("ntfy_test_fail")); });
+  if($("backupFileInput")) $("backupFileInput").addEventListener("change", function(){
+    var file=this.files && this.files[0];
+    this.value="";                       // pozwala wybrać ten sam plik ponownie
+    if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      var obj=null;
+      try{ obj=JSON.parse(reader.result); }
+      catch(e){ backupStatus(t("backup_bad_file"), false); return; }
+      restoreBackup(obj);
+    };
+    reader.onerror=function(){ backupStatus(t("backup_read_fail"), false); };
+    reader.readAsText(file);
   });
   $("tzPrimary").addEventListener("change", function(){ state.tzPrimary=$("tzPrimary").value; persistSettings(); tickClock(); });
   $("tzSecondary").addEventListener("change", function(){ state.tzSecondary=$("tzSecondary").value; persistSettings(); tickClock(); });
@@ -5863,7 +5887,7 @@
   checkUpcoming();
   rescheduleNotifications();
   setInterval(checkUpcoming, 60000);
-  // Co godzinę odśwież plan (m.in. dosyłanie do ntfy kolejnych terminów w oknie 3 dni)
+  // Co godzinę odśwież plan powiadomień (kolejne terminy wchodzą w horyzont)
   setInterval(rescheduleNotifications, 3600000);
   // Po powrocie do karty (np. odblokowanie telefonu) natychmiast nadrób zaległe i przelicz timery
   document.addEventListener("visibilitychange", function(){ if(!document.hidden){ checkUpcoming(); rescheduleNotifications(); } });
@@ -5961,7 +5985,7 @@
      - notificationclick: kliknięcie powiadomienia otwiera / fokusuje aplikację. */
   if("serviceWorker" in navigator){
     var swSource=[
-      "const CACHE_NAME='futureapp-cache-v15';",
+      "const CACHE_NAME='futureapp-cache-v16';",
       "self.addEventListener('install',function(event){",
       "  self.skipWaiting();",
       "  event.waitUntil(caches.open(CACHE_NAME).then(function(cache){",
