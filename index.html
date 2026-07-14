@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>FutureApp</title>
+<title>Fortislly</title>
 <style>
   /* ===== THEMES ===== */
   /* ============================================================
@@ -318,10 +318,8 @@
   .exercise-block{border:1px solid var(--border-soft);border-radius:9px;padding:14px;margin-top:12px;background:var(--bg-input);}
   .exercise-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
   .exercise-block-header span{font-family:var(--font-mono);color:var(--accent2);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;}
-  .set-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;max-width:100%;}
-  .set-row input{flex:1;min-width:0;}
-  .set-row .rm-set{background:none;border:none;color:var(--text-dim);font-size:0.9rem;flex:0 0 auto;padding:2px 6px;}
-  .set-row .rm-set:hover{color:var(--danger);}
+  .rm-set{background:none;border:none;color:var(--text-dim);font-size:1rem;flex:0 0 auto;padding:2px 6px;line-height:1;}
+  .rm-set:hover{color:var(--danger);}
   .workout-entry{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border-soft);}
   .workout-entry:last-child{border:none;margin:0;padding:0;}
   .workout-entry .w-date{font-family:var(--font-mono);font-weight:700;font-size:0.9rem;color:var(--accent);}
@@ -349,25 +347,41 @@
   .exercise-block.ss-member{border-color:var(--accent2);box-shadow:var(--glow2);}
   .exercise-block.ss-member:not(.ss-last){border-bottom-style:dashed;border-bottom-left-radius:0;border-bottom-right-radius:0;}
   .exercise-block.ss-member:not(.ss-first){margin-top:0;border-top:none;border-top-left-radius:0;border-top-right-radius:0;}
-  .set-item{margin-top:6px;max-width:100%;}
-  /* Steppery kurczą się, a przyciski (notatka / dropset / usuń) zawsze mieszczą się w karcie. */
-  .set-row .stepper{flex:1 1 96px;min-width:0;}
-  .set-row .set-tools{display:flex;gap:6px;align-items:center;flex:0 0 auto;margin-left:auto;}
-  .set-row .set-tool{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);
-    font-size:0.8rem;flex:0 0 auto;padding:3px 7px;line-height:1.2;}
-  .set-row .set-tool:hover{color:var(--accent);border-color:var(--accent);}
-  .set-row .set-tool.on{color:var(--accent2);border-color:var(--accent2);}
-  .set-note{width:100%;margin-top:5px;font-size:0.78rem;}
-  .drop-list{margin:4px 0 0 10px;padding-left:8px;border-left:2px dashed var(--accent2);max-width:100%;}
+  /* --- Seria = mini-karta: nagłówek (numer + narzędzia), pola z etykietami, dropsety --- */
+  .set-item{margin-top:8px;max-width:100%;border:1px solid var(--border-soft);border-radius:10px;
+    background:var(--bg-panel);padding:8px 10px 10px;}
+  .set-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .set-no{font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:0.07em;
+    color:var(--accent);white-space:nowrap;}
+  .set-tools{display:flex;gap:5px;align-items:center;flex:0 0 auto;}
+  .set-tool{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);
+    font-size:0.78rem;flex:0 0 auto;padding:3px 8px;line-height:1.2;}
+  .set-tool:hover{color:var(--accent);border-color:var(--accent);}
+  .set-tool.on{color:var(--accent2);border-color:var(--accent2);}
+  .set-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:100%;}
+  .fld{min-width:0;}
+  .fld-lab{display:block;font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em;
+    color:var(--text-dim);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fld .stepper{width:100%;}
+  .fld .stepper input{min-width:0;padding-left:2px;padding-right:2px;}
+  .set-note{width:100%;margin-top:7px;font-size:0.78rem;}
+  /* dropsety: wcięta, wyraźnie oznaczona kolumna wewnątrz serii */
+  .drop-list{margin:8px 0 0 4px;padding-left:10px;border-left:2px solid var(--accent2);max-width:100%;}
   .drop-list:empty{display:none;}
-  .drop-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px;max-width:100%;}
-  .drop-row input{flex:1;min-width:0;}
-  .drop-row .stepper{flex:1 1 90px;min-width:0;}
-  .drop-row .rm-drop{margin-left:auto;}
+  .drop-row{margin-top:8px;max-width:100%;}
+  .drop-row:first-child{margin-top:0;}
+  .drop-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;}
+  .drop-tag{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.07em;
+    color:var(--accent2);white-space:nowrap;}
   .stepper .stp{width:30px;}
   @media (max-width:520px){
-    .set-row .stepper,.drop-row .stepper{flex:1 1 44%;}
-    .stepper .stp{width:28px;}
+    .set-item{padding:8px 8px 10px;}
+    .stepper .stp{width:28px;font-size:1rem;}
+    .set-tool{padding:3px 7px;}
+    .set-fields{gap:6px;}
+  }
+  @media (max-width:340px){
+    .set-fields{grid-template-columns:1fr;}
   }
   .drop-row .drop-tag{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.06em;
     color:var(--accent2);flex:0 0 auto;}
@@ -1098,7 +1112,7 @@
 
 <header class="topbar">
   <div class="brand">
-    <div class="site-name">FUTURE<span>APP</span></div>
+    <div class="site-name">FORTIS<span>LLY</span></div>
     <!-- Licznik dni z rzędu (streak): wartość liczona w JS ze stanu `streak.days` -->
     <div class="streak" id="streakBadge">
       <span class="st-fire" aria-hidden="true">🔥</span><b id="streakDays">0</b><span id="streakUnit">dni</span>
@@ -1799,7 +1813,7 @@
 <div class="overlay" id="obOverlay">
   <div class="modal ob-modal" style="max-width:460px;">
     <div class="modal-head">
-      <h2 id="obTitle">Witaj w FutureApp!</h2>
+      <h2 id="obTitle">Witaj w Fortislly!</h2>
       <button class="modal-close" id="obCloseBtn" aria-label="Zamknij">&times;</button>
     </div>
     <div class="ob-slide">
@@ -2081,13 +2095,13 @@
       col_accent:"Kolor akcentu", col_bg:"Kolor tła", col_text:"Kolor tekstu", col_panel:"Kolor kart/paneli", col_reset:"Przywróć kolory motywu",
       set_font:"Czcionka", font_default:"Domyślna (motyw)", font_system:"Systemowa", font_serif:"Szeryfowa", font_mono:"Monospace", font_rounded:"Zaokrąglona",
       set_radius:"Zaokrąglenie rogów", ticker_enable:"Pokazuj widget kursów walut",
-      welcome_title:"Witaj w FutureApp!", welcome_start:"Zaczynamy",
+      welcome_title:"Witaj w Fortislly!", welcome_start:"Zaczynamy",
       welcome_a2hs_title:"\uD83D\uDCF2 Dodaj skrót na ekran główny",
       welcome_a2hs_ios:"iPhone (Safari): dotknij przycisku Udostępnij (kwadrat ze strzałką \u2191 na dolnym pasku), przewiń w dół i wybierz \u201EDodaj do ekranu początkowego\u201D, potem \u201EDodaj\u201D.",
       welcome_a2hs_android:"Android (Chrome): dotknij menu \u22EE w prawym górnym rogu, wybierz \u201EDodaj do ekranu głównego\u201D (lub \u201EZainstaluj aplikację\u201D) i potwierdź.",
       welcome_text:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).",
       ob_next:"Dalej", ob_back:"Wstecz", ob_start:"Zaczynajmy",
-      ob_welcome_title:"Witaj w FutureApp!",
+      ob_welcome_title:"Witaj w Fortislly!",
       ob_welcome_body:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet, dziennik i e-booki — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce (localStorage / IndexedDB).<br><br>Przejdźmy krótko przez kolejne sekcje aplikacji — użyj przycisku „Dalej”.",
       ob_clock_title:"Zegar i nadchodzące wydarzenie",
       ob_clock_body:"Na górze ekranu głównego masz zegar z datą (opcjonalnie druga strefa czasowa) oraz kafelek z najbliższym wydarzeniem z kalendarza. Strefy czasowe i format godziny zmienisz w ⚙ Ustawieniach.",
@@ -2101,7 +2115,7 @@
       ob_ebooks_body:"Twoja biblioteka plików (np. PDF/EPUB) przechowywanych lokalnie w przeglądarce (IndexedDB), dostępnych także offline.",
       ob_settings_title:"Ustawienia i wygląd",
       ob_settings_body:"Ikona ⚙ w rogu otwiera ustawienia: tryb jasny/ciemny, kolejność i widoczność kafelków, czcionka i rozmiar tekstu, język, strefy czasowe, powiadomienia oraz PIN. Instrukcję otworzysz ponownie linkiem „📲 Instrukcja” w stopce.<br><br>To wszystko — miłego korzystania!",
-      ss_link:"Superseria z kolejnym ćwiczeniem", ss_badge:"Superseria",
+      ss_link:"Superseria z kolejnym ćwiczeniem", ss_badge:"Superseria", set_word:"Seria",
       set_note_btn:"Notatka do serii", set_note_ph:"Notatka do serii (np. tempo, RPE, technika)...",
       drop_add:"Dodaj dropset", drop_tag:"Drop",
       ex_move_up:"Przesuń w górę", ex_move_down:"Przesuń w dół", ex_drag:"Przeciągnij, aby zmienić kolejność",
@@ -2199,7 +2213,7 @@
       ntfy_topic:"Prywatny temat (topic)",
       ntfy_server:"Serwer ntfy",
       ntfy_test:"Wyślij powiadomienie testowe",
-      ntfy_test_msg:"Test powiadomień FutureApp — działa! 🎉",
+      ntfy_test_msg:"Test powiadomień Fortislly — działa! 🎉",
       ntfy_test_sent:"Wysłano! Sprawdź aplikację ntfy na telefonie.",
       ntfy_test_fail:"Nie udało się wysłać. Sprawdź połączenie, serwer i nazwę tematu.",
       ntfy_note:"Zainstaluj darmową aplikację „ntfy” (App Store / Google Play) i zasubskrybuj w niej dokładnie ten temat. Powiadomienia będą przychodzić także przy zamkniętej aplikacji i zgaszonym ekranie. Temat działa jak hasło — nie udostępniaj go nikomu. Treść powiadomień przechodzi przez wybrany serwer ntfy.",
@@ -2281,13 +2295,13 @@
       col_accent:"Accent color", col_bg:"Background color", col_text:"Text color", col_panel:"Card/panel color", col_reset:"Reset to theme colors",
       set_font:"Font", font_default:"Default (theme)", font_system:"System", font_serif:"Serif", font_mono:"Monospace", font_rounded:"Rounded",
       set_radius:"Corner radius", ticker_enable:"Show currency ticker widget",
-      welcome_title:"Welcome to FutureApp!", welcome_start:"Let's go",
+      welcome_title:"Welcome to Fortislly!", welcome_start:"Let's go",
       welcome_a2hs_title:"\uD83D\uDCF2 Add a shortcut to your home screen",
       welcome_a2hs_ios:"iPhone (Safari): tap the Share button (square with an \u2191 arrow on the bottom bar), scroll down and choose \u201CAdd to Home Screen\u201D, then \u201CAdd\u201D.",
       welcome_a2hs_android:"Android (Chrome): tap the \u22EE menu in the top-right corner, choose \u201CAdd to Home screen\u201D (or \u201CInstall app\u201D) and confirm.",
       welcome_text:"Your organization hub: tasks, calendar, fitness, budget and journal — all in one place. Data is stored only locally in your browser. Customize the look and layout in settings (the ⚙ icon in the corner).",
       ob_next:"Next", ob_back:"Back", ob_start:"Let's start",
-      ob_welcome_title:"Welcome to FutureApp!",
+      ob_welcome_title:"Welcome to Fortislly!",
       ob_welcome_body:"Your organization hub: tasks, calendar, fitness, budget, journal and e-books — all in one place. Data is stored only locally in your browser (localStorage / IndexedDB).<br><br>Let's walk through the sections quickly — tap „Next”.",
       ob_clock_title:"Clock & upcoming event",
       ob_clock_body:"At the top of the home screen you get the clock and date (with an optional second time zone) and a card with your next calendar event. Time zones and the hour format live in ⚙ Settings.",
@@ -2301,7 +2315,7 @@
       ob_ebooks_body:"Your library of files (e.g. PDF/EPUB) stored locally in the browser (IndexedDB) and available offline.",
       ob_settings_title:"Settings & look",
       ob_settings_body:"The ⚙ icon in the corner opens settings: light/dark mode, tile order and visibility, font and text size, language, time zones, notifications and PIN. You can reopen this guide anytime via „📲 Guide” in the footer.<br><br>That's it — enjoy!",
-      ss_link:"Superset with the next exercise", ss_badge:"Superset",
+      ss_link:"Superset with the next exercise", ss_badge:"Superset", set_word:"Set",
       set_note_btn:"Set note", set_note_ph:"Set note (e.g. tempo, RPE, technique)...",
       drop_add:"Add drop set", drop_tag:"Drop",
       ex_move_up:"Move up", ex_move_down:"Move down", ex_drag:"Drag to reorder",
@@ -2399,7 +2413,7 @@
       ntfy_topic:"Private topic",
       ntfy_server:"ntfy server",
       ntfy_test:"Send test notification",
-      ntfy_test_msg:"FutureApp notification test — it works! 🎉",
+      ntfy_test_msg:"Fortislly notification test — it works! 🎉",
       ntfy_test_sent:"Sent! Check the ntfy app on your phone.",
       ntfy_test_fail:"Sending failed. Check your connection, server and topic name.",
       ntfy_note:"Install the free “ntfy” app (App Store / Google Play) and subscribe to exactly this topic in it. Notifications will arrive even with the app closed and the screen off. The topic works like a password — don't share it. Notification content passes through the chosen ntfy server.",
@@ -2442,6 +2456,7 @@
     document.querySelectorAll("[data-i18n-title]").forEach(function(el){
       el.setAttribute("title", t(el.getAttribute("data-i18n-title")));
     });
+    if(typeof renumberSets==="function") renumberSets();
   }
 
   /* ================= STATE / SETTINGS ================= */
@@ -3121,13 +3136,30 @@
     Object.keys(names).sort().forEach(function(n){ var o=document.createElement("option"); o.value=n; dl.appendChild(o); });
   }
 
+  // Pole liczbowe z etykietą nad stepperem (etykieta zamiast długiego placeholdera — czytelne także na telefonie).
   function makeStepper(cls,ph,step,val){
-    var phKey = (cls.indexOf("weight")>=0) ? "weight_ph" : "reps_ph";
-    return '<div class="stepper">'+
-      '<button type="button" class="stp minus">−</button>'+
-      '<input type="number" class="'+cls+'" data-i18n-ph="'+phKey+'" placeholder="'+ph+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==null&&val!==""?val:"")+'">'+
-      '<button type="button" class="stp plus">+</button>'+
+    var labKey = (cls.indexOf("weight")>=0) ? "weight_ph" : "reps_ph";
+    return '<div class="fld">'+
+      '<span class="fld-lab" data-i18n="'+labKey+'">'+t(labKey)+'</span>'+
+      '<div class="stepper">'+
+        '<button type="button" class="stp minus">−</button>'+
+        '<input type="number" class="'+cls+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==null&&val!==""?val:"")+'">'+
+        '<button type="button" class="stp plus">+</button>'+
+      '</div>'+
     '</div>';
+  }
+  // Numeracja serii i dropsetów — użytkownik od razu widzi, gdzie jest.
+  function renumberSets(){
+    document.querySelectorAll("#exercisesContainer .sets-container").forEach(function(sc){
+      sc.querySelectorAll(":scope > .set-item").forEach(function(item,i){
+        var no=item.querySelector(".set-no");
+        if(no) no.textContent=t("set_word")+" "+(i+1);
+        item.querySelectorAll(".drop-row").forEach(function(dr,j){
+          var tg=dr.querySelector(".drop-tag");
+          if(tg) tg.textContent=t("drop_tag")+" "+(j+1);
+        });
+      });
+    });
   }
   // Podpina obsługę +/- do wszystkich stepperów w danym fragmencie DOM (serie i dropsety).
   function wireSteppers(scope){
@@ -3148,13 +3180,26 @@
   /* --- DROPSET: kolejny, obniżony ciężar w ramach tej samej serii --- */
   function addDropRow(list,d){
     var row=document.createElement("div"); row.className="drop-row";
-    row.innerHTML='<span class="drop-tag">'+t("drop_tag")+'</span>'+
-      makeStepper("drop-weight",t("weight_ph"),"2.5", d?d.weight:"")+
-      makeStepper("drop-reps",t("reps_ph"),"1", d?d.reps:"")+
-      '<button type="button" class="rm-set rm-drop">&times;</button>';
-    row.querySelector(".rm-drop").addEventListener("click", function(){ row.remove(); saveWorkoutDraft(); });
+    row.innerHTML=
+      '<div class="drop-head">'+
+        '<span class="drop-tag"></span>'+
+        '<button type="button" class="rm-set rm-drop" aria-label="&times;">&times;</button>'+
+      '</div>'+
+      '<div class="set-fields">'+
+        makeStepper("drop-weight",t("weight_ph"),"2.5", d?d.weight:"")+
+        makeStepper("drop-reps",t("reps_ph"),"1", d?d.reps:"")+
+      '</div>';
+    row.querySelector(".rm-drop").addEventListener("click", function(){
+      row.remove();
+      var item=list.closest(".set-item");
+      if(item && !list.querySelector(".drop-row")){
+        var db=item.querySelector(".drop-btn"); if(db) db.classList.remove("on");
+      }
+      renumberSets(); saveWorkoutDraft();
+    });
     wireSteppers(row);
     list.appendChild(row);
+    renumberSets();
   }
 
   /* --- SERIA: ciężar + powtórzenia + (opcjonalnie) dropsety i notatka --- */
@@ -3162,14 +3207,17 @@
     data=data||{};
     var item=document.createElement("div"); item.className="set-item";
     item.innerHTML=
-      '<div class="set-row">'+
-        makeStepper("set-weight",t("weight_ph"),"2.5",data.weight)+
-        makeStepper("set-reps",t("reps_ph"),"1",data.reps)+
+      '<div class="set-head">'+
+        '<span class="set-no"></span>'+
         '<div class="set-tools">'+
           '<button type="button" class="set-tool note-btn" data-i18n-title="set_note_btn" title="'+t("set_note_btn")+'">&#9998;</button>'+
-          '<button type="button" class="set-tool drop-btn" data-i18n-title="drop_add" title="'+t("drop_add")+'">&#9660;</button>'+
-          '<button type="button" class="rm-set">&times;</button>'+
+          '<button type="button" class="set-tool drop-btn" data-i18n-title="drop_add" title="'+t("drop_add")+'">&#9660; '+t("drop_tag")+'</button>'+
+          '<button type="button" class="rm-set" aria-label="&times;">&times;</button>'+
         '</div>'+
+      '</div>'+
+      '<div class="set-fields">'+
+        makeStepper("set-weight",t("weight_ph"),"2.5",data.weight)+
+        makeStepper("set-reps",t("reps_ph"),"1",data.reps)+
       '</div>'+
       '<div class="drop-list"></div>'+
       '<input type="text" class="set-note" data-i18n-ph="set_note_ph" placeholder="'+t("set_note_ph")+'" style="display:none;">';
@@ -3177,7 +3225,7 @@
     var noteInp=item.querySelector(".set-note");
     var noteBtn=item.querySelector(".note-btn");
     var dropBtn=item.querySelector(".drop-btn");
-    item.querySelector(".set-row .rm-set").addEventListener("click", function(){ item.remove(); saveWorkoutDraft(); });
+    item.querySelector(".set-head .rm-set").addEventListener("click", function(){ item.remove(); renumberSets(); saveWorkoutDraft(); });
     noteBtn.addEventListener("click", function(){
       var show=(noteInp.style.display==="none");
       noteInp.style.display=show?"":"none";
@@ -3197,6 +3245,7 @@
     }
     wireSteppers(item);
     container.appendChild(item);
+    renumberSets();
   }
 
   /* --- SUPERSERIE: łączenie sąsiadujących ćwiczeń w grupy --- */
@@ -3449,7 +3498,7 @@
   $("exercisesContainer").addEventListener("input", function(e){
     if(!e.target.classList) return;
     if(e.target.classList.contains("set-weight")||e.target.classList.contains("set-reps")){
-      var row=e.target.closest(".set-row"); if(row) checkRowComplete(row);
+      var row=e.target.closest(".set-item"); if(row) checkRowComplete(row);
     }
   });
   $("exercisesContainer").addEventListener("click", function(e){
@@ -3457,7 +3506,7 @@
     var addBtn=t_.closest?t_.closest(".add-set-btn"):null;
     if(addBtn){ resetRestTimer(); return; }
     var stp=t_.closest?t_.closest(".stp"):null;
-    if(stp){ var row=stp.closest(".set-row"); if(row) checkRowComplete(row); }
+    if(stp){ var row=stp.closest(".set-item"); if(row) checkRowComplete(row); }
   });
   // auto-zapis roboczej wersji treningu przy każdej zmianie pól
   $("exercisesContainer").addEventListener("input", function(){ saveWorkoutDraft(); });
@@ -5537,7 +5586,7 @@
   });
   if($("ntfyTestBtn")) $("ntfyTestBtn").addEventListener("click", function(){
     if(!state.ntfyTopic){ alert(t("ntfy_test_fail")); return; }
-    var url=ntfyBase()+"/"+encodeURIComponent(state.ntfyTopic)+"?title="+encodeURIComponent("FutureApp")+"&tags=tada";
+    var url=ntfyBase()+"/"+encodeURIComponent(state.ntfyTopic)+"?title="+encodeURIComponent("Fortislly")+"&tags=tada";
     fetch(url,{method:"POST",body:t("ntfy_test_msg")})
       .then(function(r){ alert(r.ok?t("ntfy_test_sent"):t("ntfy_test_fail")); })
       .catch(function(){ alert(t("ntfy_test_fail")); });
@@ -5938,7 +5987,7 @@
       "    list.forEach(function(n){ if(n.data&&n.data.futureapp){ try{ n.close(); }catch(e){} } });",
       "    return Promise.all((data.plan||[]).map(function(n){",
       "      if(!n||!n.at||n.at<=Date.now()) return Promise.resolve();",
-      "      return self.registration.showNotification(n.title||'FutureApp',{",
+      "      return self.registration.showNotification(n.title||'Fortislly',{",
       "        body:n.body||'', tag:n.key, data:{futureapp:true},",
       "        showTrigger:new TimestampTrigger(n.at)",
       "      }).catch(function(){});",
@@ -5950,7 +5999,7 @@
       "self.addEventListener('push',function(event){",
       "  var data={};",
       "  try{ data=event.data?event.data.json():{}; }catch(e){ data={body:(event.data&&event.data.text&&event.data.text())||''}; }",
-      "  event.waitUntil(self.registration.showNotification(data.title||'FutureApp',{",
+      "  event.waitUntil(self.registration.showNotification(data.title||'Fortislly',{",
       "    body:data.body||'', tag:data.key||undefined, data:{futureapp:true}",
       "  }));",
       "});",
