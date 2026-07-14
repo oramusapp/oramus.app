@@ -373,6 +373,14 @@
     color:var(--accent2);flex:0 0 auto;}
   .workout-entry .w-ss-badge{margin-left:6px;font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;
     letter-spacing:0.06em;color:var(--accent2);border:1px dashed var(--accent2);border-radius:5px;padding:1px 5px;}
+  .wk-save-summary{border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--bg-input);
+    padding:12px 14px;margin-bottom:14px;font-size:0.8rem;line-height:1.6;color:var(--text-dim);}
+  .wk-save-summary .wss-date{font-family:var(--font-mono);color:var(--accent);font-size:0.82rem;margin-bottom:4px;}
+  .wk-save-summary .wss-ex{margin-top:2px;}
+  .wk-save-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+  .wk-save-actions .btn-primary,.wk-save-actions .btn-ghost{margin-top:0;}
+  .workout-entry .w-wknote{font-size:0.8rem;color:var(--text-dim);margin-top:6px;padding:8px 10px;
+    border-left:2px solid var(--accent);background:var(--bg-input);border-radius:0 8px 8px 0;}
   .wk-timers{flex-wrap:wrap;}
   .wk-timers .wk-timer-box{min-width:110px;}
   .wk-rest-target input{width:100%;text-align:center;font-family:var(--font-mono);padding:6px 4px;margin:0;}
@@ -1770,6 +1778,23 @@
   <button class="gear-btn" id="gearBtn" title="Ustawienia">&#9881;</button>
 </div>
 
+<!-- ZAPIS TRENINGU: podsumowanie + notatka do całego treningu -->
+<div class="overlay" id="wkSaveOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <h2 data-i18n="wk_save_title">Zapisz trening</h2>
+      <button class="modal-close" id="wkSaveClose" aria-label="Zamknij">&times;</button>
+    </div>
+    <div class="wk-save-summary" id="wkSaveSummary"></div>
+    <label for="wkSaveNote" data-i18n="wk_note_label">Notatka do treningu (opcjonalnie)</label>
+    <textarea id="wkSaveNote" rows="3" data-i18n-ph="wk_note_ph" placeholder="np. Dobra energia, kolana bez bólu, następnym razem +2,5 kg..."></textarea>
+    <div class="wk-save-actions">
+      <button class="btn-ghost" id="wkSaveCancel" data-i18n="cancel">Anuluj</button>
+      <button class="btn-primary" id="wkSaveConfirm" data-i18n="wk_save_confirm">Zapisz trening</button>
+    </div>
+  </div>
+</div>
+
 <!-- ONBOARDING: karuzela okien (pierwsze uruchomienie; ponownie z linku „Instrukcja” w stopce) -->
 <div class="overlay" id="obOverlay">
   <div class="modal ob-modal" style="max-width:460px;">
@@ -2081,6 +2106,10 @@
       drop_add:"Dodaj dropset", drop_tag:"Drop",
       ex_move_up:"Przesuń w górę", ex_move_down:"Przesuń w dół", ex_drag:"Przeciągnij, aby zmienić kolejność",
       wk_rest_target:"Cel przerwy (gong)", wk_rest_target_ph:"np. 1:30",
+      wk_save_title:"Zapisz trening", wk_save_confirm:"Zapisz trening",
+      wk_note_label:"Notatka do treningu (opcjonalnie)",
+      wk_note_ph:"np. Dobra energia, kolana bez bólu, następnym razem +2,5 kg...",
+      wk_save_sum_ex:"ćwiczeń", wk_save_sum_sets:"serii",
       pin_fixed:"Oznacz jako stałe (nie kasuj przy resecie)", unpin_fixed:"Usuń oznaczenie stałej",
       wk_start_btn:"\u25B6 Rozpocznij trening", wk_total_time:"Czas treningu", wk_rest_time:"Przerwa", wk_duration:"Czas trwania",
       set_pin:"Zabezpieczenie PIN", pin_journal:"Chroń Dziennik", pin_calendar:"Chroń Kalendarz", pin_budget:"Chroń Zarządzanie budżetem",
@@ -2277,6 +2306,10 @@
       drop_add:"Add drop set", drop_tag:"Drop",
       ex_move_up:"Move up", ex_move_down:"Move down", ex_drag:"Drag to reorder",
       wk_rest_target:"Rest target (gong)", wk_rest_target_ph:"e.g. 1:30",
+      wk_save_title:"Save workout", wk_save_confirm:"Save workout",
+      wk_note_label:"Workout note (optional)",
+      wk_note_ph:"e.g. Good energy, knees fine, add 2.5 kg next time...",
+      wk_save_sum_ex:"exercises", wk_save_sum_sets:"sets",
       pin_fixed:"Mark as fixed (keep on reset)", unpin_fixed:"Unmark fixed",
       wk_start_btn:"\u25B6 Start workout", wk_total_time:"Workout time", wk_rest_time:"Rest", wk_duration:"Duration",
       set_pin:"PIN protection", pin_journal:"Protect Journal", pin_calendar:"Protect Calendar", pin_budget:"Protect Budget management",
@@ -3566,25 +3599,59 @@
     if(!prs || !prs.length) return;
     prs.forEach(function(pr){ pushToast(t("pr_new"), pr.name+": "+String(pr.weight)+" kg"); });
   }
-  $("addWorkoutBtn").addEventListener("click", function(){
+  /* --- Zapis treningu: okno z podsumowaniem i notatką do całego treningu --- */
+  var pendingSave=null; // {date, exercises}
+  function openWkSaveModal(){
     var date=$("wDate").value;
     var exercises=collectExercises();
     if(!date||exercises.length===0){ alert(t("fill_workout")); return; }
+    pendingSave={date:date, exercises:exercises};
+    // podsumowanie
+    var setCount=0;
+    exercises.forEach(function(ex){ setCount+=(ex.sets||[]).length; });
+    var sum=$("wkSaveSummary");
+    sum.innerHTML='<div class="wss-date"></div><div class="wss-count"></div><div class="wss-ex"></div>';
+    sum.querySelector(".wss-date").textContent=formatDateReadable(date);
+    sum.querySelector(".wss-count").textContent=exercises.length+" "+t("wk_save_sum_ex")+" · "+setCount+" "+t("wk_save_sum_sets");
+    sum.querySelector(".wss-ex").textContent=exercises.map(function(ex){
+      return ex.name+(ex.ss?" ("+t("ss_badge")+" "+ex.ss+")":"");
+    }).join(", ");
+    // notatka: przy edycji podpowiadamy dotychczasową
+    var prev="";
+    if(editingWorkoutId){
+      var w0=workouts.filter(function(x){ return x.id===editingWorkoutId; })[0];
+      if(w0 && w0.note) prev=w0.note;
+    }
+    $("wkSaveNote").value=prev;
+    $("wkSaveOverlay").classList.add("active");
+    setTimeout(function(){ $("wkSaveNote").focus(); }, 60);
+  }
+  function closeWkSaveModal(){ $("wkSaveOverlay").classList.remove("active"); pendingSave=null; }
+  function commitWorkoutSave(){
+    if(!pendingSave) return;
+    var date=pendingSave.date, exercises=pendingSave.exercises;
+    var note=($("wkSaveNote").value||"").trim();
     var prs=[];
     if(editingWorkoutId){
       // Edycja: czas trwania (i ewentualne stare pola start/end) zostają bez zmian.
-      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; } });
+      workouts.forEach(function(w){ if(w.id===editingWorkoutId){ w.date=date; w.exercises=exercises; w.note=note; } });
     } else {
       // Detect personal records BEFORE adding this workout to history.
       prs=detectPRs(exercises);
       var durSec = wkTimerStart ? Math.max(0, Math.floor((Date.now()-wkTimerStart)/1000)) : null;
-      workouts.push({id:uid(),date:date,exercises:exercises,durSec:durSec});
+      workouts.push({id:uid(),date:date,exercises:exercises,durSec:durSec,note:note});
     }
     saveWorkouts(); refreshExerciseDatalist();
     clearWorkoutDraft();
+    closeWkSaveModal();
     resetWorkoutForm(); renderWorkouts();
     showPrToast(prs);
-  });
+  }
+  $("addWorkoutBtn").addEventListener("click", openWkSaveModal);
+  $("wkSaveConfirm").addEventListener("click", commitWorkoutSave);
+  $("wkSaveCancel").addEventListener("click", closeWkSaveModal);
+  $("wkSaveClose").addEventListener("click", closeWkSaveModal);
+  $("wkSaveOverlay").addEventListener("click", function(e){ if(e.target===$("wkSaveOverlay")) closeWkSaveModal(); });
   // Duration in minutes between two "HH:MM" strings; if end <= start, assumes the session crossed midnight (+24h).
   function workoutDurationMin(start,end){
     if(!start||!end) return null;
@@ -3631,6 +3698,10 @@
       if(durTxt){ durEl.textContent=t("wk_duration")+": "+durTxt; }
       else { durEl.style.display="none"; }
       entry.appendChild(head);
+      if(w.note){
+        var wn=document.createElement("div"); wn.className="w-wknote";
+        wn.textContent=w.note; entry.appendChild(wn);
+      }
       (w.exercises||[]).forEach(function(ex){
         var b=document.createElement("div"); b.className="w-exercise-block";
         var st=(ex.sets||[]).map(function(s){
