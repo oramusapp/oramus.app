@@ -318,8 +318,8 @@
   .exercise-block{border:1px solid var(--border-soft);border-radius:9px;padding:14px;margin-top:12px;background:var(--bg-input);}
   .exercise-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
   .exercise-block-header span{font-family:var(--font-mono);color:var(--accent2);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;}
-  .set-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
-  .set-row input{flex:1;}
+  .set-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;max-width:100%;}
+  .set-row input{flex:1;min-width:0;}
   .set-row .rm-set{background:none;border:none;color:var(--text-dim);font-size:0.9rem;flex:0 0 auto;padding:2px 6px;}
   .set-row .rm-set:hover{color:var(--danger);}
   .workout-entry{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border-soft);}
@@ -340,6 +340,8 @@
     padding:3px 7px;font-size:0.75rem;line-height:1.2;}
   .ex-tools button:hover{color:var(--accent);border-color:var(--accent);}
   .ex-tools .ex-drag{cursor:grab;touch-action:none;}
+  .ex-tools .ex-drag:active{cursor:grabbing;}
+  .exercise-block.dragging{box-shadow:var(--glow);border-color:var(--accent);}
   .ex-tools .link-next.on{color:var(--accent2);border-color:var(--accent2);box-shadow:var(--glow2);}
   .ex-tools .rm-exercise{margin-left:2px;}
   .ss-badge{display:inline-block;margin-bottom:8px;font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;
@@ -347,16 +349,26 @@
   .exercise-block.ss-member{border-color:var(--accent2);box-shadow:var(--glow2);}
   .exercise-block.ss-member:not(.ss-last){border-bottom-style:dashed;border-bottom-left-radius:0;border-bottom-right-radius:0;}
   .exercise-block.ss-member:not(.ss-first){margin-top:0;border-top:none;border-top-left-radius:0;border-top-right-radius:0;}
-  .set-item{margin-top:6px;}
+  .set-item{margin-top:6px;max-width:100%;}
+  /* Steppery kurczą się, a przyciski (notatka / dropset / usuń) zawsze mieszczą się w karcie. */
+  .set-row .stepper{flex:1 1 96px;min-width:0;}
+  .set-row .set-tools{display:flex;gap:6px;align-items:center;flex:0 0 auto;margin-left:auto;}
   .set-row .set-tool{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);
     font-size:0.8rem;flex:0 0 auto;padding:3px 7px;line-height:1.2;}
   .set-row .set-tool:hover{color:var(--accent);border-color:var(--accent);}
   .set-row .set-tool.on{color:var(--accent2);border-color:var(--accent2);}
   .set-note{width:100%;margin-top:5px;font-size:0.78rem;}
-  .drop-list{margin:4px 0 0 14px;padding-left:10px;border-left:2px dashed var(--accent2);}
+  .drop-list{margin:4px 0 0 10px;padding-left:8px;border-left:2px dashed var(--accent2);max-width:100%;}
   .drop-list:empty{display:none;}
-  .drop-row{display:flex;gap:6px;align-items:center;margin-top:5px;}
-  .drop-row input{flex:1;}
+  .drop-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px;max-width:100%;}
+  .drop-row input{flex:1;min-width:0;}
+  .drop-row .stepper{flex:1 1 90px;min-width:0;}
+  .drop-row .rm-drop{margin-left:auto;}
+  .stepper .stp{width:30px;}
+  @media (max-width:520px){
+    .set-row .stepper,.drop-row .stepper{flex:1 1 44%;}
+    .stepper .stp{width:28px;}
+  }
   .drop-row .drop-tag{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.06em;
     color:var(--accent2);flex:0 0 auto;}
   .workout-entry .w-ss-badge{margin-left:6px;font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;
@@ -3120,9 +3132,11 @@
       '<div class="set-row">'+
         makeStepper("set-weight",t("weight_ph"),"2.5",data.weight)+
         makeStepper("set-reps",t("reps_ph"),"1",data.reps)+
-        '<button type="button" class="set-tool note-btn" data-i18n-title="set_note_btn" title="'+t("set_note_btn")+'">&#9998;</button>'+
-        '<button type="button" class="set-tool drop-btn" data-i18n-title="drop_add" title="'+t("drop_add")+'">&#9660;</button>'+
-        '<button type="button" class="rm-set">&times;</button>'+
+        '<div class="set-tools">'+
+          '<button type="button" class="set-tool note-btn" data-i18n-title="set_note_btn" title="'+t("set_note_btn")+'">&#9998;</button>'+
+          '<button type="button" class="set-tool drop-btn" data-i18n-title="drop_add" title="'+t("drop_add")+'">&#9660;</button>'+
+          '<button type="button" class="rm-set">&times;</button>'+
+        '</div>'+
       '</div>'+
       '<div class="drop-list"></div>'+
       '<input type="text" class="set-note" data-i18n-ph="set_note_ph" placeholder="'+t("set_note_ph")+'" style="display:none;">';
@@ -3188,8 +3202,6 @@
       b.__ssRaw=b.__ssGroup;
       var lb=b.querySelector(".link-next"); if(lb) lb.classList.toggle("on", !!b.__linkNext);
       var nm=b.querySelector(".ex-num"); if(nm) nm.textContent=String(idx+1);
-      var up=b.querySelector(".ex-up"); if(up) up.disabled=(idx===0);
-      var dn=b.querySelector(".ex-down"); if(dn) dn.disabled=(idx===blocks.length-1);
     });
   }
   // Po wczytaniu treningu/szablonu/roboczej wersji: odtwarza połączenia na podstawie zapisanych liter grup.
@@ -3202,14 +3214,23 @@
     refreshSupersets();
   }
 
-  /* --- Zmiana kolejności ćwiczeń (przyciski ▲▼ oraz drag & drop) --- */
+  /* --- Zmiana kolejności ćwiczeń: drag & drop uchwytem ⋮⋮ (Pointer Events: mysz + dotyk) --- */
   var dragBlock=null;
-  function moveBlock(block,dir){
+  function dragOverPoint(x,y){
+    if(!dragBlock) return;
+    var el=document.elementFromPoint(x,y);
+    var target=el && el.closest ? el.closest("#exercisesContainer .exercise-block") : null;
+    if(!target || target===dragBlock) return;
+    var rect=target.getBoundingClientRect();
+    var after=((y-rect.top)/rect.height)>0.5;
     var c=$("exercisesContainer");
-    if(dir<0){ var prev=block.previousElementSibling; if(prev) c.insertBefore(block,prev); }
-    else { var next=block.nextElementSibling; if(next) c.insertBefore(next,block); }
+    c.insertBefore(dragBlock, after ? target.nextSibling : target);
+  }
+  function endDrag(){
+    if(!dragBlock) return;
+    dragBlock.classList.remove("dragging");
+    dragBlock=null;
     rebuildSupersetLinks(); saveWorkoutDraft(); persistOrderIfEditing(); // superserie "podążają" za ćwiczeniami
-    if(block.scrollIntoView) block.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
 
   function addExerciseBlock(prefill){
@@ -3219,8 +3240,6 @@
         '<div class="ex-head-left"><span data-i18n="exercise">'+t("exercise")+'</span><span class="ex-num"></span></div>'+
         '<div class="ex-tools">'+
           '<button type="button" class="ex-drag" data-i18n-title="ex_drag" title="'+t("ex_drag")+'" aria-label="'+t("ex_drag")+'">&#8942;&#8942;</button>'+
-          '<button type="button" class="ex-up" data-i18n-title="ex_move_up" title="'+t("ex_move_up")+'" aria-label="'+t("ex_move_up")+'">&#9650;</button>'+
-          '<button type="button" class="ex-down" data-i18n-title="ex_move_down" title="'+t("ex_move_down")+'" aria-label="'+t("ex_move_down")+'">&#9660;</button>'+
           '<button type="button" class="link-next" data-i18n-title="ss_link" title="'+t("ss_link")+'" aria-label="'+t("ss_link")+'">&#128279;</button>'+
           '<button type="button" class="btn-small rm-exercise" data-i18n="rm_exercise">'+t("rm_exercise")+'</button>'+
         '</div>'+
@@ -3237,26 +3256,28 @@
         block.remove(); rebuildSupersetLinks(); saveWorkoutDraft(); persistOrderIfEditing();
       } else alert(t("min_one_ex"));
     });
-    block.querySelector(".ex-up").addEventListener("click", function(){ moveBlock(block,-1); });
-    block.querySelector(".ex-down").addEventListener("click", function(){ moveBlock(block,1); });
     block.querySelector(".link-next").addEventListener("click", function(){
       block.__linkNext=!block.__linkNext;
       refreshSupersets(); saveWorkoutDraft(); persistOrderIfEditing();
     });
 
-    // drag & drop: uchwyt ⋮⋮ włącza przeciąganie całego bloku
+    // drag & drop: przeciąganie uchwytem ⋮⋮ (działa myszą i palcem)
     var handle=block.querySelector(".ex-drag");
-    handle.addEventListener("mousedown", function(){ block.draggable=true; });
-    handle.addEventListener("touchstart", function(){ block.draggable=true; }, {passive:true});
-    handle.addEventListener("mouseup", function(){ block.draggable=false; });
-    block.addEventListener("dragstart", function(e){
+    handle.addEventListener("pointerdown", function(e){
+      e.preventDefault();
       dragBlock=block; block.classList.add("dragging");
-      try{ e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain",""); }catch(_e){}
+      try{ handle.setPointerCapture(e.pointerId); }catch(_e){}
     });
-    block.addEventListener("dragend", function(){
-      block.classList.remove("dragging"); block.draggable=false; dragBlock=null;
-      rebuildSupersetLinks(); saveWorkoutDraft(); persistOrderIfEditing();
+    handle.addEventListener("pointermove", function(e){
+      if(dragBlock!==block) return;
+      e.preventDefault();
+      dragOverPoint(e.clientX, e.clientY);
     });
+    handle.addEventListener("pointerup", function(e){
+      try{ handle.releasePointerCapture(e.pointerId); }catch(_e){}
+      endDrag();
+    });
+    handle.addEventListener("pointercancel", endDrag);
 
     var sc=block.querySelector(".sets-container");
     var nameInp=block.querySelector(".ex-name");
@@ -3410,17 +3431,8 @@
   $("exercisesContainer").addEventListener("input", function(){ saveWorkoutDraft(); });
   $("exercisesContainer").addEventListener("change", function(){ saveWorkoutDraft(); });
   $("wDate").addEventListener("change", function(){ saveWorkoutDraft(); });
-  // drag & drop kolejności ćwiczeń
-  $("exercisesContainer").addEventListener("dragover", function(e){
-    if(!dragBlock) return;
-    e.preventDefault();
-    var target=e.target.closest?e.target.closest(".exercise-block"):null;
-    if(!target || target===dragBlock || target.parentNode!==this) return;
-    var rect=target.getBoundingClientRect();
-    var after=((e.clientY-rect.top)/rect.height)>0.5;
-    this.insertBefore(dragBlock, after?target.nextSibling:target);
-  });
-  $("exercisesContainer").addEventListener("drop", function(e){ e.preventDefault(); });
+  // przerwanie przeciągania poza uchwytem (np. puszczenie przycisku poza blokiem)
+  document.addEventListener("pointerup", function(){ endDrag(); });
   // Wznowienie stopera po odświeżeniu strony (start zapisany w localStorage).
   (function resumeWorkoutTimer(){
     var saved=num(localStorage.getItem("wkTimerStart")||0);
