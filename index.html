@@ -1,45 +1,49 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FutureApp</title>
 <style>
   /* ===== THEMES ===== */
+  /* ============================================================
+     DESIGN TOKENS — "Iris & Slate"
+     Two modes only: dark (default) + light. Both are first-class.
+     Component CSS below consumes these variables, so redefining the
+     tokens re-skins the whole app coherently.
+     ============================================================ */
   :root{
-    --radius:10px;
-    --font-mono:"JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --radius:18px;      /* cards / panels */
+    --radius-md:12px;   /* inputs / buttons */
+    --radius-sm:10px;   /* small controls */
+    --ease:cubic-bezier(0.4,0,0.2,1);
+    --font-mono:"SFMono-Regular","SF Mono","JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,monospace;
+    --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",Arial,sans-serif;
+    --font-display:var(--font-sans);
   }
-  /* Cyberpunk (default dark) */
-  html[data-theme="cyber"]{
-    --bg:#05060a; --bg-panel:#0b0e16; --bg-input:#0d1119;
-    --accent:#00fff7; --accent2:#ff2fd0; --danger:#ff3860;
-    --text:#dff8ff; --text-dim:#7c93a3;
-    --border:rgba(0,255,247,0.28); --border-soft:rgba(0,255,247,0.14);
-    --glow:0 0 6px rgba(0,255,247,0.55),0 0 18px rgba(0,255,247,0.18);
-    --glow2:0 0 6px rgba(255,47,208,0.55),0 0 18px rgba(255,47,208,0.18);
-    --scan:rgba(255,255,255,0.018);
-  }
-  /* Synthwave (violet/magenta) */
-  html[data-theme="synth"]{
-    --bg:#0d0618; --bg-panel:#160a26; --bg-input:#1c0f30;
-    --accent:#b388ff; --accent2:#ff5db1; --danger:#ff5470;
-    --text:#f2e9ff; --text-dim:#a08bc0;
-    --border:rgba(179,136,255,0.30); --border-soft:rgba(179,136,255,0.16);
-    --glow:0 0 6px rgba(179,136,255,0.55),0 0 18px rgba(179,136,255,0.18);
-    --glow2:0 0 6px rgba(255,93,177,0.55),0 0 18px rgba(255,93,177,0.18);
-    --scan:rgba(255,255,255,0.02);
-  }
-  /* Light */
-  html[data-theme="light"]{
-    --bg:#f4f6fb; --bg-panel:#ffffff; --bg-input:#f0f2f7;
-    --accent:#0a84ff; --accent2:#c026d3; --danger:#dc2626;
-    --text:#1a2230; --text-dim:#64748b;
-    --border:rgba(10,132,255,0.25); --border-soft:rgba(10,132,255,0.12);
-    --glow:0 1px 2px rgba(20,30,50,0.06),0 6px 18px rgba(20,30,50,0.08);
-    --glow2:0 1px 2px rgba(192,38,211,0.10),0 6px 18px rgba(192,38,211,0.10);
+  /* ---------- DARK (default) ---------- */
+  html[data-theme="dark"]{
+    --bg:#0f1117; --bg-panel:#171a22; --bg-input:#1c2029; --bg-subtle:#13161d;
+    --accent:#8b90fa; --accent2:#aea2f7; --on-accent:#0f1117; --danger:#f2666b;
+    --text:#e9eaf0; --text-dim:#9298a8;
+    --border:rgba(255,255,255,0.09); --border-soft:rgba(255,255,255,0.05);
+    --glow:0 1px 2px rgba(0,0,0,0.35),0 12px 30px rgba(0,0,0,0.38);
+    --glow2:0 10px 30px rgba(139,144,250,0.20);
+    --shadow-tile:0 1px 2px rgba(0,0,0,0.30),0 10px 24px rgba(0,0,0,0.32);
     --scan:transparent;
+    color-scheme:dark;
+  }
+  /* ---------- LIGHT ---------- */
+  html[data-theme="light"]{
+    --bg:#f3f4fb; --bg-panel:#ffffff; --bg-input:#eef0f8; --bg-subtle:#f8f9fd;
+    --accent:#4f55e0; --accent2:#655bd6; --on-accent:#ffffff; --danger:#e5484d;
+    --text:#1b1e2b; --text-dim:#6a7185;
+    --border:rgba(23,26,45,0.10); --border-soft:rgba(23,26,45,0.055);
+    --glow:0 1px 2px rgba(23,26,45,0.05),0 12px 30px rgba(23,26,45,0.10);
+    --glow2:0 10px 30px rgba(79,85,224,0.16);
+    --shadow-tile:0 1px 2px rgba(23,26,45,0.04),0 10px 24px rgba(23,26,45,0.08);
+    --scan:transparent;
+    color-scheme:light;
   }
 
   *{box-sizing:border-box;}
@@ -325,6 +329,58 @@
   .workout-entry .w-exercise-name{font-size:0.88rem;color:var(--text);font-weight:600;}
   .workout-entry .w-sets{font-size:0.78rem;color:var(--text-dim);margin-top:2px;font-family:var(--font-mono);}
   .workout-entry .w-note{font-size:0.78rem;color:var(--text-dim);margin-top:2px;font-style:italic;}
+
+  /* --- Serie: dropsety, notatki, superserie, zmiana kolejności --- */
+  .exercise-block{position:relative;}
+  .exercise-block.dragging{opacity:0.45;}
+  .exercise-block-header .ex-head-left{display:flex;align-items:baseline;gap:6px;min-width:0;}
+  .exercise-block-header .ex-num{font-family:var(--font-mono);color:var(--text-dim);font-size:0.72rem;}
+  .ex-tools{display:flex;gap:4px;align-items:center;flex:0 0 auto;}
+  .ex-tools button{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);
+    padding:3px 7px;font-size:0.75rem;line-height:1.2;}
+  .ex-tools button:hover{color:var(--accent);border-color:var(--accent);}
+  .ex-tools .ex-drag{cursor:grab;touch-action:none;}
+  .ex-tools .link-next.on{color:var(--accent2);border-color:var(--accent2);box-shadow:var(--glow2);}
+  .ex-tools .rm-exercise{margin-left:2px;}
+  .ss-badge{display:inline-block;margin-bottom:8px;font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;
+    letter-spacing:0.07em;color:var(--accent2);border:1px dashed var(--accent2);border-radius:6px;padding:2px 7px;}
+  .exercise-block.ss-member{border-color:var(--accent2);box-shadow:var(--glow2);}
+  .exercise-block.ss-member:not(.ss-last){border-bottom-style:dashed;border-bottom-left-radius:0;border-bottom-right-radius:0;}
+  .exercise-block.ss-member:not(.ss-first){margin-top:0;border-top:none;border-top-left-radius:0;border-top-right-radius:0;}
+  .set-item{margin-top:6px;}
+  .set-row .set-tool{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);
+    font-size:0.8rem;flex:0 0 auto;padding:3px 7px;line-height:1.2;}
+  .set-row .set-tool:hover{color:var(--accent);border-color:var(--accent);}
+  .set-row .set-tool.on{color:var(--accent2);border-color:var(--accent2);}
+  .set-note{width:100%;margin-top:5px;font-size:0.78rem;}
+  .drop-list{margin:4px 0 0 14px;padding-left:10px;border-left:2px dashed var(--accent2);}
+  .drop-list:empty{display:none;}
+  .drop-row{display:flex;gap:6px;align-items:center;margin-top:5px;}
+  .drop-row input{flex:1;}
+  .drop-row .drop-tag{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--accent2);flex:0 0 auto;}
+  .workout-entry .w-ss-badge{margin-left:6px;font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;
+    letter-spacing:0.06em;color:var(--accent2);border:1px dashed var(--accent2);border-radius:5px;padding:1px 5px;}
+  .wk-timers{flex-wrap:wrap;}
+  .wk-timers .wk-timer-box{min-width:110px;}
+  .wk-rest-target input{width:100%;text-align:center;font-family:var(--font-mono);padding:6px 4px;margin:0;}
+  .wk-timer-box.done{border-color:var(--accent);box-shadow:var(--glow);}
+
+  /* --- Onboarding (karuzela przy pierwszym uruchomieniu) --- */
+  .ob-modal .ob-slide{display:flex;flex-direction:column;gap:10px;min-height:210px;}
+  .ob-modal .ob-icon{font-size:2rem;line-height:1;}
+  .ob-modal .ob-body{font-size:0.86rem;line-height:1.65;color:var(--text-dim);}
+  .ob-modal .ob-body p{margin:0;}
+  .ob-a2hs{margin-top:12px;border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--bg-input);
+    padding:12px 14px;font-size:0.8rem;line-height:1.6;color:var(--text-dim);}
+  .ob-a2hs .ob-a2hs-t{font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--accent2);margin-bottom:6px;}
+  .ob-dots{display:flex;gap:6px;justify-content:center;margin:16px 0 12px;flex-wrap:wrap;}
+  .ob-dot{width:8px;height:8px;padding:0;border-radius:50%;border:1px solid var(--border);background:transparent;}
+  .ob-dot.on{background:var(--accent);border-color:var(--accent);box-shadow:var(--glow);}
+  .ob-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .ob-nav .btn-primary{margin-top:0;}
+  .ob-step{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);}
 
   /* Calories */
   .day-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
@@ -785,6 +841,237 @@
     .site-name{font-size:1.05rem;}
     .stat-tiles{grid-template-columns:1fr;}
   }
+  /* =====================================================================
+     REDESIGN LAYER — "Iris & Slate"
+     Applies to BOTH modes (dark default + light). Mobile-first; desktop
+     enhancements are gated behind min-width. This layer is the last word
+     in the cascade, so it defines the redesigned look for shared classes.
+     JS ids / class names are untouched.
+     ===================================================================== */
+
+  /* ---- Neutralise the old CRT / neon leftovers ---- */
+  body::before{content:none !important;background:none !important;animation:none !important;}
+  .site-name{animation:none !important;}
+  .site-name,.site-name span,.streak b,.stat.kcal .st-num,.calc-hero-num,
+  .clock-second .cs-time,.bud-summary .bs-final .bf-val,.wk-timer-val{text-shadow:none !important;}
+
+  /* ---- Base typography & rhythm ---- */
+  body{
+    font-family:var(--font-sans);
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;line-height:1.55;padding-bottom:96px;
+  }
+  ::selection{background:color-mix(in srgb,var(--accent) 28%,transparent);color:var(--text);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  a{color:var(--accent);text-underline-offset:2px;}
+
+  main{max-width:1080px;margin:0 auto;padding:8px 16px 32px;}
+
+  /* ---- HEADER ---- */
+  header.topbar{max-width:1080px;margin:0 auto;padding:16px 16px 6px;gap:14px;align-items:center;}
+  .site-name{font-family:var(--font-display);font-weight:800;font-size:1.35rem;letter-spacing:-0.015em;color:var(--text);}
+  .site-name span{color:var(--accent);}
+  .brand{gap:6px;}
+  .streak{
+    background:color-mix(in srgb,var(--accent) 10%,transparent);
+    border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);
+    border-radius:999px;padding:5px 11px;color:var(--text-dim);width:max-content;
+  }
+  .streak b{color:var(--accent);}
+  .tick{border-radius:12px;background:var(--bg-panel);border:1px solid var(--border);box-shadow:none;}
+  .tick .tk-val{color:var(--accent);}
+  .header-info{
+    border-radius:14px;box-shadow:none;border:1px solid var(--border);
+    background:var(--bg-panel);max-width:320px;
+  }
+  .header-info .hi-label{color:var(--accent2);}
+  .header-info .hi-ref{color:var(--accent);}
+
+  /* ---- SUBBAR / CLOCK / UPCOMING ---- */
+  .subbar{gap:14px;margin:16px 0 18px;}
+  .subcard,.card,.bud-section,.daily-card{
+    background:var(--bg-panel);border:1px solid var(--border);
+    border-radius:var(--radius);box-shadow:var(--shadow-tile);padding:18px;
+  }
+  .subcard h3,.daily-card h3,.bud-section h3{color:var(--accent2);letter-spacing:0.1em;}
+  .clock-main{font-size:2.1rem;font-variant-numeric:tabular-nums;letter-spacing:0.01em;color:var(--text);}
+  .clock-second .cs-time{color:var(--accent);}
+  .upcoming-big .ub-when{color:var(--accent);}
+  .daily-pen{border-radius:10px;border-color:var(--border);color:var(--text-dim);}
+  .daily-pen:hover{border-color:var(--accent);color:var(--accent);box-shadow:none;}
+  .daily-pen.active{color:var(--accent);border-color:var(--accent);box-shadow:none;}
+
+  /* ---- TILES (signature element) ---- */
+  .tile-grid{grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;}
+  .tile{
+    position:relative;overflow:hidden;gap:9px;min-height:118px;padding:16px;justify-content:flex-start;
+    background:var(--bg-panel);border:1px solid var(--border);
+    border-radius:var(--radius);box-shadow:var(--shadow-tile);
+    transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease);
+  }
+  .tile::before{
+    content:"";position:absolute;left:0;right:0;top:0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transform:scaleX(0);transform-origin:left;transition:transform .28s var(--ease);
+  }
+  .tile:hover,.tile:focus-visible{
+    transform:translateY(-3px);
+    border-color:color-mix(in srgb,var(--accent) 40%,var(--border));
+    box-shadow:0 12px 28px color-mix(in srgb,var(--accent) 18%,transparent);
+  }
+  .tile:hover::before,.tile:focus-visible::before{transform:scaleX(1);}
+  .tile:active{transform:translateY(-1px);}
+  .tile .tile-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border-radius:13px;font-size:1.35rem;line-height:1;
+    background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);
+  }
+  .tile .tile-title{font-family:var(--font-display);font-weight:700;font-size:1rem;letter-spacing:-0.01em;color:var(--text);}
+  .tile .tile-sub{color:var(--text-dim);font-size:0.78rem;}
+  .tile .tile-lock{color:var(--accent2);}
+  /* neutralise the removed per-tile highlight remnants */
+  .tile--tinted,.tile--tinted:hover,.tile--tinted:active,.tile--tinted:focus-visible{
+    border-color:color-mix(in srgb,var(--accent) 40%,var(--border));
+    box-shadow:var(--shadow-tile);
+  }
+
+  /* ---- BUTTONS ---- */
+  .btn-primary{
+    margin-top:14px;background:var(--accent);color:var(--on-accent);border:1px solid transparent;
+    border-radius:var(--radius-md);box-shadow:none;font-family:var(--font-sans);
+    font-weight:600;font-size:0.9rem;padding:11px 18px;letter-spacing:0.01em;
+    transition:filter .16s var(--ease),transform .12s var(--ease),box-shadow .16s var(--ease);
+  }
+  .btn-primary:hover{filter:brightness(1.06);background:var(--accent);box-shadow:var(--glow2);}
+  .btn-primary:active{transform:translateY(1px);}
+  .btn-ghost{border-radius:var(--radius-md);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-sans);transition:all .16s var(--ease);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);box-shadow:none;}
+  .btn-small{border-radius:var(--radius-sm);border:1px solid var(--border);color:var(--text-dim);transition:all .16s var(--ease);}
+  .btn-small:hover{border-color:var(--accent);color:var(--accent);}
+  .back-btn{
+    border-radius:var(--radius-md);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-sans);background:var(--bg-panel);transition:all .16s var(--ease);
+  }
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:none;}
+
+  /* ---- VIEW HEADERS ---- */
+  .view-header h2{font-family:var(--font-display);font-weight:800;font-size:1.35rem;letter-spacing:-0.015em;}
+
+  /* ---- INPUTS ---- */
+  input[type=text],input[type=email],input[type=date],input[type=time],input[type=number],
+  input[type=password],textarea,select{
+    border-radius:var(--radius-md);background:var(--bg-input);border:1px solid var(--border);color:var(--text);
+    transition:border-color .16s var(--ease),box-shadow .16s var(--ease),background .16s var(--ease);
+  }
+  input:focus,textarea:focus,select:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);
+  }
+
+  /* ---- SEGMENTS / TABS / CHIPS as pills ---- */
+  .seg{gap:6px;}
+  .seg-btn,.tab-btn,.db-tab,.theme-chip{
+    border-radius:999px;border:1px solid var(--border);color:var(--text-dim);
+    font-family:var(--font-sans);font-weight:600;box-shadow:none;transition:all .16s var(--ease);
+  }
+  .seg-btn.active,.tab-btn.active,.db-tab.active,.theme-chip.active{
+    background:color-mix(in srgb,var(--accent) 13%,transparent);
+    border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+    color:var(--accent);box-shadow:none;
+  }
+  .chip{border-radius:999px;}
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  .dchip.on{color:var(--accent);border-color:var(--accent);box-shadow:none;}
+  .subtab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  /* ---- STAT / SUMMARY accents (calmer, no neon) ---- */
+  .stat.kcal{border-color:color-mix(in srgb,var(--accent) 40%,var(--border));}
+  .stat.kcal .st-num{color:var(--accent);}
+  .stat.c .st-num{color:var(--accent2);}
+  .calc-hero{border-color:color-mix(in srgb,var(--accent) 40%,var(--border));box-shadow:var(--glow2);}
+  .calc-hero-num{color:var(--accent);}
+  .goal-fill{background:var(--accent);box-shadow:none;}
+  .bud-summary{border-color:color-mix(in srgb,var(--accent) 40%,var(--border));box-shadow:var(--glow2);}
+  .bud-summary .bs-final .bf-val{color:var(--accent);}
+  .wk-timer-box{border-color:color-mix(in srgb,var(--accent) 40%,var(--border));box-shadow:none;}
+  .wk-timer-val{color:var(--accent);}
+  .wk-timer-box.rest{border-color:color-mix(in srgb,var(--accent2) 45%,var(--border));}
+  .cbt-timer{border-color:color-mix(in srgb,var(--accent2) 45%,var(--border));box-shadow:none;}
+  .cbt-timer.rest{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));}
+  .csw.sel{box-shadow:0 0 0 2px var(--bg-panel),0 0 0 4px currentColor;}
+
+  /* ---- CALENDAR ---- */
+  .cal-day.today{border-color:var(--accent);box-shadow:none;background:color-mix(in srgb,var(--accent) 9%,var(--bg-input));}
+  .cal-day .dot{background:var(--accent2);}
+  .cw-day.today{border-color:var(--accent);box-shadow:none;}
+
+  /* ---- EBOOK / READER ---- */
+  .ebook-item .eb-open{border-radius:var(--radius-md);box-shadow:none;}
+  .reader-title{color:var(--accent);}
+
+  /* ---- MODALS ---- */
+  .overlay{background:color-mix(in srgb,var(--bg) 55%,rgba(10,12,20,0.55));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+  .modal{border-radius:22px;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,0.30);padding:24px;}
+  .modal-head h2{font-family:var(--font-display);font-weight:800;letter-spacing:-0.01em;}
+  .set-section h4,.set-subhead{color:var(--accent);}
+
+  /* ---- FLOATING CONTROLS: theme toggle + settings ---- */
+  .fab-stack{
+    position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:130;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .gear-btn,.theme-toggle{
+    position:static;right:auto;bottom:auto;width:50px;height:50px;border-radius:16px;
+    background:var(--bg-panel);border:1px solid var(--border);color:var(--text);
+    box-shadow:var(--glow);display:flex;align-items:center;justify-content:center;font-size:1.25rem;
+    transition:transform .18s var(--ease),border-color .18s var(--ease),color .18s var(--ease);
+  }
+  .gear-btn:hover,.theme-toggle:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--accent);}
+  .theme-toggle .ic-sun{display:none;}
+  html[data-theme="light"] .theme-toggle .ic-sun{display:block;}
+  html[data-theme="light"] .theme-toggle .ic-moon{display:none;}
+
+  /* ---- FOOTER ---- */
+  footer.app-footer{font-family:var(--font-sans);}
+  footer.app-footer a{color:var(--accent);}
+
+  /* ---- MOTION: gentle view entrance ---- */
+  .view.active{animation:viewIn 0.26s var(--ease);}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+
+  /* ---- DESKTOP ENHANCEMENTS ---- */
+  @media (min-width:600px){
+    .tile-grid{grid-template-columns:repeat(3,1fr);gap:14px;}
+    .clock-main{font-size:2.4rem;}
+    .streak{width:auto;}
+  }
+  @media (min-width:900px){
+    main{padding:12px 24px 40px;}
+    header.topbar{padding:18px 24px 8px;}
+    .view-header h2{font-size:1.55rem;}
+    .subcard,.card,.bud-section,.daily-card{padding:20px 22px;}
+  }
+
+  /* ---- MOBILE FINAL TOUCHES (last word, wins over earlier mobile rules) ---- */
+  @media (max-width:600px){
+    .tile-grid{grid-template-columns:1fr 1fr;gap:12px;}
+    .tile{padding:14px;min-height:104px;gap:8px;}
+    .tile .tile-icon{width:40px;height:40px;font-size:1.25rem;border-radius:12px;}
+    .tile .tile-title{font-size:0.95rem;}
+    .clock-main{font-size:1.95rem;}
+    .site-name{font-size:1.2rem;}
+    header.topbar{padding:14px 14px 4px;}
+    .header-info{order:2;max-width:100%;}
+    .ticker{order:3;}
+    .fab-stack{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));gap:9px;}
+    .gear-btn,.theme-toggle{width:48px;height:48px;font-size:1.2rem;}
+    .modal{border-radius:0;}
+  }
+  @media (max-width:360px){
+    .tile-grid{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
@@ -984,6 +1271,10 @@
               <div class="wk-timer-label" data-i18n="wk_rest_time">Przerwa</div>
               <div class="wk-timer-val" id="wkRestTimer">00:00</div>
             </div>
+            <div class="wk-timer-box wk-rest-target" id="restTargetBox">
+              <div class="wk-timer-label" data-i18n="wk_rest_target">Cel przerwy (gong)</div>
+              <input type="text" id="wkRestTarget" value="1:30" data-i18n-ph="wk_rest_target_ph" placeholder="np. 1:30">
+            </div>
           </div>
         </div>
         <div id="exercisesContainer"></div>
@@ -1043,7 +1334,7 @@
             <div><label for="runDist" data-i18n="run_distance">Dystans (km)</label><input type="number" id="runDist" min="0" step="0.01" placeholder="np. 5.2"></div>
             <div><label for="runTime" data-i18n="run_time">Czas (mm:ss)</label><input type="text" id="runTime" inputmode="numeric" data-i18n-ph="run_time_ph" placeholder="np. 28:30"></div>
           </div>
-          <div class="calc-out" id="runPacePreview" style="margin-bottom:10px;">—</div>
+          <div class="calc-out" id="runPacePreview" style="margin-top:16px;margin-bottom:12px;">—</div>
           <label for="runNote" data-i18n="run_note">Notatka (opcjonalnie)</label>
           <input type="text" id="runNote" data-i18n-ph="run_note_ph" placeholder="np. Las, interwały...">
           <button class="btn-primary" id="addRunBtn" data-i18n="run_save">Zapisz bieg</button>
@@ -1460,24 +1751,30 @@
   &nbsp;·&nbsp; <span data-i18n="rights">Wszystkie prawa zastrzeżone</span> &copy; SKB
 </footer>
 
-<button class="gear-btn" id="gearBtn" title="Ustawienia">&#9881;</button>
+<div class="fab-stack">
+  <button class="theme-toggle" id="themeToggle" aria-label="Przełącz tryb jasny/ciemny">
+    <span class="ic-moon" aria-hidden="true">&#9789;</span><span class="ic-sun" aria-hidden="true">&#9728;</span>
+  </button>
+  <button class="gear-btn" id="gearBtn" title="Ustawienia">&#9881;</button>
+</div>
 
-<!-- WELCOME MODAL (first visit only) -->
-<div class="overlay" id="welcomeOverlay">
-  <div class="modal" style="max-width:440px;">
+<!-- ONBOARDING: karuzela okien (pierwsze uruchomienie; ponownie z linku „Instrukcja” w stopce) -->
+<div class="overlay" id="obOverlay">
+  <div class="modal ob-modal" style="max-width:460px;">
     <div class="modal-head">
-      <h2 data-i18n="welcome_title">Witaj w FutureApp!</h2>
-      <button class="modal-close" id="welcomeCloseBtn">&times;</button>
+      <h2 id="obTitle">Witaj w FutureApp!</h2>
+      <button class="modal-close" id="obCloseBtn" aria-label="Zamknij">&times;</button>
     </div>
-    <div style="font-size:0.86rem;line-height:1.65;color:var(--text-dim);margin-bottom:14px;" data-i18n="welcome_text">
-      Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).
+    <div class="ob-slide">
+      <div class="ob-icon" id="obIcon">&#128075;</div>
+      <div class="ob-body" id="obBody"></div>
     </div>
-    <div style="border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--bg-input);padding:12px 14px;margin-bottom:14px;font-size:0.8rem;line-height:1.6;color:var(--text-dim);">
-      <div style="font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent2);margin-bottom:6px;" data-i18n="welcome_a2hs_title">📲 Dodaj skrót na ekran główny</div>
-      <div style="margin-bottom:6px;" data-i18n="welcome_a2hs_ios">iPhone (Safari): dotknij przycisku Udostępnij (kwadrat ze strzałką ↑ na dolnym pasku), przewiń w dół i wybierz „Dodaj do ekranu początkowego”, potem „Dodaj”.</div>
-      <div data-i18n="welcome_a2hs_android">Android (Chrome): dotknij menu ⋮ w prawym górnym rogu, wybierz „Dodaj do ekranu głównego” (lub „Zainstaluj aplikację”) i potwierdź.</div>
+    <div class="ob-dots" id="obDots"></div>
+    <div class="ob-nav">
+      <button class="btn-ghost" id="obPrevBtn">Wstecz</button>
+      <span class="ob-step" id="obStep"></span>
+      <button class="btn-primary" id="obNextBtn">Dalej</button>
     </div>
-    <button class="btn-primary" id="welcomeStartBtn" style="width:100%;" data-i18n="welcome_start">Zaczynamy</button>
   </div>
 </div>
 
@@ -1491,72 +1788,21 @@
 
     <div class="set-section">
       <button class="acc-head" data-acc="set_appearance" data-acc-open aria-controls="accAppearance">
-        <h4 data-i18n="acc_appearance">Motyw, kolory i język</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
+        <h4 data-i18n="acc_appearance">Wygląd i język</h4><span class="db-arrow" aria-hidden="true">&#9660;</span>
       </button>
       <div class="db-collapse" id="accAppearance">
-        <!-- Motyw / tło -->
-        <div class="set-subhead first" data-i18n="acc_themes">Motywy</div>
-        <div class="mini-label" data-i18n="set_colormode">Tryb</div>
-        <div class="theme-opts" id="colorModeOpts">
-          <button class="theme-chip" data-cm-opt="dark" data-i18n="cm_dark">Ciemny</button>
-          <button class="theme-chip" data-cm-opt="light" data-i18n="cm_light">Jasny</button>
-          <button class="theme-chip" data-cm-opt="system" data-i18n="cm_system">Systemowy</button>
-        </div>
-        <div class="mini-label" style="margin-top:12px;" data-i18n="set_bg">Tło strony</div>
-        <div class="theme-opts" id="pageBgOpts">
-          <button class="theme-chip" data-bg-opt="default" data-i18n="bg_default">Domyślne</button>
-          <button class="theme-chip" data-bg-opt="gradient" data-i18n="bg_gradient">Gradient</button>
-          <button class="theme-chip" data-bg-opt="pattern" data-i18n="bg_pattern">Wzór</button>
-        </div>
-        <div class="mini-label" style="margin-top:12px;" data-i18n="set_settingsbg">Tło panelu ustawień</div>
-        <div class="theme-opts" id="settingsBgOpts">
-          <button class="theme-chip" data-sbg-opt="blur" data-i18n="sbg_blur">Rozmyte</button>
-          <button class="theme-chip" data-sbg-opt="solid" data-i18n="sbg_solid">Statyczny kolor</button>
-        </div>
-
-        <!-- Kolory -->
-        <div class="set-subhead" data-i18n="acc_colors">Kolory</div>
-        <div class="color-row"><span data-i18n="col_accent">Kolor akcentu</span><input type="color" id="colAccent" data-col="accent"></div>
-        <div class="color-row"><span data-i18n="col_bg">Kolor tła</span><input type="color" id="colBg" data-col="bg"></div>
-        <div class="color-row"><span data-i18n="col_text">Kolor tekstu</span><input type="color" id="colText" data-col="text"></div>
-        <div class="color-row"><span data-i18n="col_panel">Kolor kart/paneli</span><input type="color" id="colPanel" data-col="panel"></div>
-        <button class="btn-ghost" id="colorResetBtn" style="margin-top:6px;" data-i18n="col_reset">Przywróć kolory motywu</button>
-
-        <!-- Typografia -->
-        <div class="set-subhead" data-i18n="acc_typo">Typografia</div>
-        <label for="fontFamilySel" data-i18n="set_font">Czcionka</label>
-        <select id="fontFamilySel">
-          <option value="default" data-i18n="font_default">Domyślna (motyw)</option>
-          <option value="system" data-i18n="font_system">Systemowa</option>
-          <option value="serif" data-i18n="font_serif">Szeryfowa</option>
-          <option value="mono" data-i18n="font_mono">Monospace</option>
-          <option value="rounded" data-i18n="font_rounded">Zaokrąglona</option>
-        </select>
-        <div class="mini-label" style="margin-top:12px;" data-i18n="set_fontsize">Rozmiar czcionki</div>
-        <div class="slider-row">
-          <input type="range" id="fontSizeRange" min="13" max="20" step="0.5">
-          <span class="slider-val" id="fontSizeVal"></span>
-        </div>
-
-        <!-- Układ -->
-        <div class="set-subhead" data-i18n="acc_layout">Układ</div>
-        <div class="mini-label" data-i18n="set_density">Gęstość układu</div>
-        <div class="theme-opts" id="densityOpts">
-          <button class="theme-chip" data-den-opt="compact" data-i18n="den_compact">Kompaktowy</button>
-          <button class="theme-chip" data-den-opt="standard" data-i18n="den_standard">Standardowy</button>
-          <button class="theme-chip" data-den-opt="spacious" data-i18n="den_spacious">Przestronny</button>
-        </div>
-        <div class="mini-label" style="margin-top:12px;" data-i18n="set_radius">Zaokrąglenie rogów</div>
-        <div class="slider-row">
-          <input type="range" id="radiusRange" min="0" max="24" step="1">
-          <span class="slider-val" id="radiusVal"></span>
+        <!-- Tryb (jedyna opcja motywu) -->
+        <div class="mini-label first" data-i18n="set_colormode">Tryb</div>
+        <div class="seg mode-seg" id="colorModeOpts">
+          <button class="seg-btn" data-cm-opt="dark" data-i18n="cm_dark">Ciemny</button>
+          <button class="seg-btn" data-cm-opt="light" data-i18n="cm_light">Jasny</button>
         </div>
 
         <!-- Język -->
         <div class="set-subhead" data-i18n="set_lang">Język strony</div>
-        <div class="lang-opts" id="langOpts">
-          <button class="theme-chip" data-lang-opt="pl">Polski</button>
-          <button class="theme-chip" data-lang-opt="en">English</button>
+        <div class="seg lang-seg" id="langOpts">
+          <button class="seg-btn" data-lang-opt="pl">Polski</button>
+          <button class="seg-btn" data-lang-opt="en">English</button>
         </div>
       </div>
     </div>
@@ -1567,14 +1813,7 @@
       </button>
       <div class="db-collapse" id="accWidgets">
         <!-- Kafelki -->
-        <div class="set-subhead first" data-i18n="set_tiles">Kafelki: kolejność, widoczność i kolor</div>
-        <div class="color-row">
-          <span data-i18n="tile_color">Kolor podświetlenia kafelków</span>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="color" id="tileGlowColor" class="tile-col" title="">
-            <button class="or-colreset" id="tileGlowReset" title="" data-i18n-title="tile_color_reset">&#8634;</button>
-          </div>
-        </div>
+        <div class="set-subhead first" data-i18n="set_tiles">Kafelki: kolejność i widoczność</div>
         <div id="tileConfigList"></div>
 
         <!-- Kursy walut -->
@@ -1794,11 +2033,11 @@
       send:"Wyślij", ai_ph:"Napisz wiadomość...", ai_config:"Konfiguracja API", ai_clear:"Wyczyść czat",
       about_link:"Informacje / O nas", guide_link:"\uD83D\uDCF2 Instrukcja", rights:"Wszystkie prawa zastrzeżone",
       settings:"Ustawienia", set_theme:"Wygląd strony", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Jasny",
-      set_tiles:"Kafelki: kolejność, widoczność i kolor", tile_color:"Kolor podświetlenia kafelków", tile_color_reset:"Przywróć domyślny kolor", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
+      set_tiles:"Kafelki: kolejność i widoczność", tile_color:"Kolor podświetlenia kafelków", tile_color_reset:"Przywróć domyślny kolor", set_lang:"Język strony", set_clock:"Strefa czasowa zegara",
       tz_primary:"Strefa główna", tz_second_enable:"Drugi zegar",
       set_header:"Pole informacyjne (nagłówek)", header_quote:"Cytat z NT", header_fact:"Ciekawostka", header_motiv:"Cytat motywacyjny",
       acc_themes:"Motywy", acc_colors:"Kolory", acc_typo:"Typografia", acc_layout:"Układ",
-      acc_appearance:"Motyw, kolory i język", acc_widgets:"Kafelki, waluty i zegar",
+      acc_appearance:"Wygląd i język", acc_widgets:"Kafelki, waluty i zegar",
       set_colormode:"Tryb", cm_dark:"Ciemny", cm_light:"Jasny", cm_system:"Systemowy",
       set_bg:"Tło strony", bg_default:"Domyślne", bg_gradient:"Gradient", bg_pattern:"Wzór",
       set_settingsbg:"Tło panelu ustawień", sbg_blur:"Rozmyte", sbg_solid:"Statyczny kolor",
@@ -1810,6 +2049,26 @@
       welcome_a2hs_ios:"iPhone (Safari): dotknij przycisku Udostępnij (kwadrat ze strzałką \u2191 na dolnym pasku), przewiń w dół i wybierz \u201EDodaj do ekranu początkowego\u201D, potem \u201EDodaj\u201D.",
       welcome_a2hs_android:"Android (Chrome): dotknij menu \u22EE w prawym górnym rogu, wybierz \u201EDodaj do ekranu głównego\u201D (lub \u201EZainstaluj aplikację\u201D) i potwierdź.",
       welcome_text:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet i dziennik — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Wygląd i układ dostosujesz w ustawieniach (ikona ⚙ w rogu).",
+      ob_next:"Dalej", ob_back:"Wstecz", ob_start:"Zaczynajmy",
+      ob_welcome_title:"Witaj w FutureApp!",
+      ob_welcome_body:"Twoje centrum organizacji: zadania, kalendarz, fitness, budżet, dziennik i e-booki — wszystko w jednym miejscu. Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce (localStorage / IndexedDB).<br><br>Przejdźmy krótko przez kolejne sekcje aplikacji — użyj przycisku „Dalej”.",
+      ob_clock_title:"Zegar i nadchodzące wydarzenie",
+      ob_clock_body:"Na górze ekranu głównego masz zegar z datą (opcjonalnie druga strefa czasowa) oraz kafelek z najbliższym wydarzeniem z kalendarza. Strefy czasowe i format godziny zmienisz w ⚙ Ustawieniach.",
+      ob_daily_title:"Codzienne zadania",
+      ob_daily_body:"Lista nawyków powtarzanych każdego dnia. Ołówek ✎ otwiera tryb edycji (dodawanie i usuwanie pozycji), a kliknięcie zadania odhacza je. Kolejne dni z odhaczonymi zadaniami budują licznik serii 🔥 w nagłówku.",
+      ob_todo_body:"Zadania jednorazowe z datą i godziną. Po dodaniu zadania aplikacja może przypomnieć o nim powiadomieniem, a najbliższe terminy pokazuje na ekranie głównym.",
+      ob_calendar_body:"Kalendarz miesięczny i tygodniowy. Kliknij dzień, aby zobaczyć i dodać wydarzenia (nazwa, godzina, czas dojazdu, przypomnienie). Sekcję można zabezpieczyć PIN-em w ustawieniach.",
+      ob_fitness_body:"Trzy moduły treningowe oraz kalorie i kalkulator zapotrzebowania.<br>• <b>Trening siłowy</b>: ćwiczenia i serie, <b>superserie</b>, <b>dropsety</b>, <b>notatki do serii</b>, zmiana kolejności ćwiczeń (▲▼ lub przeciąganie), szablony, stoper treningu i przerwy oraz rekordy (PR).<br>• <b>Bieganie</b>: dystans, czas, tempo.<br>• <b>Sporty walki</b>: timer rund z gongiem bokserskim.",
+      ob_budget_body:"Przychody, wydatki, kategorie i skarbonka. Historia miesięcy pozwala porównać wydatki w czasie. Sekcję można zabezpieczyć PIN-em.",
+      ob_journal_body:"Prywatne wpisy z datą — przemyślenia, notatki, plany. Wpisy możesz edytować, zwijać i chronić PIN-em.",
+      ob_ebooks_body:"Twoja biblioteka plików (np. PDF/EPUB) przechowywanych lokalnie w przeglądarce (IndexedDB), dostępnych także offline.",
+      ob_settings_title:"Ustawienia i wygląd",
+      ob_settings_body:"Ikona ⚙ w rogu otwiera ustawienia: tryb jasny/ciemny, kolejność i widoczność kafelków, czcionka i rozmiar tekstu, język, strefy czasowe, powiadomienia oraz PIN. Instrukcję otworzysz ponownie linkiem „📲 Instrukcja” w stopce.<br><br>To wszystko — miłego korzystania!",
+      ss_link:"Superseria z kolejnym ćwiczeniem", ss_badge:"Superseria",
+      set_note_btn:"Notatka do serii", set_note_ph:"Notatka do serii (np. tempo, RPE, technika)...",
+      drop_add:"Dodaj dropset", drop_tag:"Drop",
+      ex_move_up:"Przesuń w górę", ex_move_down:"Przesuń w dół", ex_drag:"Przeciągnij, aby zmienić kolejność",
+      wk_rest_target:"Cel przerwy (gong)", wk_rest_target_ph:"np. 1:30",
       pin_fixed:"Oznacz jako stałe (nie kasuj przy resecie)", unpin_fixed:"Usuń oznaczenie stałej",
       wk_start_btn:"\u25B6 Rozpocznij trening", wk_total_time:"Czas treningu", wk_rest_time:"Przerwa", wk_duration:"Czas trwania",
       set_pin:"Zabezpieczenie PIN", pin_journal:"Chroń Dziennik", pin_calendar:"Chroń Kalendarz", pin_budget:"Chroń Zarządzanie budżetem",
@@ -1970,11 +2229,11 @@
       send:"Send", ai_ph:"Type a message...", ai_config:"API config", ai_clear:"Clear chat",
       about_link:"Info / About us", guide_link:"\uD83D\uDCF2 Guide", rights:"All rights reserved",
       settings:"Settings", set_theme:"Appearance", theme_cyber:"Cyberpunk", theme_synth:"Synthwave", theme_light:"Light",
-      set_tiles:"Tiles: order, visibility & color", tile_color:"Tiles highlight color", tile_color_reset:"Reset to default color", set_lang:"Language", set_clock:"Clock time zone",
+      set_tiles:"Tiles: order & visibility", tile_color:"Tiles highlight color", tile_color_reset:"Reset to default color", set_lang:"Language", set_clock:"Clock time zone",
       tz_primary:"Primary zone", tz_second_enable:"Second clock",
       set_header:"Header info box", header_quote:"NT quote", header_fact:"Fun fact", header_motiv:"Motivational quote",
       acc_themes:"Themes", acc_colors:"Colors", acc_typo:"Typography", acc_layout:"Layout",
-      acc_appearance:"Theme, colors & language", acc_widgets:"Tiles, currency & clock",
+      acc_appearance:"Appearance & language", acc_widgets:"Tiles, currency & clock",
       set_colormode:"Mode", cm_dark:"Dark", cm_light:"Light", cm_system:"System",
       set_bg:"Page background", bg_default:"Default", bg_gradient:"Gradient", bg_pattern:"Pattern",
       set_settingsbg:"Settings panel backdrop", sbg_blur:"Blurred", sbg_solid:"Solid color",
@@ -1986,6 +2245,26 @@
       welcome_a2hs_ios:"iPhone (Safari): tap the Share button (square with an \u2191 arrow on the bottom bar), scroll down and choose \u201CAdd to Home Screen\u201D, then \u201CAdd\u201D.",
       welcome_a2hs_android:"Android (Chrome): tap the \u22EE menu in the top-right corner, choose \u201CAdd to Home screen\u201D (or \u201CInstall app\u201D) and confirm.",
       welcome_text:"Your organization hub: tasks, calendar, fitness, budget and journal — all in one place. Data is stored only locally in your browser. Customize the look and layout in settings (the ⚙ icon in the corner).",
+      ob_next:"Next", ob_back:"Back", ob_start:"Let's start",
+      ob_welcome_title:"Welcome to FutureApp!",
+      ob_welcome_body:"Your organization hub: tasks, calendar, fitness, budget, journal and e-books — all in one place. Data is stored only locally in your browser (localStorage / IndexedDB).<br><br>Let's walk through the sections quickly — tap „Next”.",
+      ob_clock_title:"Clock & upcoming event",
+      ob_clock_body:"At the top of the home screen you get the clock and date (with an optional second time zone) and a card with your next calendar event. Time zones and the hour format live in ⚙ Settings.",
+      ob_daily_title:"Daily tasks",
+      ob_daily_body:"Your list of habits repeated every day. The pencil ✎ opens edit mode (add or remove items) and tapping a task checks it off. Consecutive completed days build the 🔥 streak counter in the header.",
+      ob_todo_body:"One-off tasks with a date and time. Once added, the app can remind you with a notification and shows the closest deadlines on the home screen.",
+      ob_calendar_body:"Month and week views. Tap a day to see and add events (name, time, travel time, reminder). The section can be locked with a PIN in settings.",
+      ob_fitness_body:"Three training modules plus calories and a daily needs calculator.<br>• <b>Strength training</b>: exercises and sets, <b>supersets</b>, <b>drop sets</b>, <b>per-set notes</b>, exercise reordering (▲▼ or drag), templates, workout and rest timers, personal records.<br>• <b>Running</b>: distance, time, pace.<br>• <b>Combat sports</b>: round timer with a boxing ring gong.",
+      ob_budget_body:"Income, expenses, categories and a piggy bank. Month history lets you compare spending over time. The section can be locked with a PIN.",
+      ob_journal_body:"Private, dated entries — thoughts, notes, plans. Entries can be edited, collapsed and protected with a PIN.",
+      ob_ebooks_body:"Your library of files (e.g. PDF/EPUB) stored locally in the browser (IndexedDB) and available offline.",
+      ob_settings_title:"Settings & look",
+      ob_settings_body:"The ⚙ icon in the corner opens settings: light/dark mode, tile order and visibility, font and text size, language, time zones, notifications and PIN. You can reopen this guide anytime via „📲 Guide” in the footer.<br><br>That's it — enjoy!",
+      ss_link:"Superset with the next exercise", ss_badge:"Superset",
+      set_note_btn:"Set note", set_note_ph:"Set note (e.g. tempo, RPE, technique)...",
+      drop_add:"Add drop set", drop_tag:"Drop",
+      ex_move_up:"Move up", ex_move_down:"Move down", ex_drag:"Drag to reorder",
+      wk_rest_target:"Rest target (gong)", wk_rest_target_ph:"e.g. 1:30",
       pin_fixed:"Mark as fixed (keep on reset)", unpin_fixed:"Unmark fixed",
       wk_start_btn:"\u25B6 Start workout", wk_total_time:"Workout time", wk_rest_time:"Rest", wk_duration:"Duration",
       set_pin:"PIN protection", pin_journal:"Protect Journal", pin_calendar:"Protect Calendar", pin_budget:"Protect Budget management",
@@ -2175,6 +2454,10 @@
     tileGlow: (typeof settings.tileGlow==="string") ? settings.tileGlow
               : (settings.tileColors && typeof settings.tileColors==="object" && Object.keys(settings.tileColors).length ? settings.tileColors[Object.keys(settings.tileColors)[0]] : "")
   };
+  // Redesign: per-tile highlight colour and custom colours were removed —
+  // force them off so any legacy saved values can't tint the new look.
+  state.tileGlow = "";
+  state.customColors = {};
   // ensure order integrity (in case of new tiles)
   DEFAULT_ORDER.forEach(function(id){ if(state.order.indexOf(id)===-1) state.order.push(id); });
   state.order = state.order.filter(function(id){ return DEFAULT_ORDER.indexOf(id)!==-1; });
@@ -2206,78 +2489,35 @@
   // System dark/light preference (used when colorMode === "system")
   var prefersDark = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)")) || {matches:true,addListener:function(){}};
 
-  // Resolves which theme to render given the color-mode choice.
-  // dark   -> keep chosen dark theme (cyber/synth), fall back to cyber if "light" was stored
-  // light  -> force the built-in light theme
-  // system -> follow OS preference (light theme when OS is light, otherwise the chosen dark theme)
+  // Redesign: the only appearance choice is dark vs. light.
+  // "system" is still honoured for anyone who had it saved before, but it is
+  // no longer offered in the UI.
   function resolveTheme(){
-    var chosen = state.theme;
     if(state.colorMode==="light") return "light";
-    if(state.colorMode==="system") return prefersDark.matches ? (chosen==="light"?"cyber":chosen) : "light";
-    // dark mode
-    return chosen==="light" ? "cyber" : chosen;
+    if(state.colorMode==="system") return prefersDark.matches ? "dark" : "light";
+    return "dark";
   }
   function applyTheme(){
     document.documentElement.setAttribute("data-theme", resolveTheme());
-    applyCustomColors(); // re-assert user color overrides on top of the theme variables
+    updateThemeToggleIcon();
   }
-  // Applies user-picked colors as inline CSS variables on <html> (override theme defaults). Empty = use theme.
-  function applyCustomColors(){
-    var root=document.documentElement, c=state.customColors||{};
-    var map={accent:"--accent", bg:"--bg", text:"--text", panel:"--bg-panel"};
-    Object.keys(map).forEach(function(key){
-      if(c[key]) root.style.setProperty(map[key], c[key]);
-      else root.style.removeProperty(map[key]);
-    });
-    // "Kolor tekstu" obejmuje też wszystkie różowe napisy (--accent2): nagłówki sekcji
-    // typu ZEGAR I DATA, CODZIENNE ZADANIA, drugi człon nazwy strony itd.
-    // Przy własnym kolorze wyciszamy różową poświatę, żeby nie prześwitywała spod nowego koloru.
-    if(c.text){
-      root.style.setProperty("--accent2", c.text);
-      root.style.setProperty("--glow2", "none");
-    } else {
-      root.style.removeProperty("--accent2");
-      root.style.removeProperty("--glow2");
-    }
+  // Updates the floating light/dark toggle's accessible label (the icon itself
+  // is swapped purely in CSS based on the active data-theme).
+  function updateThemeToggleIcon(){
+    var b=$("themeToggle"); if(!b) return;
+    var isLight = resolveTheme()==="light";
+    var toDark  = state.lang==="en" ? "Switch to dark mode"  : "Przełącz na tryb ciemny";
+    var toLight = state.lang==="en" ? "Switch to light mode" : "Przełącz na tryb jasny";
+    b.setAttribute("aria-label", isLight ? toDark : toLight);
   }
-  // Font colour follows the active mode automatically: white text in dark mode,
-  // dark text in light mode. Overrides any saved custom "col_text" so the text
-  // always matches the current theme. Call on every theme/mode switch.
-  var AUTO_TEXT_DARK="#ffffff", AUTO_TEXT_LIGHT="#1a2230";
-  function syncTextColorToMode(){
-    state.customColors = state.customColors || {};
-    state.customColors.text = (resolveTheme()==="light") ? AUTO_TEXT_LIGHT : AUTO_TEXT_DARK;
-    applyCustomColors();
-  }
-  var FONT_STACKS={
-    "default":"", // empty => inherit theme's --font-sans (handled by not overriding)
-    "system":"-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif",
-    "serif":"Georgia,\"Times New Roman\",\"Noto Serif\",serif",
-    "mono":"\"JetBrains Mono\",\"Fira Code\",ui-monospace,Consolas,monospace",
-    "rounded":"\"Segoe UI Rounded\",\"Nunito\",\"Quicksand\",ui-rounded,\"Segoe UI\",sans-serif"
-  };
-  function applyAppearance(){
-    var h=document.documentElement, b=document.body;
-    // Font size: concrete px on <html> so rem-based layout scales globally.
-    h.style.fontSize=(state.fontPx||16)+"px";
-    // Font family override (empty for "default" so the theme font is used).
-    var stack=FONT_STACKS[state.fontFamily]||"";
-    if(stack) b.style.fontFamily=stack; else b.style.removeProperty("font-family");
-    // Corner radius via the existing --radius variable (respected across cards/inputs/buttons).
-    h.style.setProperty("--radius",(state.radius==null?10:state.radius)+"px");
-    // Density (padding scale) — unchanged class mechanism.
-    b.classList.remove("den-compact","den-standard","den-spacious");
-    b.classList.add("den-"+(state.density||"standard"));
-    // Optional page background.
-    b.classList.remove("bg-gradient","bg-pattern");
-    if(state.pageBg==="gradient") b.classList.add("bg-gradient");
-    else if(state.pageBg==="pattern") b.classList.add("bg-pattern");
-    // Settings-overlay backdrop: solid static colour vs. blurred (default).
-    b.classList.toggle("ov-solid", state.settingsBg==="solid");
-  }
-  // React to OS theme changes live when in "system" mode.
+  // Custom colours / fonts / density / page backgrounds were removed in the
+  // redesign — these remain as no-ops so older call sites stay harmless.
+  function applyCustomColors(){ /* removed: theme tokens define all colours */ }
+  function syncTextColorToMode(){ /* removed: text colour comes from theme tokens */ }
+  function applyAppearance(){ /* removed: appearance is fully driven by the theme */ }
+  // React to OS theme changes live when a legacy "system" preference is active.
   try{
-    var _mqHandler=function(){ if(state.colorMode==="system"){ applyTheme(); syncTextColorToMode(); persistSettings(); if(typeof syncAppearanceControls==="function") syncAppearanceControls(); } };
+    var _mqHandler=function(){ if(state.colorMode==="system"){ applyTheme(); persistSettings(); } };
     if(prefersDark.addEventListener) prefersDark.addEventListener("change",_mqHandler);
     else if(prefersDark.addListener) prefersDark.addListener(_mqHandler); // older browsers
   }catch(e){ /* matchMedia not supported — ignore */ }
@@ -2837,57 +3077,206 @@
   }
 
   function makeStepper(cls,ph,step,val){
-    var phKey = cls==="set-weight" ? "weight_ph" : "reps_ph";
+    var phKey = (cls.indexOf("weight")>=0) ? "weight_ph" : "reps_ph";
     return '<div class="stepper">'+
-      '<button type="button" class="stp minus" data-step="'+cls+'">−</button>'+
-      '<input type="number" class="'+cls+'" data-i18n-ph="'+phKey+'" placeholder="'+ph+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==""?val:"")+'">'+
-      '<button type="button" class="stp plus" data-step="'+cls+'">+</button>'+
+      '<button type="button" class="stp minus">−</button>'+
+      '<input type="number" class="'+cls+'" data-i18n-ph="'+phKey+'" placeholder="'+ph+'" min="0" step="'+step+'" value="'+(val!==undefined&&val!==null&&val!==""?val:"")+'">'+
+      '<button type="button" class="stp plus">+</button>'+
     '</div>';
   }
-  function addSetRow(container,w,r){
-    var row=document.createElement("div"); row.className="set-row";
-    row.innerHTML=makeStepper("set-weight",t("weight_ph"),"2.5",w)+
-      makeStepper("set-reps",t("reps_ph"),"1",r)+
-      '<button type="button" class="rm-set">&times;</button>';
-    row.querySelector(".rm-set").addEventListener("click", function(){ row.remove(); });
-    row.querySelectorAll(".stp").forEach(function(btn){
+  // Podpina obsługę +/- do wszystkich stepperów w danym fragmencie DOM (serie i dropsety).
+  function wireSteppers(scope){
+    scope.querySelectorAll(".stp").forEach(function(btn){
+      if(btn.__wired) return; btn.__wired=true;
       btn.addEventListener("click", function(){
-        var inp=row.querySelector("."+btn.getAttribute("data-step"));
+        var inp=btn.parentNode.querySelector("input"); if(!inp) return;
         var stepv=parseFloat(inp.step)||1;
         var cur=parseFloat(inp.value)||0;
         cur += btn.classList.contains("plus")?stepv:-stepv;
         if(cur<0) cur=0;
         inp.value = (stepv%1===0)?String(cur):String(Math.round(cur*100)/100);
+        saveWorkoutDraft();
       });
     });
-    container.appendChild(row);
   }
+
+  /* --- DROPSET: kolejny, obniżony ciężar w ramach tej samej serii --- */
+  function addDropRow(list,d){
+    var row=document.createElement("div"); row.className="drop-row";
+    row.innerHTML='<span class="drop-tag">'+t("drop_tag")+'</span>'+
+      makeStepper("drop-weight",t("weight_ph"),"2.5", d?d.weight:"")+
+      makeStepper("drop-reps",t("reps_ph"),"1", d?d.reps:"")+
+      '<button type="button" class="rm-set rm-drop">&times;</button>';
+    row.querySelector(".rm-drop").addEventListener("click", function(){ row.remove(); saveWorkoutDraft(); });
+    wireSteppers(row);
+    list.appendChild(row);
+  }
+
+  /* --- SERIA: ciężar + powtórzenia + (opcjonalnie) dropsety i notatka --- */
+  function addSetRow(container,data){
+    data=data||{};
+    var item=document.createElement("div"); item.className="set-item";
+    item.innerHTML=
+      '<div class="set-row">'+
+        makeStepper("set-weight",t("weight_ph"),"2.5",data.weight)+
+        makeStepper("set-reps",t("reps_ph"),"1",data.reps)+
+        '<button type="button" class="set-tool note-btn" data-i18n-title="set_note_btn" title="'+t("set_note_btn")+'">&#9998;</button>'+
+        '<button type="button" class="set-tool drop-btn" data-i18n-title="drop_add" title="'+t("drop_add")+'">&#9660;</button>'+
+        '<button type="button" class="rm-set">&times;</button>'+
+      '</div>'+
+      '<div class="drop-list"></div>'+
+      '<input type="text" class="set-note" data-i18n-ph="set_note_ph" placeholder="'+t("set_note_ph")+'" style="display:none;">';
+    var dropList=item.querySelector(".drop-list");
+    var noteInp=item.querySelector(".set-note");
+    var noteBtn=item.querySelector(".note-btn");
+    var dropBtn=item.querySelector(".drop-btn");
+    item.querySelector(".set-row .rm-set").addEventListener("click", function(){ item.remove(); saveWorkoutDraft(); });
+    noteBtn.addEventListener("click", function(){
+      var show=(noteInp.style.display==="none");
+      noteInp.style.display=show?"":"none";
+      noteBtn.classList.toggle("on", show);
+      if(show) noteInp.focus(); else { noteInp.value=""; saveWorkoutDraft(); }
+    });
+    dropBtn.addEventListener("click", function(){
+      addDropRow(dropList);
+      dropBtn.classList.add("on");
+      resetRestTimer();
+      saveWorkoutDraft();
+    });
+    if(data.note){ noteInp.value=data.note; noteInp.style.display=""; noteBtn.classList.add("on"); }
+    if(data.drops && data.drops.length){
+      data.drops.forEach(function(d){ addDropRow(dropList,d); });
+      dropBtn.classList.add("on");
+    }
+    wireSteppers(item);
+    container.appendChild(item);
+  }
+
+  /* --- SUPERSERIE: łączenie sąsiadujących ćwiczeń w grupy --- */
+  function exerciseBlocks(){
+    return Array.prototype.slice.call(document.querySelectorAll("#exercisesContainer .exercise-block"));
+  }
+  // Przelicza grupy superserii na podstawie flag __linkNext, nadaje klasy, etykiety i numery ćwiczeń.
+  function refreshSupersets(){
+    var blocks=exerciseBlocks();
+    blocks.forEach(function(b){
+      b.classList.remove("ss-member","ss-first","ss-last");
+      var bd=b.querySelector(".ss-badge");
+      if(bd){ bd.style.display="none"; bd.textContent=""; }
+      b.__ssGroup=null;
+    });
+    if(blocks.length) blocks[blocks.length-1].__linkNext=false; // ostatnie nie ma z czym się łączyć
+    var i=0, g=0;
+    while(i<blocks.length){
+      if(blocks[i].__linkNext && i+1<blocks.length){
+        var startI=i, j=i;
+        while(j<blocks.length-1 && blocks[j].__linkNext) j++;
+        g++;
+        var letter=String.fromCharCode(64+g); // A, B, C...
+        for(var k=startI;k<=j;k++){
+          blocks[k].classList.add("ss-member");
+          if(k===startI) blocks[k].classList.add("ss-first");
+          if(k===j) blocks[k].classList.add("ss-last");
+          blocks[k].__ssGroup=letter;
+          var bd2=blocks[k].querySelector(".ss-badge");
+          if(bd2){ bd2.style.display=""; bd2.textContent=t("ss_badge")+" "+letter+" · "+(k-startI+1)+"/"+(j-startI+1); }
+        }
+        i=j+1;
+      } else { i++; }
+    }
+    blocks.forEach(function(b,idx){
+      b.__ssRaw=b.__ssGroup;
+      var lb=b.querySelector(".link-next"); if(lb) lb.classList.toggle("on", !!b.__linkNext);
+      var nm=b.querySelector(".ex-num"); if(nm) nm.textContent=String(idx+1);
+      var up=b.querySelector(".ex-up"); if(up) up.disabled=(idx===0);
+      var dn=b.querySelector(".ex-down"); if(dn) dn.disabled=(idx===blocks.length-1);
+    });
+  }
+  // Po wczytaniu treningu/szablonu/roboczej wersji: odtwarza połączenia na podstawie zapisanych liter grup.
+  function rebuildSupersetLinks(){
+    var blocks=exerciseBlocks();
+    blocks.forEach(function(b,i){
+      var next=blocks[i+1];
+      b.__linkNext = !!(b.__ssRaw && next && next.__ssRaw===b.__ssRaw);
+    });
+    refreshSupersets();
+  }
+
+  /* --- Zmiana kolejności ćwiczeń (przyciski ▲▼ oraz drag & drop) --- */
+  var dragBlock=null;
+  function moveBlock(block,dir){
+    var c=$("exercisesContainer");
+    if(dir<0){ var prev=block.previousElementSibling; if(prev) c.insertBefore(block,prev); }
+    else { var next=block.nextElementSibling; if(next) c.insertBefore(next,block); }
+    rebuildSupersetLinks(); saveWorkoutDraft(); persistOrderIfEditing(); // superserie "podążają" za ćwiczeniami
+    if(block.scrollIntoView) block.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+
   function addExerciseBlock(prefill){
     var container=$("exercisesContainer");
     var block=document.createElement("div"); block.className="exercise-block";
-    block.innerHTML='<div class="exercise-block-header"><span data-i18n="exercise">'+t("exercise")+'</span>'+
-      '<button type="button" class="btn-small rm-exercise" data-i18n="rm_exercise">'+t("rm_exercise")+'</button></div>'+
+    block.innerHTML='<div class="exercise-block-header">'+
+        '<div class="ex-head-left"><span data-i18n="exercise">'+t("exercise")+'</span><span class="ex-num"></span></div>'+
+        '<div class="ex-tools">'+
+          '<button type="button" class="ex-drag" data-i18n-title="ex_drag" title="'+t("ex_drag")+'" aria-label="'+t("ex_drag")+'">&#8942;&#8942;</button>'+
+          '<button type="button" class="ex-up" data-i18n-title="ex_move_up" title="'+t("ex_move_up")+'" aria-label="'+t("ex_move_up")+'">&#9650;</button>'+
+          '<button type="button" class="ex-down" data-i18n-title="ex_move_down" title="'+t("ex_move_down")+'" aria-label="'+t("ex_move_down")+'">&#9660;</button>'+
+          '<button type="button" class="link-next" data-i18n-title="ss_link" title="'+t("ss_link")+'" aria-label="'+t("ss_link")+'">&#128279;</button>'+
+          '<button type="button" class="btn-small rm-exercise" data-i18n="rm_exercise">'+t("rm_exercise")+'</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="ss-badge" style="display:none;"></div>'+
       '<label data-i18n="ex_name">'+t("ex_name")+'</label><input type="text" class="ex-name" list="exerciseNames" data-i18n-ph="ex_name_ph" placeholder="'+t("ex_name_ph")+'">'+
       '<div class="ex-hint" style="display:none;"></div>'+
       '<label data-i18n="sets">'+t("sets")+'</label><div class="sets-container"></div>'+
       '<button type="button" class="btn-ghost add-set-btn" style="margin-top:8px;" data-i18n="add_set">'+t("add_set")+'</button>'+
       '<label data-i18n="note">'+t("note")+'</label><textarea class="ex-note"></textarea>';
+
     block.querySelector(".rm-exercise").addEventListener("click", function(){
-      if(container.querySelectorAll(".exercise-block").length>1) block.remove(); else alert(t("min_one_ex"));
+      if(container.querySelectorAll(".exercise-block").length>1){
+        block.remove(); rebuildSupersetLinks(); saveWorkoutDraft(); persistOrderIfEditing();
+      } else alert(t("min_one_ex"));
     });
+    block.querySelector(".ex-up").addEventListener("click", function(){ moveBlock(block,-1); });
+    block.querySelector(".ex-down").addEventListener("click", function(){ moveBlock(block,1); });
+    block.querySelector(".link-next").addEventListener("click", function(){
+      block.__linkNext=!block.__linkNext;
+      refreshSupersets(); saveWorkoutDraft(); persistOrderIfEditing();
+    });
+
+    // drag & drop: uchwyt ⋮⋮ włącza przeciąganie całego bloku
+    var handle=block.querySelector(".ex-drag");
+    handle.addEventListener("mousedown", function(){ block.draggable=true; });
+    handle.addEventListener("touchstart", function(){ block.draggable=true; }, {passive:true});
+    handle.addEventListener("mouseup", function(){ block.draggable=false; });
+    block.addEventListener("dragstart", function(e){
+      dragBlock=block; block.classList.add("dragging");
+      try{ e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain",""); }catch(_e){}
+    });
+    block.addEventListener("dragend", function(){
+      block.classList.remove("dragging"); block.draggable=false; dragBlock=null;
+      rebuildSupersetLinks(); saveWorkoutDraft(); persistOrderIfEditing();
+    });
+
     var sc=block.querySelector(".sets-container");
     var nameInp=block.querySelector(".ex-name");
     var hint=block.querySelector(".ex-hint");
-    block.querySelector(".add-set-btn").addEventListener("click", function(){ addSetRow(sc); });
+    block.querySelector(".add-set-btn").addEventListener("click", function(){ addSetRow(sc,{}); saveWorkoutDraft(); });
 
     function showHint(){
       var last=lastSetsFor(nameInp.value);
       if(last && last.length){
-        var txt=last.map(function(s){return s.weight+"kg×"+s.reps;}).join(", ");
+        var txt=last.map(function(s){
+          var one=s.weight+"kg×"+s.reps;
+          if(s.drops && s.drops.length) one+="→"+s.drops.map(function(d){ return d.weight+"kg×"+d.reps; }).join("→");
+          return one;
+        }).join(", ");
         hint.innerHTML='<span>'+t("last_time")+": "+txt+'</span><span class="use-last">'+t("use_last")+'</span>';
         hint.style.display="flex";
         hint.querySelector(".use-last").addEventListener("click", function(){
-          sc.innerHTML=""; last.forEach(function(s){ addSetRow(sc,s.weight,s.reps); });
+          sc.innerHTML="";
+          last.forEach(function(s){ addSetRow(sc,{weight:s.weight,reps:s.reps,note:s.note,drops:(s.drops||[]).slice()}); });
+          saveWorkoutDraft();
         });
       } else { hint.style.display="none"; hint.innerHTML=""; }
     }
@@ -2896,34 +3285,88 @@
 
     if(prefill){
       nameInp.value=prefill.name||"";
-      (prefill.sets&&prefill.sets.length?prefill.sets:[null]).forEach(function(s){ addSetRow(sc, s?s.weight:undefined, s?s.reps:undefined); });
+      var ps=(prefill.sets && prefill.sets.length) ? prefill.sets : [{}];
+      ps.forEach(function(st){ addSetRow(sc, st||{}); });
       if(prefill.note) block.querySelector(".ex-note").value=prefill.note;
+      block.__ssRaw=prefill.ss||null;
       showHint();
     } else {
-      addSetRow(sc);
+      addSetRow(sc,{});
+      block.__ssRaw=null;
     }
+    block.__linkNext=false;
     container.appendChild(block);
+    refreshSupersets();
+    return block;
   }
-  $("addExerciseBtn").addEventListener("click", function(){ addExerciseBlock(); });
-  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; addExerciseBlock(); $("wDate").value=todayISO(); editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout"); stopWorkoutTimer(); }
+  $("addExerciseBtn").addEventListener("click", function(){ addExerciseBlock(); saveWorkoutDraft(); });
+
+  /* --- Auto-zapis formularza (kolejność ćwiczeń, superserie, dropsety, notatki) w localStorage --- */
+  var draftTimer=null;
+  function saveWorkoutDraft(){
+    clearTimeout(draftTimer);
+    draftTimer=setTimeout(function(){
+      try{
+        var ex=collectExercises(true);
+        if(!ex.length){ localStorage.removeItem("wkDraft"); return; }
+        saveJSON("wkDraft", {date:$("wDate").value, editing:editingWorkoutId, exercises:ex, ts:Date.now()});
+      }catch(e){}
+    }, 250);
+  }
+  function clearWorkoutDraft(){ clearTimeout(draftTimer); try{ localStorage.removeItem("wkDraft"); }catch(e){} }
+  function restoreWorkoutDraft(){
+    var d=loadJSON("wkDraft",null);
+    if(!d || !d.exercises || !d.exercises.length) return false;
+    $("exercisesContainer").innerHTML="";
+    d.exercises.forEach(function(ex){ addExerciseBlock(ex); });
+    rebuildSupersetLinks();
+    if(d.date) $("wDate").value=d.date;
+    if(d.editing){
+      var still=workouts.filter(function(w){ return w.id===d.editing; }).length>0;
+      if(still){ editingWorkoutId=d.editing; $("addWorkoutBtn").textContent=t("save"); }
+    }
+    return true;
+  }
+  // Kolejność (i struktura) edytowanego treningu zapisuje się od razu w historii.
+  function persistOrderIfEditing(){
+    if(!editingWorkoutId) return;
+    var ex=collectExercises(true);
+    workouts.forEach(function(w){ if(w.id===editingWorkoutId) w.exercises=ex; });
+    saveWorkouts();
+  }
+
+  function resetWorkoutForm(){ $("exercisesContainer").innerHTML=""; editingWorkoutId=null; addExerciseBlock(); $("wDate").value=todayISO(); $("addWorkoutBtn").textContent=t("save_workout"); stopWorkoutTimer(); clearWorkoutDraft(); }
 
   /* ---- stopery: czas całego treningu + przerwy między seriami ---- */
   function fmtHMS(sec){ var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return pad(h)+":"+pad(m)+":"+pad(s); }
   function fmtMS(sec){ var m=Math.floor(sec/60), s=sec%60; return pad(m)+":"+pad(s); }
-  var wkTimerStart=0, wkTimerInt=null, restStart=0, restInt=null;
+  var wkTimerStart=0, wkTimerInt=null, restStart=0, restInt=null, restGonged=false;
   function tickWkTimer(){ if(wkTimerStart) $("wkTotalTimer").textContent=fmtHMS(Math.max(0,Math.floor((Date.now()-wkTimerStart)/1000))); }
-  function tickRest(){ if(restStart) $("wkRestTimer").textContent=fmtMS(Math.max(0,Math.floor((Date.now()-restStart)/1000))); }
-  function startWorkoutTimer(ts){
+  // Cel przerwy (mm:ss). Po jego osiągnięciu odzywa się gong — odpowiednik "odliczenia do zera".
+  function restTargetSec(){ var el=$("wkRestTarget"); return el?parseMMSS(el.value):0; }
+  function tickRest(){
+    if(!restStart) return;
+    var el=Math.max(0,Math.floor((Date.now()-restStart)/1000));
+    $("wkRestTimer").textContent=fmtMS(el);
+    var tgt=restTargetSec();
+    if(tgt>0 && el>=tgt && !restGonged){
+      restGonged=true;
+      playGong(1);                       // gong bokserski = koniec przerwy
+      $("restBox").classList.add("done");
+    }
+  }
+  function startWorkoutTimer(ts,quiet){
     wkTimerStart=ts||Date.now();
     try{ localStorage.setItem("wkTimerStart",String(wkTimerStart)); }catch(e){}
     $("startWorkoutBtn").style.display="none";
     $("wkTimers").style.display="flex";
     tickWkTimer();
     clearInterval(wkTimerInt); wkTimerInt=setInterval(tickWkTimer,1000);
+    if(!quiet) playGong(1);              // gong startowy (opcjonalny sygnał startu treningu)
   }
   function stopRestTimer(){
-    clearInterval(restInt); restInt=null; restStart=0;
-    $("restBox").style.display="none"; $("wkRestTimer").textContent="00:00";
+    clearInterval(restInt); restInt=null; restStart=0; restGonged=false;
+    $("restBox").style.display="none"; $("restBox").classList.remove("done"); $("wkRestTimer").textContent="00:00";
   }
   function stopWorkoutTimer(){
     clearInterval(wkTimerInt); wkTimerInt=null; wkTimerStart=0;
@@ -2936,8 +3379,9 @@
   // oraz po kliknięciu "+ Dodaj serię". Działa tylko podczas trwającego treningu.
   function resetRestTimer(){
     if(!wkTimerStart) return;
-    restStart=Date.now();
+    restStart=Date.now(); restGonged=false;
     $("restBox").style.display="";
+    $("restBox").classList.remove("done");
     tickRest();
     clearInterval(restInt); restInt=setInterval(tickRest,1000);
   }
@@ -2948,7 +3392,7 @@
     if(complete && !row.__setDone){ row.__setDone=true; resetRestTimer(); }
     else if(!complete){ row.__setDone=false; }
   }
-  $("startWorkoutBtn").addEventListener("click", function(){ startWorkoutTimer(); });
+  $("startWorkoutBtn").addEventListener("click", function(){ startWorkoutTimer(); });  // start = gong
   $("exercisesContainer").addEventListener("input", function(e){
     if(!e.target.classList) return;
     if(e.target.classList.contains("set-weight")||e.target.classList.contains("set-reps")){
@@ -2962,10 +3406,25 @@
     var stp=t_.closest?t_.closest(".stp"):null;
     if(stp){ var row=stp.closest(".set-row"); if(row) checkRowComplete(row); }
   });
+  // auto-zapis roboczej wersji treningu przy każdej zmianie pól
+  $("exercisesContainer").addEventListener("input", function(){ saveWorkoutDraft(); });
+  $("exercisesContainer").addEventListener("change", function(){ saveWorkoutDraft(); });
+  $("wDate").addEventListener("change", function(){ saveWorkoutDraft(); });
+  // drag & drop kolejności ćwiczeń
+  $("exercisesContainer").addEventListener("dragover", function(e){
+    if(!dragBlock) return;
+    e.preventDefault();
+    var target=e.target.closest?e.target.closest(".exercise-block"):null;
+    if(!target || target===dragBlock || target.parentNode!==this) return;
+    var rect=target.getBoundingClientRect();
+    var after=((e.clientY-rect.top)/rect.height)>0.5;
+    this.insertBefore(dragBlock, after?target.nextSibling:target);
+  });
+  $("exercisesContainer").addEventListener("drop", function(e){ e.preventDefault(); });
   // Wznowienie stopera po odświeżeniu strony (start zapisany w localStorage).
   (function resumeWorkoutTimer(){
     var saved=num(localStorage.getItem("wkTimerStart")||0);
-    if(saved>0 && saved<=Date.now()) startWorkoutTimer(saved);
+    if(saved>0 && saved<=Date.now()) startWorkoutTimer(saved,true); // wznowienie po odświeżeniu: bez gongu
   })();
 
   // Zbiera ćwiczenia wpisane w formularzu poniżej (wspólne dla zapisu treningu i szablonu).
@@ -2977,14 +3436,30 @@
       var name=block.querySelector(".ex-name").value.trim();
       var note=block.querySelector(".ex-note").value.trim();
       var sets=[];
-      block.querySelectorAll(".set-row").forEach(function(row){
-        var w=row.querySelector(".set-weight").value, r=row.querySelector(".set-reps").value;
-        if(forTemplate){ sets.push({weight:w||"",reps:r||""}); }
-        else if(w!==""||r!==""){ sets.push({weight:w||"0",reps:r||"0"}); }
+      block.querySelectorAll(".set-item").forEach(function(item){
+        var w=item.querySelector(".set-weight").value, r=item.querySelector(".set-reps").value;
+        var sn=(item.querySelector(".set-note").value||"").trim();
+        var drops=[];
+        item.querySelectorAll(".drop-row").forEach(function(dr){
+          var dw=dr.querySelector(".drop-weight").value, drp=dr.querySelector(".drop-reps").value;
+          if(forTemplate){ drops.push({weight:dw||"",reps:drp||""}); }
+          else if(dw!==""||drp!==""){ drops.push({weight:dw||"0",reps:drp||"0"}); }
+        });
+        if(forTemplate){ sets.push({weight:w||"",reps:r||"",note:sn,drops:drops}); }
+        else if(w!==""||r!==""||sn||drops.length){ sets.push({weight:w||"0",reps:r||"0",note:sn,drops:drops}); }
       });
-      if(name && (forTemplate || sets.length>0)) exercises.push({name:name,sets:sets,note:note});
+      if(name && (forTemplate || sets.length>0)) exercises.push({name:name,sets:sets,note:note,ss:block.__ssGroup||null});
     });
     return exercises;
+  }
+
+  // Kopiuje strukturę serii (liczba serii, notatki, liczba dropsetów) bez ciężarów i powtórzeń.
+  function blankSets(sets){
+    var src=(sets && sets.length)?sets:[{}];
+    return src.map(function(s){
+      s=s||{};
+      return {weight:"",reps:"",note:s.note||"",drops:(s.drops||[]).map(function(){ return {weight:"",reps:""}; })};
+    });
   }
 
   /* ---- szablony treningów ---- */
@@ -3004,15 +3479,16 @@
       item.querySelector(".tpl-sub").textContent=(tp.exercises||[]).map(function(ex){return ex.name;}).join(", ");
       function loadTpl(){
         $("exercisesContainer").innerHTML="";
-        // Zachowujemy nazwy ćwiczeń, liczbę serii i notatki, ale kilogramy i powtórzenia
-        // startują puste (do wpisania na bieżąco podczas treningu).
+        // Zachowujemy nazwy ćwiczeń, liczbę serii, notatki, superserie i strukturę dropsetów,
+        // ale kilogramy i powtórzenia startują puste (do wpisania na bieżąco podczas treningu).
         (tp.exercises||[]).forEach(function(ex){
-          var blankSets=(ex.sets&&ex.sets.length?ex.sets:[null]).map(function(){ return null; });
-          addExerciseBlock({name:ex.name,sets:blankSets,note:ex.note});
+          addExerciseBlock({name:ex.name, sets:blankSets(ex.sets), note:ex.note, ss:ex.ss||null});
         });
         if((tp.exercises||[]).length===0) addExerciseBlock();
+        rebuildSupersetLinks();
         $("wDate").value=todayISO();
         editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
+        saveWorkoutDraft();
         var card=$("wDate").closest(".card"); if(card && card.scrollIntoView) card.scrollIntoView({behavior:"smooth",block:"start"});
       }
       item.querySelector(".tpl-main").addEventListener("click", loadTpl);
@@ -3093,6 +3569,7 @@
       workouts.push({id:uid(),date:date,exercises:exercises,durSec:durSec});
     }
     saveWorkouts(); refreshExerciseDatalist();
+    clearWorkoutDraft();
     resetWorkoutForm(); renderWorkouts();
     showPrToast(prs);
   });
@@ -3144,9 +3621,19 @@
       entry.appendChild(head);
       (w.exercises||[]).forEach(function(ex){
         var b=document.createElement("div"); b.className="w-exercise-block";
-        var st=ex.sets.map(function(s){return s.weight+"kg × "+s.reps;}).join(", ");
+        var st=(ex.sets||[]).map(function(s){
+          var one=s.weight+"kg × "+s.reps;
+          if(s.drops && s.drops.length) one+=" → "+s.drops.map(function(d){ return d.weight+"kg × "+d.reps; }).join(" → ");
+          if(s.note) one+=" ("+s.note+")";
+          return one;
+        }).join(" | ");
         b.innerHTML='<div class="w-exercise-name"></div><div class="w-sets"></div>'+(ex.note?'<div class="w-note"></div>':'');
-        b.querySelector(".w-exercise-name").textContent=ex.name;
+        var nameEl=b.querySelector(".w-exercise-name");
+        nameEl.textContent=ex.name;
+        if(ex.ss){
+          var bg=document.createElement("span"); bg.className="w-ss-badge";
+          bg.textContent=t("ss_badge")+" "+ex.ss; nameEl.appendChild(bg);
+        }
         b.querySelector(".w-sets").textContent=t("sets")+": "+st;
         if(ex.note) b.querySelector(".w-note").textContent=ex.note;
         entry.appendChild(b);
@@ -3164,12 +3651,13 @@
         var w=workouts.filter(function(x){return x.id===id;})[0]; if(!w) return;
         $("exercisesContainer").innerHTML="";
         (w.exercises||[]).forEach(function(ex){
-          var blankSets=(ex.sets&&ex.sets.length?ex.sets:[null]).map(function(){ return null; });
-          addExerciseBlock({name:ex.name,sets:blankSets,note:ex.note});
+          addExerciseBlock({name:ex.name, sets:blankSets(ex.sets), note:ex.note, ss:ex.ss||null});
         });
         if((w.exercises||[]).length===0) addExerciseBlock();
+        rebuildSupersetLinks();
         $("wDate").value=todayISO();
         editingWorkoutId=null; $("addWorkoutBtn").textContent=t("save_workout");
+        saveWorkoutDraft();
         document.querySelector('.tab-btn[data-tab="training"]').click();
         $("view-fitness").scrollIntoView({behavior:"smooth",block:"start"});
       });
@@ -3181,9 +3669,11 @@
         editingWorkoutId=id;
         $("wDate").value=w.date;
         $("exercisesContainer").innerHTML="";
-        (w.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note}); });
+        (w.exercises||[]).forEach(function(ex){ addExerciseBlock({name:ex.name,sets:ex.sets,note:ex.note,ss:ex.ss||null}); });
         if((w.exercises||[]).length===0) addExerciseBlock();
+        rebuildSupersetLinks();
         $("addWorkoutBtn").textContent=t("save");
+        saveWorkoutDraft();
         document.querySelector('.tab-btn[data-tab="training"]').click();
         $("view-fitness").scrollIntoView({behavior:"smooth",block:"start"});
       });
@@ -3695,39 +4185,74 @@
   });
 
   /* ---- Timer rund (sporty walki): runda -> gong -> przerwa -> gong -> kolejna runda ---- */
+  /* DŹWIĘK: gong z ringu bokserskiego (syntezowany w Web Audio — działa offline, bez plików).
+     playGong() to wspólne źródło dźwięku dla wszystkich timerów (sporty walki + przerwy w treningu siłowym).
+     cbtGong() zostaje jako dotychczasowy punkt zaczepienia i wywołuje playGong(). */
   var cbtAudioCtx=null;
-  function cbtGong(hits){
-    // Syntetyczny "gong bokserski" (Web Audio) — działa offline, bez plików.
+  function audioCtx(){
     try{
       if(!cbtAudioCtx) cbtAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
       if(cbtAudioCtx.state==="suspended") cbtAudioCtx.resume();
-      var ctx=cbtAudioCtx;
-      hits=hits||1;
-      for(var h=0; h<hits; h++){
-        (function(offset){
-          var now=ctx.currentTime+offset;
-          var master=ctx.createGain();
-          master.gain.setValueAtTime(0.9,now);
-          master.connect(ctx.destination);
-          // metaliczne, niestrojone częstotliwości = brzmienie gongu/dzwonu
-          [111,172,241,338,467,616].forEach(function(f,i){
-            var o=ctx.createOscillator(), g=ctx.createGain();
-            o.type="sine"; o.frequency.value=f;
-            g.gain.setValueAtTime(0.45/(i+1), now);
-            g.gain.exponentialRampToValueAtTime(0.0001, now+2.4-(i*0.18));
-            o.connect(g); g.connect(master);
-            o.start(now); o.stop(now+2.5);
-          });
-          // krótki "strzał" ataku (uderzenie młotkiem)
-          var len=Math.floor(ctx.sampleRate*0.05), buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
-          for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
-          var src=ctx.createBufferSource(); src.buffer=buf;
-          var ng=ctx.createGain(); ng.gain.setValueAtTime(0.5,now); ng.gain.exponentialRampToValueAtTime(0.0001,now+0.06);
-          src.connect(ng); ng.connect(master); src.start(now);
-        })(h*0.55);
-      }
-    }catch(e){}
+      return cbtAudioCtx;
+    }catch(e){ return null; }
   }
+  // Odblokowanie audio przy pierwszym dotknięciu ekranu (wymóg przeglądarek mobilnych).
+  document.addEventListener("pointerdown", function(){ audioCtx(); }, {once:true});
+
+  function playGong(hits, gap){
+    var ctx=audioCtx(); if(!ctx) return;
+    hits=hits||1; gap=(typeof gap==="number")?gap:0.62;
+    for(var h=0; h<hits; h++){
+      (function(offset){
+        var now=ctx.currentTime+0.02+offset;
+        var master=ctx.createGain();
+        master.gain.setValueAtTime(0.0001, now);
+        master.gain.exponentialRampToValueAtTime(0.95, now+0.006);   // ostry atak młotka
+        master.gain.exponentialRampToValueAtTime(0.0001, now+3.6);   // długie, metaliczne wybrzmienie
+        var out=ctx.destination;
+        if(ctx.createDynamicsCompressor){
+          var comp=ctx.createDynamicsCompressor();
+          comp.connect(out); master.connect(comp);
+        } else { master.connect(out); }
+
+        // Jasny dzwon ringowy: nieharmoniczne parcjale (stąd metaliczna barwa gongu).
+        var f0=615;
+        [1, 1.52, 2.02, 2.74, 3.35, 4.11, 5.43, 6.79].forEach(function(r,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type="sine";
+          o.frequency.setValueAtTime(f0*r*1.012, now);
+          o.frequency.exponentialRampToValueAtTime(f0*r, now+0.28);  // lekkie opadanie stroju po uderzeniu
+          var amp=0.5/Math.pow(i+1, 0.9);
+          g.gain.setValueAtTime(amp, now);
+          g.gain.exponentialRampToValueAtTime(0.0001, now+Math.max(0.45, 3.4-i*0.34));
+          o.connect(g); g.connect(master);
+          o.start(now); o.stop(now+3.7);
+        });
+
+        // Niski "hum" korpusu dzwonu.
+        var hum=ctx.createOscillator(), hg=ctx.createGain();
+        hum.type="sine"; hum.frequency.value=f0/2;
+        hg.gain.setValueAtTime(0.28, now);
+        hg.gain.exponentialRampToValueAtTime(0.0001, now+3.5);
+        hum.connect(hg); hg.connect(master);
+        hum.start(now); hum.stop(now+3.6);
+
+        // Uderzenie młotka: krótki, jasny transjent (szum przez filtr pasmowy).
+        var len=Math.floor(ctx.sampleRate*0.06), buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+        for(var i2=0;i2<len;i2++) d[i2]=(Math.random()*2-1)*Math.pow(1-i2/len,3);
+        var src=ctx.createBufferSource(); src.buffer=buf;
+        var bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600; bp.Q.value=0.9;
+        var ng=ctx.createGain();
+        ng.gain.setValueAtTime(0.6, now);
+        ng.gain.exponentialRampToValueAtTime(0.0001, now+0.09);
+        src.connect(bp); bp.connect(ng); ng.connect(master);
+        src.start(now); src.stop(now+0.12);
+      })(h*gap);
+    }
+  }
+  // Dotychczasowy punkt zaczepienia timerów sportów walki.
+  function cbtGong(hits){ playGong(hits); }
+
   function parseMMSS(v){
     // Akceptuje "3:00", "0:30" albo same minuty "3" -> sekundy
     v=String(v||"").trim();
@@ -4821,14 +5346,17 @@
   $("gearBtn").addEventListener("click", openSettings);
   document.querySelector("[data-close-settings]").addEventListener("click", function(){ $("settingsOverlay").classList.remove("active"); });
 
+  function setColorMode(mode){
+    state.colorMode = (mode==="light") ? "light" : "dark";
+    applyTheme(); persistSettings(); syncSettingChips();
+  }
+  // Settings segmented control (Dark / Light).
   document.querySelectorAll("[data-cm-opt]").forEach(function(b){
-    b.addEventListener("click", function(){
-      state.colorMode=b.getAttribute("data-cm-opt");
-      applyTheme();
-      // Font colour automatically follows the mode (overrides any saved custom text colour).
-      syncTextColorToMode();
-      persistSettings(); syncSettingChips(); syncAppearanceControls();
-    });
+    b.addEventListener("click", function(){ setColorMode(b.getAttribute("data-cm-opt")); });
+  });
+  // Floating quick toggle — flips between the two modes.
+  if($("themeToggle")) $("themeToggle").addEventListener("click", function(){
+    setColorMode(resolveTheme()==="light" ? "dark" : "light");
   });
   document.querySelectorAll("[data-bg-opt]").forEach(function(b){
     b.addEventListener("click", function(){ state.pageBg=b.getAttribute("data-bg-opt"); applyAppearance(); persistSettings(); syncSettingChips(); });
@@ -5188,7 +5716,7 @@
   var _td=$("taskDate"); if(_td) _td.value=todayISO();
   var _rd=$("runDate"); if(_rd) _rd.value=todayISO();
   var _cd=$("cbtDate"); if(_cd) _cd.value=todayISO();
-  addExerciseBlock();
+  if(!restoreWorkoutDraft()) addExerciseBlock();  // przywróć roboczy trening (kolejność ćwiczeń, superserie, dropsety)
   updateStreak();
   setInterval(updateStreak, 60000); // odśwież streak po przejściu przez północ (otwarta karta)
   renderAll();
@@ -5215,25 +5743,78 @@
     wpAutoConnect();
   }, 2500); });
 
-  /* ===== Welcome pop-up — first visit only (point 1) ===== */
-  (function initWelcome(){
-    var KEY="welcomeSeen";
-    var seen;
-    try{ seen=localStorage.getItem(KEY); }catch(e){ seen="1"; } // if storage is blocked, don't nag
-    function dismiss(){
-      $("welcomeOverlay").classList.remove("active");
+  /* ===== ONBOARDING: karuzela okien przy pierwszym uruchomieniu (punkt 1) =====
+     Kolejne okna opisują sekcje aplikacji w tej samej kolejności, w jakiej ułożone są
+     kafelki na ekranie głównym (state.order). Fakt ukończenia zapisujemy w localStorage. */
+  (function initOnboarding(){
+    var KEY="onboardingSeen_v1";
+    var TILE_BODY={ todo:"ob_todo_body", calendar:"ob_calendar_body", fitness:"ob_fitness_body",
+                    budget:"ob_budget_body", journal:"ob_journal_body", ebooks:"ob_ebooks_body" };
+    var slides=[], idx=0;
+
+    function buildSlides(){
+      slides=[
+        {icon:"\uD83D\uDC4B", titleKey:"ob_welcome_title", bodyKey:"ob_welcome_body", a2hs:true},
+        {icon:"\uD83D\uDD53", titleKey:"ob_clock_title",   bodyKey:"ob_clock_body"},
+        {icon:"\u2705",       titleKey:"ob_daily_title",   bodyKey:"ob_daily_body"}
+      ];
+      // Kafelki — dokładnie w kolejności z ekranu głównego (pomijamy ukryte).
+      state.order.forEach(function(id){
+        if(state.hidden[id]) return;
+        var def=TILE_DEFS[id]; if(!def || !TILE_BODY[id]) return;
+        slides.push({icon:def.icon, titleKey:def.titleKey, bodyKey:TILE_BODY[id]});
+      });
+      slides.push({icon:"\u2699", titleKey:"ob_settings_title", bodyKey:"ob_settings_body"});
+    }
+
+    function render(){
+      var sl=slides[idx]; if(!sl) return;
+      $("obIcon").textContent=sl.icon;
+      $("obTitle").textContent=t(sl.titleKey);
+      var html='<p>'+t(sl.bodyKey)+'</p>';
+      if(sl.a2hs){
+        html+='<div class="ob-a2hs">'+
+          '<div class="ob-a2hs-t">'+t("welcome_a2hs_title")+'</div>'+
+          '<div style="margin-bottom:6px;">'+t("welcome_a2hs_ios")+'</div>'+
+          '<div>'+t("welcome_a2hs_android")+'</div>'+
+        '</div>';
+      }
+      $("obBody").innerHTML=html;
+      var last=(idx===slides.length-1);
+      $("obNextBtn").textContent = last ? t("ob_start") : t("ob_next");
+      $("obPrevBtn").textContent = t("ob_back");
+      $("obPrevBtn").style.visibility = (idx===0) ? "hidden" : "visible";
+      $("obStep").textContent=(idx+1)+" / "+slides.length;
+      var dots=$("obDots"); dots.innerHTML="";
+      slides.forEach(function(_s,i){
+        var d=document.createElement("button");
+        d.type="button"; d.className="ob-dot"+(i===idx?" on":"");
+        d.setAttribute("aria-label", String(i+1));
+        d.addEventListener("click", function(){ idx=i; render(); });
+        dots.appendChild(d);
+      });
+    }
+
+    function open(){ buildSlides(); idx=0; render(); $("obOverlay").classList.add("active"); }
+    function close(){
+      $("obOverlay").classList.remove("active");
       try{ localStorage.setItem(KEY,"1"); }catch(e){}
     }
-    // Zamykanie działa zawsze — modal można też otworzyć ponownie z linku w stopce.
-    $("welcomeStartBtn").addEventListener("click", dismiss);
-    $("welcomeCloseBtn").addEventListener("click", dismiss);
-    // backdrop click also dismisses (handled by generic overlay handler) — persist the flag then too
-    $("welcomeOverlay").addEventListener("click", function(e){ if(e.target===$("welcomeOverlay")) dismiss(); });
-    if(!seen){
-      $("welcomeOverlay").classList.add("active");
-    }
+
+    $("obNextBtn").addEventListener("click", function(){
+      if(idx < slides.length-1){ idx++; render(); } else { close(); }
+    });
+    $("obPrevBtn").addEventListener("click", function(){ if(idx>0){ idx--; render(); } });
+    $("obCloseBtn").addEventListener("click", close);
+    $("obOverlay").addEventListener("click", function(e){ if(e.target===$("obOverlay")) close(); });
+
+    var seen;
+    try{ seen=localStorage.getItem(KEY); }catch(e){ seen="1"; } // gdy storage jest zablokowany — nie nękamy
+    if(!seen) open();
+
+    // Link „Instrukcja” w stopce otwiera karuzelę ponownie (od pierwszego okna).
     var gl=$("guideLink");
-    if(gl) gl.addEventListener("click", function(){ $("welcomeOverlay").classList.add("active"); });
+    if(gl) gl.addEventListener("click", open);
   })();
 
 })();
